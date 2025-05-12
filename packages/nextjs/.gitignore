@@ -1,0 +1,9 @@
+node_modules
+dist
+dist/types
+.turbo
+
+# local env files
+.env*.local
+.env*.production
+copilot-instruction.md

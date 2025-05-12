@@ -1,0 +1,28 @@
+{
+  "name": "@tern-secure/types",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json", 
+    "dev": "tsup --watch",
+    "lint": "eslint src/"
+  },
+  "peerDependencies": {
+    "firebase": "^11.2.0"
+  },
+  "peerDependenciesMeta": {
+    "firebase": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

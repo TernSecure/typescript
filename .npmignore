@@ -1,0 +1,21 @@
+# Environment files
+.env*
+*.env
+.env.local
+.env.production
+.env.development
+
+# Source and config
+src/**/*.test.ts
+src/**/*.spec.ts
+src/**/__tests__/*
+scripts/
+jest.config.*
+tsconfig.*
+*.config.*
+
+# Other
+node_modules/
+coverage/
+.git/
+.github/ 

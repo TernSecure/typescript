@@ -1,0 +1,31 @@
+{
+  "name": "@tern-secure/next-backend", 
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts", 
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
+    "dev": "tsup --watch",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@tern-secure/types": "workspace:*",
+    "firebase-admin": "^12.0.0",
+    "jose": "^5.0.0"
+  },
+  "devDependencies": {
+    "next": "15.3.2",
+    "rimraf": "^5.0.0",
+    "eslint": "^9.15.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

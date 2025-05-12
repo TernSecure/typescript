@@ -1,0 +1,36 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".", // Add baseUrl
+    "paths": { // Add paths for workspace resolution
+      "@tern-secure/nextjs": ["packages/nextjs/src"],
+      "@tern-secure/nextjs/*": ["packages/nextjs/src/*"],
+      "@tern-secure/next-backend": ["packages/backend/src"],
+      "@tern-secure/next-backend/*": ["packages/backend/src/*"],
+      "@tern-secure/next-frontend": ["packages/frontend/src"],
+      "@tern-secure/next-frontend/*": ["packages/frontend/src/*"],
+      "@tern-secure/types": ["packages/types/src"],
+      "@tern-secure/types/*": ["packages/types/src/*"]
+    },
+    "alwaysStrict": false,
+    "declaration": true,
+    "declarationMap": false,
+    "downlevelIteration": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "lib": ["es6"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmitHelpers": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "pretty": true,
+    "sourceMap": false,
+    "strict": true,
+    "target": "ES2019",
+    "noErrorTruncation": true
+  },
+  "exclude": ["node_modules", "dist", "**/dist/**", "packages/*/dist/**"]
+}

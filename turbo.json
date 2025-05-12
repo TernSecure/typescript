@@ -1,0 +1,30 @@
+{
+    "$schema": "https://turborepo.com/schema.json",
+    "ui": "tui",
+    "tasks": {
+      "build": {
+        "dependsOn": ["^build"],
+        "inputs": [
+        "*.d.ts",
+        "src/**",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "tsconfig.declarations.json",
+        "tsup.config.ts",
+        "!dist/**",
+        "!node_modules/**"
+      ],
+        "outputs": [
+          "dist/**",
+          "*/package.json", 
+          ".next/**", 
+          "!.next/cache/**"
+        ]
+      },
+      "dev": {
+        "cache": false,
+        "persistent": true
+      },
+      "lint": {}
+    }
+  }

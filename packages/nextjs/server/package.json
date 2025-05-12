@@ -1,0 +1,5 @@
+{
+    "main": "../dist/cjs/app-router/server/index.js",
+    "module": "../dist/esm/app-router/server/index.js",
+    "types": "../dist/types/app-router/server/index.d.ts"
+  }

@@ -1,0 +1,80 @@
+{
+  "name": "@tern-secure/nextjs",
+  "version": "4.2.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/nextjs.git",
+    "directory": "packages/nextjs"
+  },
+  "bugs": {
+    "url": "https://github.com/TernSecure/nextjs/issues"
+  },
+  "homepage": "https://github.com/TernSecure/nextjs#readme",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",  
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "keywords": [
+    "firebase",
+    "authentication",
+    "nextjs",
+    "auth",
+    "typescript"
+  ],
+  "author": "Pacifique Kamugisha",
+  "license": "ISC",
+  "description": "Firebase authentication solution for Next.js applications",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./server": {
+      "types": "./dist/types/server/index.d.ts",
+      "import": "./dist/esm/server/index.js",
+      "require": "./dist/cjs/server/index.js"
+    },
+    "./admin": {
+      "types": "./dist/types/app-router/admin/index.d.ts",
+      "import": "./dist/esm/app-router/admin/index.js", 
+      "require": "./dist/cjs/app-router/admin/index.js"
+    }
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@tern-secure/next-frontend": "workspace:*",
+    "@tern-secure/types": "workspace:*",
+    "jose": "^5.9.6"
+  },
+  "peerDependencies": {
+    "firebase": "^11.2.0",
+    "firebase-admin": "^12.7.0",
+    "next": "^13.0.0 || ^14.0.0 || ^15.0.0",
+    "react": "^18 || ^19.0.0-0",
+    "react-dom": "^18 || ^19.0.0-0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

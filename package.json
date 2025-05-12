@@ -1,0 +1,36 @@
+{
+  "name": "@tern-secure/ts",
+  "private": true,
+  "scripts": {
+    "build": "turbo build --filter=!./apps/auth-test",
+    "dev": "turbo dev",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "check-types": "turbo run check-types",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build --filter=@tern-secure/nextjs^... && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "@eslint/js": "^9.26.0",
+    "@tern-secure/next-backend": "workspace:*",
+    "@types/node": "^22.15.17",
+    "@types/react": "^18.3.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "eslint": "^9.26.0",
+    "eslint-plugin-react": "^7.37.5",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.4.0",
+    "turbo": "^2.5.3",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9.0.0"
+  }
+}
