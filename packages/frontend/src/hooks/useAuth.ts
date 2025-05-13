@@ -1,6 +1,9 @@
 "use client"
 
-import { getCurrentUser, useTernSecure } from '../ctx/TernSecureCtx'
+import { 
+  getCurrentUser, 
+  useTernSecure 
+} from '../ctx/TernSecureCtx'
 import type { 
   SignInResponse, 
   TernSecureUser 

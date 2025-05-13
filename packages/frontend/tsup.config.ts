@@ -17,7 +17,12 @@ const config: Options = {
     '@tern-secure/types',
     '@tern-secure/next-backend',
     'tailwindcss'
-  ]
+  ],
+  //injectStyle: true,
+  //loader: {
+ //   '.css': 'css',
+ // },
+  //onSuccess: 'pnpm build:styles',
 };
 
 const esmConfig: Options = {

@@ -1,3 +1,4 @@
 export {
-    useAuth
+    useAuth,
+    useIdToken
 } from '@tern-secure/next-frontend'

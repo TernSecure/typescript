@@ -9,7 +9,7 @@ import { Label } from "./ui/label"
 import { Button } from "./ui/button"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Separator } from "./ui/separator"
-import { cn } from "../lib/utils"
+import { cn } from "@workspace/frontend/lib/utils"
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { getRedirectResult, User } from 'firebase/auth'
 import { ternSecureAuth } from '../utils/client-init'

@@ -9,6 +9,9 @@ export { TernSecureAuth, TernSecureFirestore, ternSecureAuth } from '@tern-secur
 export { TernSecureProvider } from './app-router/client/TernSecureProvider'
 export { 
     useAuth,
+    useIdToken,
+    useSignUp,
+    useSession,
     SignIn,
     SignOut,
     SignOutButton,
