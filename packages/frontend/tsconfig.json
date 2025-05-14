@@ -2,14 +2,13 @@
   "compilerOptions": {
     "allowJs": true,
     "baseUrl": ".",
-    "paths": {
-      "@workspace/frontend/*": ["./src/*"]
-    },
     "esModuleInterop": true,
     "isolatedModules": true,
+    "incremental": false,
     "jsx": "react-jsx",
-    "lib": ["dom"],
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
     "module": "esnext",
+    "moduleDetection": "force",
     "moduleResolution": "bundler",
     "outDir": "dist",
     "resolveJsonModule": true,
@@ -17,8 +16,9 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": true,
-    "target": "es2019"
+    "target": "ES2022"
+
   },
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"],
-  "include": ["src", "src/lib", "src/components", "components/ui", "@/components/ui/button.tsx"]
+  "include": ["src", "src/lib", "src/components", "components/ui"]
 }

@@ -64,6 +64,7 @@
   },
   "dependencies": {
     "@tern-secure/next-frontend": "workspace:*",
+    "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
     "jose": "^5.9.6"
   },

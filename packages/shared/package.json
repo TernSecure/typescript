@@ -1,0 +1,46 @@
+{
+  "name": "@tern-secure/shared",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",  
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "author": "Pacifique Kamugisha",
+  "license": "ISC",
+  "description": "Shared types and utilities for TernSecure projects",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./nextjs": {
+      "types": "./dist/types/nextjs/index.d.ts",
+      "import": "./dist/esm/nextjs/index.js",
+      "require": "./dist/cjs/nexjs/index.js"
+    }
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@tern-secure/types": "workspace:*"
+  },
+
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -25,7 +25,10 @@ export  {
     TernSecureStorage
 } from './utils/client-init'
 export {
-    SignIn
+    SignIn,
+} from './components/sign-in'
+export type {
+    SignInProps,
 } from './components/sign-in'
 export {
     SignOutButton

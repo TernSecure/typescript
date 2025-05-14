@@ -1,4 +1,4 @@
-import { TernSecureAuth } from '@tern-secure/next-frontend'
+import { TernSecureAuth } from '../../utils/client-init'
 import { 
   signInWithEmailAndPassword, 
   signInWithRedirect, 
@@ -6,7 +6,8 @@ import {
   GoogleAuthProvider, 
   OAuthProvider, 
   createUserWithEmailAndPassword, 
-  sendEmailVerification } from 'firebase/auth'
+  sendEmailVerification 
+} from 'firebase/auth'
 import type { SignInResponse } from '@tern-secure/types'
 import { handleFirebaseAuthError } from '@tern-secure/types'
 

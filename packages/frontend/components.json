@@ -11,11 +11,11 @@
       "prefix": ""
     },
     "aliases": {
-      "components": "@workspace/frontend/components",
-      "utils": "@workspace/frontend/lib/utils",
-      "ui": "@workspace/frontend/components/ui",
-      "lib": "@workspace/frontend/lib",
-      "hooks": "@workspace/frontend/hooks"
+      "components": "@workspace/@tern-secure/next-frontend/components",
+      "utils": "@workspace/@tern-secure/next-frontend/lib/utils",
+      "ui": "@workspace/@tern-secure/next-frontend/components/ui",
+      "lib": "@workspace/@tern-secure/next-frontend/lib",
+      "hooks": "@workspace/@tern-secure/next-frontend/hooks"
     },
     "iconLibrary": "lucide"
   }

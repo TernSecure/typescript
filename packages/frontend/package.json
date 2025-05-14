@@ -1,6 +1,9 @@
 {
   "name": "@tern-secure/next-frontend",
   "version": "0.0.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "private": true,
   "type": "module",
   "types": "./dist/types/index.d.ts",
@@ -17,25 +20,39 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
+    "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css",
     "dev": "tsup --watch",
+    "dev:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css --watch",
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-separator": "^1.1.1",
+    "@radix-ui/react-slot": "^1.2.2",
+    "@tanstack/react-form": "^1.11.1",
+    "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
-    "next": "^15.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "firebase": "^11.0.0"
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.5",
+    "@tailwindcss/postcss": "^4.0.8",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "eslint": "^9.15.0",
+    "firebase": "^11.0.0",
+    "next": "^15.0.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.5",
-    "typescript": "^5.0.0",
-    "tsup": "^8.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "rimraf": "^5.0.0",
-    "eslint": "^9.15.0"
+    "tailwindcss": "^4.1.5",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
   }
 }

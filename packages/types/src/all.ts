@@ -143,4 +143,15 @@ export interface SignInProps extends RedirectConfig {
   }
 }
 
+export interface AuthActions {
+  signInWithEmail: (email: string, password: string) => Promise<SignInResponse>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithMicrosoft: () => Promise<void>;
+  signOut: () => Promise<void>;
+  getRedirectResult: () => Promise<any>;
+  getIdToken: () => Promise<string | null>;
+  createUserWithEmailAndPassword?: (email: string, password: string) => Promise<SignInResponse>;
+  sendEmailVerification?: (user: TernSecureUser) => Promise<void>;
+}
+
 
