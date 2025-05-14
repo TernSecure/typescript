@@ -3,7 +3,7 @@ import type {
     AuthActions 
 } from '@tern-secure/types';
 import { handleFirebaseAuthError } from '@tern-secure/types'
-import { ternSecureAuth } from '../utils/client-init'
+import { ternSecureAuth } from '../../utils/client-init'
 import { 
   signInWithEmailAndPassword, 
   signInWithRedirect, 
