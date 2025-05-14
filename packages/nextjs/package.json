@@ -4,7 +4,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TernSecure/nextjs.git",
@@ -66,7 +65,8 @@
     "@tern-secure/next-frontend": "workspace:*",
     "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "tslib": "2.4.1"
   },
   "peerDependencies": {
     "firebase": "^11.2.0",

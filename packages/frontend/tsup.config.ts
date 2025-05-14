@@ -1,8 +1,8 @@
-import { defineConfig } from 'tsup';
-import type { Options } from 'tsup';
+import { defineConfig } from 'tsup'
+import type { Options } from 'tsup'
 
 const config: Options = {
-  entry: ['./src/**/*.{ts,tsx,js,jsx}'],
+  entry: ['./src/**/*.{ts,tsx,js,jsx}', './src/styles/globals.css'],
   bundle: false,
   sourcemap: true,
   clean: true,
@@ -15,13 +15,14 @@ const config: Options = {
     'next',
     'firebase',
     '@tern-secure/types',
+    '@tanstack/react-form',
     '@tern-secure/next-backend',
     'tailwindcss'
   ],
   //injectStyle: true,
-  //loader: {
- //   '.css': 'css',
- // },
+  loader: {
+    '.css': 'css',
+  },
   //onSuccess: 'pnpm build:styles',
 };
 

@@ -4,7 +4,9 @@ module.exports = {
 	//content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
 	content: [
         "./src/**/*.{ts,tsx,js,jsx}",
-		"components/**/*.{ts,tsx}"
+		"./src/components/**/*.{ts,tsx}",
+		"./node_modules/@tern-secure/**/*.{js,ts,jsx,tsx}",
+		"./node_modules/@tern-secure/*/dist/**/*.{js,ts,jsx,tsx}" 
     ],
 	theme: {
 	  extend: {

@@ -2,6 +2,9 @@
   "compilerOptions": {
     "allowJs": true,
     "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "esModuleInterop": true,
     "isolatedModules": true,
     "incremental": false,
@@ -19,6 +22,6 @@
     "target": "ES2022"
 
   },
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": ["node_modules"],
   "include": ["src", "src/lib", "src/components", "components/ui"]
 }

@@ -8,7 +8,7 @@
     "isolatedModules": true,
     "lib": ["es2022"],
     "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "resolveJsonModule": true,
     "rootDir": "./src",
@@ -18,11 +18,7 @@
     "target": "ES2022"
   },
   "exclude": [
-    "node_modules", 
-    "dist", 
-    "**/*.test.ts", 
-    "**/*.test.tsx",
-    "tsup.config.ts",
+    "node_modules"
   ],
   "include": ["src"]
 }

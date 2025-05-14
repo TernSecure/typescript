@@ -14,22 +14,32 @@
   "author": "Pacifique Kamugisha",
   "license": "ISC",
   "description": "Shared types and utilities for TernSecure projects",
-  "types": "./dist/types/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./nextjs": {
-      "types": "./dist/types/nextjs/index.d.ts",
-      "import": "./dist/esm/nextjs/index.js",
-      "require": "./dist/cjs/nexjs/index.js"
+      "import": {
+        "types": "./dist/nextjs/index.d.mts",
+        "default": "./dist/nextjs/index.mjs"
+      },
+      "require": {
+        "types": "./dist/nextjs/index.d.ts",
+        "default": "./dist/nextjs/index.js"
+      }
     }
   },
+  "main": "./dist/index.js",
   "devDependencies": {
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
@@ -37,7 +47,8 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@tern-secure/types": "workspace:*"
+    "@tern-secure/types": "workspace:*",
+    "tslib": "2.4.1"
   },
 
   "engines": {

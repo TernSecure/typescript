@@ -10,6 +10,7 @@ import type {
 } from '@tern-secure/types'
 import { createAuthActions as defaultCreateAuthActions } from '@tern-secure/shared'
 import { useRouter } from 'next/navigation'
+import { cn } from '../lib/utils'
 
 const appName = process.env.NEXT_PUBLIC_FIREBASE_APP_NAME || 'TernSecure'
 
@@ -33,25 +34,18 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
   )
 }
 
-const prefix = (classes: string) => {
-  return classes.split(' ').map(cls => `tern-${cls}`).join(' ')
-}
-
 interface SignInDisplayProps {
-  authActions: Pick<AuthActions, 'signInWithEmail' | 'signInWithGoogle' | 'signInWithMicrosoft'>;
-  redirectUrl?: string;
-  onError?: (error: Error, response?: SignInResponse | null) => void;
-  onSuccess?: (user: TernSecureUser | null) => void;
-  className?: string;
-  customStyles?: {
-    card?: string;
-    input?: string;
-    button?: string;
-    label?: string;
-    separator?: string;
-    title?: string;
-    socialButton?: string;
-  };
+  authActions: Pick<AuthActions, 'signInWithEmail' | 'signInWithGoogle' | 'signInWithMicrosoft'>
+  redirectUrl?: string
+  onError?: (error: Error, response?: SignInResponse | null) => void
+  onSuccess?: (user: TernSecureUser | null) => void
+  className?: string
+  colors?: {
+    primary?: string
+    background?: string
+    text?: string
+    border?: string
+  }
 }
 
 function SignInDisplay({
@@ -60,7 +54,12 @@ function SignInDisplay({
   onError,
   onSuccess,
   className,
-  customStyles = {},
+  colors = {
+    primary: "hsl(221.2 83.2% 53.3%)",
+    background: "white",
+    text: "hsl(222.2 47.4% 11.2%)",
+    border: "hsl(214.3 31.8% 91.4%)",
+  },
 }: SignInDisplayProps) {
   const form = useForm({
     defaultValues: {
@@ -94,13 +93,19 @@ function SignInDisplay({
     }
   }, [authActions, onError, redirectUrl])
 
-  const isFormSubmitting = (form.state as any).isSubmitting;
-  const formGlobalErrors = (form.state as any).errors;
+  const isFormSubmitting = (form.state as any).isSubmitting
+  const formGlobalErrors = (form.state as any).errors
+  const styles = {
+    "--primary-color": colors.primary,
+    "--background-color": colors.background,
+    "--text-color": colors.text,
+    "--border-color": colors.border,
+  } as React.CSSProperties
 
   return (
-    <div className={prefix(`flex items-center justify-center min-h-screen bg-gray-100 ${className || ''}`)}>
-      <div className={prefix(`bg-white p-8 rounded-lg shadow-md w-full max-w-md ${customStyles.card || ''}`)}>
-        <h2 className={prefix(`text-2xl font-bold mb-6 text-center text-gray-800 ${customStyles.title || ''}`)}>
+    <div className={cn('flex items-center justify-center min-h-screen bg-gray-100', className)} style={styles}>
+      <div className={cn('bg-white p-8 rounded-lg shadow-md w-full max-w-md')}>
+        <h2 className={cn('text-2xl font-bold mb-6 text-center text-gray-800')}>
           Sign in to {appName}
         </h2>
 
@@ -123,7 +128,7 @@ function SignInDisplay({
               const fieldState = field.state as any; 
               return (
                 <div>
-                  <label htmlFor={field.name} className={prefix(`block text-sm font-medium text-gray-700 ${customStyles.label || ''}`)}>
+                  <label htmlFor={field.name} className={cn('block text-sm font-medium text-gray-700')}>
                     Email
                   </label>
                   <input
@@ -133,7 +138,7 @@ function SignInDisplay({
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     type="email"
-                    className={prefix(`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary ${customStyles.input || ''}`)}
+                    className={cn('mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary')}
                     required
                     disabled={isFormSubmitting}
                   />
@@ -154,7 +159,7 @@ function SignInDisplay({
               const fieldState = field.state as any; 
               return (
                 <div>
-                  <label htmlFor={field.name} className={prefix(`block text-sm font-medium text-gray-700 ${customStyles.label || ''}`)}>
+                  <label htmlFor={field.name} className={cn('block text-sm font-medium text-gray-700')}>
                     Password
                   </label>
                   <input
@@ -164,7 +169,7 @@ function SignInDisplay({
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     type="password"
-                    className={prefix(`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary ${customStyles.input || ''}`)}
+                    className={cn('mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary')}
                     required
                     disabled={isFormSubmitting}
                   />
@@ -187,7 +192,7 @@ function SignInDisplay({
               <button
                 type="submit"
                 disabled={!canSubmit || isSubmitting}
-                className={prefix(`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 ${customStyles.button || ''}`)}
+                className={cn('w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50')}
               >
                 {isSubmitting ? 'Signing in...' : 'Sign in'}
               </button>
@@ -195,7 +200,7 @@ function SignInDisplay({
           </form.Subscribe>
         </form>
 
-        <div className={prefix(`mt-6 ${customStyles.separator || ''}`)}>
+        <div className={cn('mt-6')}>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -210,7 +215,7 @@ function SignInDisplay({
           <button
             type="button"
             onClick={() => handleSocialSignIn('google')}
-            className={prefix(`w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 ${customStyles.socialButton || ''}`)}
+            className={cn('w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50')}
             disabled={isFormSubmitting}
           >
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -222,7 +227,7 @@ function SignInDisplay({
           <button
             type="button"
             onClick={() => handleSocialSignIn('microsoft')}
-            className={prefix(`w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 ${customStyles.socialButton || ''}`)}
+            className={cn('w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50')}
             disabled={isFormSubmitting}
           >
             <svg className="h-5 w-5 mr-2" viewBox="0 0 23 23">
@@ -244,7 +249,7 @@ export type SignInProps = Omit<SignInDisplayProps, 'authActions'> & {
 };
 
 export function SignIn(props: SignInProps) {
-  const { authActions: propsAuthActions, redirectUrl = '/', onSuccess, onError, ...restDisplayProps } = props;
+  const { authActions: propsAuthActions, redirectUrl = '/', onSuccess, onError, className, ...restDisplayProps } = props;
   const router = useRouter();
   const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const [initialError, setInitialError] = useState<Error | null>(null);
@@ -284,7 +289,7 @@ export function SignIn(props: SignInProps) {
 
   if (isCheckingRedirect) {
     return (
-      <div className={prefix('flex items-center justify-center min-h-screen bg-gray-100')}>
+      <div className={cn('flex items-center justify-center min-h-screen bg-gray-100')}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -292,7 +297,7 @@ export function SignIn(props: SignInProps) {
 
   if (initialError) {
     return (
-        <div className={prefix('flex items-center justify-center min-h-screen bg-gray-100')}>
+        <div className={cn('flex items-center justify-center min-h-screen bg-gray-100')}>
             <div className="text-red-500 p-4 border border-red-500 rounded">
                 Error during authentication: {initialError.message}
             </div>

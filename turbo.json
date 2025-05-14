@@ -8,17 +8,14 @@
         "*.d.ts",
         "src/**",
         "tsconfig.json",
-        "tsconfig.build.json",
-        "tsconfig.declarations.json",
+        "tsconfig.add.json",
         "tsup.config.ts",
         "!dist/**",
         "!node_modules/**"
       ],
         "outputs": [
           "dist/**",
-          "*/package.json", 
-          ".next/**", 
-          "!.next/cache/**"
+          "*/package.json"
         ]
       },
       "dev": {
