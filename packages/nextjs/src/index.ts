@@ -7,7 +7,7 @@ export { TernSecureAuth, TernSecureFirestore, ternSecureAuth } from '@tern-secur
 //export { useInternalContext } from './boundary/TernSecureCtx'
 //export { TernSecureClientProvider } from './app-router/client/TernSecureProvider'
 export { TernSecureProvider } from './app-router/client/TernSecureProvider'
-export { 
+export {
     useAuth,
     useIdToken,
     useSignUp,
@@ -17,7 +17,8 @@ export {
     SignOutButton,
     SignUp,
     Verify
-} from '@tern-secure/next-frontend' 
+} from './boundary/components'
+
 export type { TernSecureUser, TernSecureUserData } from '@tern-secure/types'
 
 //export const TernSecureProvider = TernSecureServerProvider

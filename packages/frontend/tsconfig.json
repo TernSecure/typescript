@@ -2,17 +2,16 @@
   "compilerOptions": {
     "allowJs": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    },
     "esModuleInterop": true,
     "isolatedModules": true,
-    "incremental": false,
     "jsx": "react-jsx",
     "lib": ["es2022", "DOM", "DOM.Iterable"],
-    "module": "esnext",
+    "module": "NodeNext",
     "moduleDetection": "force",
-    "moduleResolution": "bundler",
+    "moduleResolution": "NodeNext",
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "outDir": "dist",
     "resolveJsonModule": true,
     "rootDir": "src",

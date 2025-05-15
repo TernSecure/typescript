@@ -1,15 +1,18 @@
-import { defineConfig } from 'tsup'
-import type { Options } from 'tsup'
+import { defineConfig } from 'tsup';
 
-const config: Options = {
-  entry: ['./src/**/*.{ts,tsx,js,jsx}', './src/styles/globals.css'],
-  bundle: false,
-  sourcemap: true,
-  clean: true,
-  minify: false,
-  dts: false,
-  legacyOutput: true,
-  external: [
+export default defineConfig(() => {
+  return {
+    entry: [
+      './src/**/*.{ts,tsx,js,jsx}',
+      './src/styles/globals.css',
+    ],
+    bundle: false,
+    minify: false,
+    clean: true,
+    sourcemap: true,
+    format: ['cjs', 'esm'],
+    dts: true,
+    external: [
     'react',
     'react-dom',
     'next',
@@ -19,25 +22,9 @@ const config: Options = {
     '@tern-secure/next-backend',
     'tailwindcss'
   ],
-  //injectStyle: true,
   loader: {
-    '.css': 'css',
+    '.css': 'local-css'
   },
-  //onSuccess: 'pnpm build:styles',
-};
-
-const esmConfig: Options = {
-    ...config,
-    format: 'esm'
-};
-
-const cjsConfig: Options = {
-    ...config,
-    format: 'cjs',
-    outDir: './dist/cjs'
-};
-
-export default defineConfig([
-    esmConfig,
-    cjsConfig,
-]);
+  onSuccess: 'pnpm build:styles',
+  };
+});

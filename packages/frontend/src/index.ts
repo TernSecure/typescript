@@ -1,4 +1,3 @@
-
 export { useAuth } from "./hooks/useAuth"
 export { useSignUp } from "./hooks/useSignUp"
 export { useIdToken } from "./hooks/useIdToken"
