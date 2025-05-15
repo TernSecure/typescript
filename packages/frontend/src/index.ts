@@ -45,4 +45,7 @@ export {
 export {
     AuthBackground
 } from './components/background'
+export {
+    cn
+} from './lib/utils'
 

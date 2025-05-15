@@ -1,10 +1,7 @@
 @import "tailwindcss";
 
-@source "../../../apps/**/*.{ts,tsx}";
-@source "../../../components/**/*.{ts,tsx}";
-@source "../**/*.{ts,tsx}";
-@source not "../node_modules/";
-@source "../node_modules/@tern-secure/nextjs/";
+@source '../../node_modules/@tern-secure/**/*.{js,ts,jsx,tsx}';
+@source '../../node_modules/@tern-secure/*/dist/**/*.{js,ts,jsx,tsx}';
 
 
 @custom-variant dark (&:is(.dark *));
