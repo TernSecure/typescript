@@ -3,11 +3,10 @@ import { defineConfig } from 'tsup';
 export default defineConfig(() => {
   return {
     entry: [
-      './src/**/*.{ts,tsx,js,jsx}',
-      './src/styles/globals.css',
+      './src/**/*.{ts,tsx,js,jsx}'
     ],
     bundle: false,
-    minify: false,
+    minify: true,
     clean: true,
     sourcemap: true,
     format: ['cjs', 'esm'],
@@ -17,14 +16,17 @@ export default defineConfig(() => {
     'react-dom',
     'next',
     'firebase',
+    'firebase-admin',
     '@tern-secure/types',
     '@tanstack/react-form',
     '@tern-secure/next-backend',
-    'tailwindcss'
+    '@tern-secure/shared',
+    'tailwindcss',
+    'firebase/auth',
+    'firebase/storage',
+    'firebase/firestore'
   ],
-  loader: {
-    '.css': 'local-css'
-  },
-  onSuccess: 'pnpm build:styles',
+  injectStyle: true,
+  onSuccess: 'pnpm build:styles'
   };
 });

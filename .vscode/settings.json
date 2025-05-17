@@ -1,0 +1,15 @@
+{
+    "files.watcherExclude": {
+        "**/.tsup/**": true,
+        "**/node_modules": true,
+        "pnpm-lock.yaml": true,
+        "**/.turbo": true,
+    },
+    "search.exclude": {
+        "**/.tsup/**": true,
+        "**/.turbo": true,
+        "**/node_modules": true,
+        "packages/*/dist": true,
+        "pnpm-lock.yaml": true,
+    }
+}

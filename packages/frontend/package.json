@@ -19,14 +19,13 @@
         "default": "./dist/index.js"
       }
     },
-    "./globals.css": "./dist/index.css",
-    "./postcss.config": "./postcss.config.js"
+    "./index.css": "./dist/styles/globals.css"
   },
   "main": "./dist/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
-    "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css",
+    "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/styles/globals.css --minify",
     "dev": "tsup --watch",
     "dev:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css --watch",
     "lint": "eslint src/"
@@ -51,6 +50,8 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.21",
+    "esbuild-plugin-postcss2": "^0.1.2",
     "eslint": "^9.15.0",
     "firebase": "^11.0.0",
     "next": "^15.0.0",
@@ -59,7 +60,7 @@
     "react-dom": "^18.2.0",
     "rimraf": "^5.0.0",
     "tailwindcss": "^4.1.6",
-    "tsup": "^8.0.0",
+    "tsup": "^8.4.0",
     "typescript": "^5.0.0"
   }
 }

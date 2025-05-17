@@ -11,6 +11,7 @@ import type {
 import { createAuthActions as defaultCreateAuthActions } from '@tern-secure/shared'
 import { useRouter } from 'next/navigation'
 import { cn } from '../lib/utils'
+import { Card } from './ui/card'
 
 const appName = process.env.NEXT_PUBLIC_FIREBASE_APP_NAME || 'TernSecure'
 
@@ -103,7 +104,7 @@ function SignInDisplay({
   } as React.CSSProperties
 
   return (
-    <div className={cn('flex items-center justify-center min-h-screen bg-gray-100', className)} style={styles}>
+    <Card>
       <div className={cn('bg-white p-8 rounded-lg shadow-md w-full max-w-md')}>
         <h2 className={cn('text-2xl font-bold mb-6 text-center text-gray-800')}>
           Sign in to {appName}
@@ -240,7 +241,7 @@ function SignInDisplay({
           </button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
