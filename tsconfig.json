@@ -1,17 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": ".", // Add baseUrl
-    "paths": { // Add paths for workspace resolution
-      "@tern-secure/nextjs": ["packages/nextjs/src"],
-      "@tern-secure/nextjs/*": ["packages/nextjs/src/*"],
-      "@tern-secure/next-backend": ["packages/backend/src"],
-      "@tern-secure/next-backend/*": ["packages/backend/src/*"],
-      "@tern-secure/next-frontend": ["packages/frontend/src"],
-      "@tern-secure/next-frontend/*": ["packages/frontend/src/*"],
-      "@tern-secure/types": ["packages/types/src"],
-      "@tern-secure/types/*": ["packages/types/src/*"]
-    },
+    "baseUrl": ".",
     "alwaysStrict": false,
     "declaration": true,
     "declarationMap": false,
@@ -32,5 +22,5 @@
     "target": "ES2019",
     "noErrorTruncation": true
   },
-  "exclude": ["node_modules", "dist", "**/dist/**", "packages/*/dist/**"]
+  "exclude": ["node_modules", "dist", "**/dist/**", "packages/*/dist/**","exampless/**"]
 }

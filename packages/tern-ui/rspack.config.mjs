@@ -1,13 +1,16 @@
+// @ts-check
 import rspack from '@rspack/core';
 import path from 'path';
-import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 import { merge } from 'webpack-merge';
+import { createRequire } from 'module';
 
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 /**
  *
- * @param {string}
  * @returns {import('@rspack/core').Configuration}
  */
 const entry = () => ({
@@ -17,7 +20,7 @@ const entry = () => ({
 })
 
 /**
- * @returns {Partial<import('@rspack/core').Configuration>}
+ *  @returns { import('@rspack/cli').Configuration }
  */
 function sharedConfig() {
   return {
@@ -86,10 +89,8 @@ function prodBundler() {
   };
 }
 
-/**
- * @returns {import('@rspack/core').Configuration}
- */
-function sharedProdConfig() {
+/** @type { () => (import('@rspack/core').Configuration) } */
+const sharedProdConfig = () =>{
   return {
     devtool: false,
     output: {
@@ -210,7 +211,7 @@ function devConfig() {
     ...sharedDevConfig(),
     mode: 'development',
     output: {
-      path: path.resolve(PACKAGE_ROOT, 'dist'),
+      //path: path.resolve(PACKAGE_ROOT, 'dist'),
       filename: '[name].js',
       clean: true,
     }

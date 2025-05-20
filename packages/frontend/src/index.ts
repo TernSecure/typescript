@@ -10,6 +10,7 @@ export {
 export  {
     TernSecureClientProvider
 } from './ctx/TernSecureClientProvider'
+
 export {
     isAuthRoute,
     isBaseAuthRoute,
@@ -25,19 +26,8 @@ export  {
 } from './utils/client-init'
 export {
     SignIn,
-} from './components/sign-in'
-export type {
-    SignInProps,
-} from './components/sign-in'
-export {
-    SignOutButton
-} from './components/sign-out-button'
-export {
-    SignOut
-} from './components/sign-out'
-export {
-    SignUp
-} from './components/sign-up'
+    SignUp,
+} from './components/uiComponent'
 export {
     Verify
 } from './components/verify'

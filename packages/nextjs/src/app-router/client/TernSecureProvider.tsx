@@ -48,15 +48,15 @@ export interface TernSecureConfig {
 export async function TernSecureProvider({ 
   children,
   requiresVerification = true,
-  loginPath,
-  signUpPath,
+  //loginPath,
+  //signUpPath,
   loadingComponent,
  }: React.PropsWithChildren<TernSecureConfig>) {
   return (
     <TernSecureClientProvider
       requiresVerification={requiresVerification}
-      loginPath={loginPath}
-      signUpPath={signUpPath}
+      //loginPath={loginPath}
+      //signUpPath={signUpPath}
       loadingComponent={loadingComponent}
     >
         {children}

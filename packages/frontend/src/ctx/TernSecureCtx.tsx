@@ -5,7 +5,8 @@ import { ternSecureAuth } from '../utils/client-init';
 import type { 
   TernSecureState, 
   SignInResponse, 
-  TernSecureUser 
+  TernSecureUser,
+  TernSecureInstanceTree // <-- Import TernSecureInstanceTree
 } from '@tern-secure/types';
 
 
@@ -18,6 +19,7 @@ export interface TernSecureCtxValue extends TernSecureState {
  setEmail: (email: string) => void
  getAuthError: () => SignInResponse
  redirectToLogin: () => void
+ ui?: TernSecureInstanceTree['ui'];
 }
 
 export const TernSecureCtx = createContext<TernSecureCtxValue | null>(null)
@@ -35,4 +37,3 @@ export const useTernSecure = (hookName: string) => {
 
   return context
 }
-

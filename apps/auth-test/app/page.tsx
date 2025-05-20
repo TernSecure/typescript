@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth, SignOutButton } from "@tern-secure/nextjs";
+import { useAuth } from "@tern-secure/nextjs";
 
 export default function Home() {
   const { user, token, signOut } = useAuth();
@@ -10,7 +10,6 @@ export default function Home() {
         <>
           <h1>Welcome, {user.displayName || user.email}</h1>
           {/*<button onClick={signOut}>Sign out</button>*/}
-          <SignOutButton />
         </>
       ) : (
         <>

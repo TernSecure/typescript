@@ -6,8 +6,8 @@ export {
     useSignUp,
     useSession,
     SignIn,
-    SignOut,
-    SignOutButton,
+    //SignOut,
+    //SignOutButton,
     SignUp,
     Verify
 } from '@tern-secure/next-frontend' 

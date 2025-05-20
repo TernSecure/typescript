@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./src",
-    "lib": ["es2020"],
+    "lib": ["es2020", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,

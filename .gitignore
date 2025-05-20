@@ -3,6 +3,8 @@ dist
 dist/types
 .turbo
 
+exampless
+
 # local env files
 .env*.local
 .env*.production
