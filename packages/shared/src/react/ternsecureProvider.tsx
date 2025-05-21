@@ -7,7 +7,7 @@ import { createContextAndHook } from './ternsecureCtx';
 
 // Create instance context
 const [TernSecureInstanceContext, useTernSecureInstanceContext] = 
-  createContextAndHook<TernSecureInstanceTree>('TernSecureInstance');
+  createContextAndHook<TernSecureInstanceTree>('TernSecureInstanceContext');
 
 // Assert helper
 function useAssertWrappedByTernSecureProvider(displayNameOrFn: string | (() => void)): void {

@@ -5,22 +5,29 @@ import type {
     SignInResponseTree,
     SignInUIConfig,
     SignUpUIConfig,
-    AuthErrorTree,
+    SignInPropsTree,
+    SignUpPropsTree,
 } from '@tern-secure/types';
-import { createComponentRenderer, TernComponentControls } from '../ui/Renderer';
-
-/**
- * This is a placeholder for the functional part of the TernSecure instance.
- * In a real scenario, this would be provided by a core package (like @tern-secure/core or @tern-secure/client)
- * and would handle the actual logic for sign-in, sign-out, API calls, etc.
- */
-export interface FunctionalTernSecureInstance extends Omit<TernSecureInstanceTree, 'ui'> {
-    // It might have additional methods or properties specific to its internal workings
-}
+import type { MountComponentRenderer } from '../ui/Renderer';
 
 export class TernSecure implements TernSecureInstanceTree {
-    private functionalInstance: FunctionalTernSecureInstance;
-    private rendererControls: TernComponentControls;
+    public static mountComponentRenderer?: MountComponentRenderer;
+
+    #componentControls?: ReturnType<MountComponentRenderer>| null;
+    #functionalInstance: Omit<TernSecureInstanceTree, 'ui'>;
+
+    constructor(functionalInstance: Omit<TernSecureInstanceTree, 'ui'>) {
+        this.#functionalInstance = functionalInstance;
+    };
+
+    assertComponentControlsReady(controls: unknown): asserts controls is ReturnType<MountComponentRenderer> {
+        if (!TernSecure.mountComponentRenderer) {
+            throw new Error('TernSecure instance was loaded without UI components');
+        }
+        if (!controls) {
+            throw new Error('TernSecure UI components are not ready yet.');
+        }
+    }
 
     // UI State - managed by this class, reflecting what the renderer might need or what is controlled.
     public ui: TernSecureInstanceTree['ui'] = {
@@ -32,39 +39,55 @@ export class TernSecure implements TernSecureInstanceTree {
             error: null,
         },
         controls: {
-            showSignIn: (targetNode: HTMLDivElement, config?: SignInUIConfig) => {
-                this.rendererControls.mountComponent({
-                    name: 'SignIn',
-                    node: targetNode,
-                    props: config,
-                    instance: this, // Pass self if SignIn component needs access to the full instance
-                });
+            showSignIn: (node: HTMLDivElement, config?: SignInUIConfig) => {
+                this.assertComponentControlsReady(this.#componentControls);
+                const componentProps: SignInPropsTree = {
+                    ui: config,
+                    signIn: this.#functionalInstance.signIn,
+                }
+                this.#componentControls.ensureMounted().then(controls =>
+                    controls.mountComponent({
+                        name: 'SignIn',
+                        node,
+                        props: componentProps,
+                        appearanceKey: config?.appearance?.colors?.primary || 'default',
+                    }),
+                );
                 this.ui.state.currentView = 'signIn';
                 this.ui.state.isVisible = true;
             },
-            hideSignIn: (targetNode: HTMLDivElement) => {
-                this.rendererControls.unmountComponent({ node: targetNode });
-                if (this.ui.state.currentView === 'signIn') {
-                    this.ui.state.isVisible = false;
-                    this.ui.state.currentView = null;
-                }
+            hideSignIn: (node: HTMLDivElement) => {
+                this.assertComponentControlsReady(this.#componentControls);
+                this.#componentControls.ensureMounted().then(controls =>
+                    controls.unmountComponent({ 
+                        node,
+                    }),
+                );
             },
-            showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => {
-                this.rendererControls.mountComponent({
-                    name: 'SignUp',
-                    node: targetNode,
-                    props: config,
-                    instance: this,
-                });
+            showSignUp: (node: HTMLDivElement, config?: SignUpUIConfig) => {
+                this.assertComponentControlsReady(this.#componentControls);
+                const componentProps: SignInPropsTree = {
+                    ui: config,
+                    signIn: this.#functionalInstance.signIn,
+                }
+                this.#componentControls.ensureMounted().then(controls =>
+                    controls.mountComponent({
+                        name: 'SignUp',
+                        node,
+                        props: componentProps,
+                        appearanceKey: config?.appearance?.colors?.primary || 'default',
+                    }),
+                );
                 this.ui.state.currentView = 'signUp';
                 this.ui.state.isVisible = true;
             },
-            hideSignUp: (targetNode: HTMLDivElement) => {
-                this.rendererControls.unmountComponent({ node: targetNode });
-                if (this.ui.state.currentView === 'signUp') {
-                    this.ui.state.isVisible = false;
-                    this.ui.state.currentView = null;
-                }
+            hideSignUp: (node: HTMLDivElement) => {
+                this.assertComponentControlsReady(this.#componentControls);
+                this.#componentControls.ensureMounted().then(controls =>
+                    controls.unmountComponent({ 
+                        node,
+                    }),
+                );
             },
             clearError: () => {
                 this.ui.state.error = null;
@@ -77,29 +100,25 @@ export class TernSecure implements TernSecureInstanceTree {
         },
     };
 
-    constructor(functionalInstance: FunctionalTernSecureInstance) {
-        this.functionalInstance = functionalInstance;
-        this.rendererControls = createComponentRenderer(); // Pass this if renderer needs access to full instance
-    }
 
     // Delegate auth, user, platform, and events to the functionalInstance
     public get auth(): TernSecureInstanceTree['auth'] {
-        return this.functionalInstance.auth;
+        return this.#functionalInstance.auth;
     }
 
-    public get signIn() {
-        return this.functionalInstance.signIn;
+    public get signIn(): TernSecureInstanceTree['signIn'] {
+        return this.#functionalInstance.signIn;
     }
 
-    public get user() {
-        return this.functionalInstance.user;
+    public get user(): TernSecureInstanceTree['user'] {
+        return this.#functionalInstance.user;
     }
 
-    public get platform() {
-        return this.functionalInstance.platform;
+    public get platform(): TernSecureInstanceTree['platform'] {
+        return this.#functionalInstance.platform;
     }
 
-    public get events() {
-        return this.functionalInstance.events;
+    public get events(): TernSecureInstanceTree['events'] {
+        return this.#functionalInstance.events;
     }
 }

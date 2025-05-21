@@ -121,7 +121,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   // UI State Management
   public ui = {
     state: {
-      isReady: true,
+      isReady: false,
       isVisible: false,
       currentView: null as 'signIn' | 'signUp' | 'verify' | null,
       isLoading: false,
