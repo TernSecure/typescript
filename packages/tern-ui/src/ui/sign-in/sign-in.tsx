@@ -1,3 +1,4 @@
+import { useTernSecure } from '@tern-secure/shared'
 import type { 
   SignInResponseTree,
   SignInPropsTree,
@@ -10,21 +11,21 @@ import { cn } from '../../lib/utils';
 
 // SignInProps now directly extends SignInPropsTree.
 // It will inherit ui, onError, onSuccess, and the new 'signIn' methods prop.
-interface SignInProps extends SignInPropsTree {
+interface SignInProps extends Omit<SignInPropsTree, 'signIn'> {
   className?: string;
   redirectUrl?: string;
-  signIn: TernSecureInstanceTree['signIn'];
 }
 
 export function SignIn({
   ui, 
-  signIn, 
   onError, 
   onSuccess, 
   initialValue, 
   className, 
   redirectUrl = '/',
 }: SignInProps) {
+  const instance = useTernSecure();
+  const { signIn } = instance;
   const appName = ui?.appName;
   const logo = ui?.logo; // Get logo from ui config
   const socialButtonsConfig = ui?.socialButtons; // Get social buttons config

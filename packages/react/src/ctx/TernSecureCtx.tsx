@@ -6,7 +6,6 @@ import type {
   TernSecureState, 
   SignInResponse, 
   TernSecureUser,
-  TernSecureInstanceTree // <-- Import TernSecureInstanceTree
 } from '@tern-secure/types';
 
 
@@ -19,7 +18,6 @@ export interface TernSecureCtxValue extends TernSecureState {
  setEmail: (email: string) => void
  getAuthError: () => SignInResponse
  redirectToLogin: () => void
- ui?: TernSecureInstanceTree['ui'];
 }
 
 export const TernSecureCtx = createContext<TernSecureCtxValue | null>(null)

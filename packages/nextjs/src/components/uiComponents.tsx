@@ -2,7 +2,7 @@
 import  { 
     SignIn as BaseSignIn,
     SignUp as BaseSignUp,
-} from '@tern-secure/next-frontend'
+} from '@tern-secure/react'
 import type { ComponentProps } from 'react';
 
 

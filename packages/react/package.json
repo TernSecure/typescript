@@ -1,5 +1,5 @@
 {
-  "name": "@tern-secure/next-frontend",
+  "name": "@tern-secure/react",
   "version": "0.0.0",
   "sideEffects": [
     "**/*.css"

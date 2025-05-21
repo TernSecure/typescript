@@ -10,4 +10,4 @@ export {
     //SignOutButton,
     SignUp,
     Verify
-} from '@tern-secure/next-frontend' 
+} from '@tern-secure/react' 

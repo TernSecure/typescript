@@ -1,4 +1,4 @@
 export {
     useAuth,
     useIdToken
-} from '@tern-secure/next-frontend'
+} from '@tern-secure/react'

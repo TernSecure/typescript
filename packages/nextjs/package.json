@@ -62,7 +62,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@tern-secure/next-frontend": "workspace:*",
+    "@tern-secure/react": "workspace:*",
     "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
     "jose": "^5.9.6",

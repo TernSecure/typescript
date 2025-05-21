@@ -1,0 +1,1 @@
+export { useTernSecure } from './useTernSecure'

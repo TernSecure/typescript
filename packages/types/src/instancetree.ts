@@ -206,8 +206,8 @@ export interface TernSecureInstanceTree {
       hideSignIn: (targetNode: HTMLDivElement) => void;
       showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
       hideSignUp: (targetNode: HTMLDivElement) => void;
-      showVerify: (targetNode: HTMLDivElement) => void;
-      hideVerify: (targetNode: HTMLDivElement) => void;
+      //showVerify: (targetNode: HTMLDivElement) => void;
+      //hideVerify: (targetNode: HTMLDivElement) => void;
       clearError: () => void;
       setLoading: (isLoading: boolean) => void;
     };

@@ -1,8 +1,8 @@
+import { useTernSecure } from '@tern-secure/shared';
 import type { 
   SignUpPropsTree,
   AuthErrorTree,
   TernSecureUser,
-  TernSecureInstanceTree
 } from '@tern-secure/types';
 import { cn } from '../../lib/utils';
 
@@ -10,19 +10,18 @@ import { cn } from '../../lib/utils';
 interface SignUpProps extends SignUpPropsTree {
   className?: string;
   redirectUrl?: string;
-  signIn: TernSecureInstanceTree['signIn']; // Reusing the same methods as SignIn
 }
 
-export function SignUp({
-  ui, 
-  signIn, 
+export function SignUp({ 
+  ui,
   onError, 
   onSuccess, 
   initialValue, 
   className, 
-  redirectUrl = '/', 
 }: SignUpProps) {
-  const appName = ui?.appName;
+  const instance = useTernSecure();
+  const { signIn } = instance;
+  const appName = ui?.appName
   const logo = ui?.logo;
   const passwordRequirements = ui?.passwordRequirements;
 

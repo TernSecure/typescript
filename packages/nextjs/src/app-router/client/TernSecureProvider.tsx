@@ -1,5 +1,5 @@
 import React from "react"
-import { TernSecureClientProvider } from "@tern-secure/next-frontend"
+import { TernSecureClientProvider } from "@tern-secure/react"
 
 
 /**

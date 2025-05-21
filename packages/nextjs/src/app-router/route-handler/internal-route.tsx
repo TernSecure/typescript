@@ -2,4 +2,4 @@ export {
   isBaseAuthRoute,
   isInternalRoute,
   isAuthRoute
-} from '@tern-secure/next-frontend'
+} from '@tern-secure/react'
