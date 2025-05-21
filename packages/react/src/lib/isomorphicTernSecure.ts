@@ -1,6 +1,3 @@
-'use client'
-
-import { useEffect, useRef, useState } from 'react';
 import type { 
   TernSecureInstanceTree, 
   TernSecureUser, 
@@ -121,7 +118,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   // UI State Management
   public ui = {
     state: {
-      isReady: false,
+      isReady: true,
       isVisible: false,
       currentView: null as 'signIn' | 'signUp' | 'verify' | null,
       isLoading: false,
@@ -297,49 +294,3 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     };
   }
 }
-
-/**
- * React hook for managing TernSecure instance in isomorphic context
- */
-export const useIsomorphicTernSecure = (options: IsomorphicTernSecureOptions = {}): IsomorphicTernSecure | null => {
-  const isomorphicInstanceRef = useRef<IsomorphicTernSecure | null>(null);
-  // This state is used to ensure a re-render occurs once the instance is created and ready.
-  const [activeInstance, setActiveInstance] = useState<IsomorphicTernSecure | null>(null);
-
-  useEffect(() => {
-    if (!isomorphicInstanceRef.current) {
-      isomorphicInstanceRef.current = new IsomorphicTernSecure(options);
-      // At this point, the IsomorphicTernSecure wrapper is created.
-      // We set it to state to trigger a re-render, so consumers get the wrapper.
-      setActiveInstance(isomorphicInstanceRef.current);
-    }
-
-    // IMPORTANT: The actual initialization of the underlying TernSecure service
-    // (e.g., Firebase, your custom backend SDK) should happen here or be triggered from here.
-    // Once that actual service is initialized, you would call:
-    // isomorphicInstanceRef.current.__internal_updateInstance(actualServiceInstance);
-    // This might also require another setActiveInstance call if the readiness of the
-    // IsomorphicTernSecure instance changes in a way that consumers need to react to.
-    // For example, if actualServiceInstance is loaded asynchronously:
-    /*
-    const initializeActualService = async () => {
-      if (isomorphicInstanceRef.current && !isomorphicInstanceRef.current.instance) {
-        try {
-          // const actualService = await yourAsyncInitFunction(options); // Replace with your actual init
-          // isomorphicInstanceRef.current.__internal_updateInstance(actualService);
-          // setActiveInstance(isomorphicInstanceRef.current); // Re-trigger if state of wrapper changes
-        } catch (error) {
-          console.error('Failed to initialize actual TernSecure service:', error);
-        }
-      }
-    };
-    initializeActualService();
-    */
-    
-    // Using JSON.stringify for options in dependency array is a common way to handle object dependencies,
-    // but be cautious if options contain functions or complex objects.
-    // A more robust solution might involve memoizing options or using a stable key.
-  }, [JSON.stringify(options)]);
-
-  return activeInstance;
-};

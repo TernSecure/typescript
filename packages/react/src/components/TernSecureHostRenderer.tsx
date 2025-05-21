@@ -72,7 +72,7 @@ export class TernSecureHostRenderer extends React.PureComponent<HostRendererProp
     const rootAttributes = {
       ref: this.rootRef,
       ...rootProps,
-      ...(component && { 'data-tern-component': component }),
+      ...(component && { 'data-ternsecure-component': component }),
     };
 
     debugLog(component, 'Rendering', {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 
 /**
  * Assert that the context value exists, otherwise throw an error.
@@ -31,17 +31,17 @@ export const createContextAndHook = <CtxValue>(
   options?: Options,
 ): [ContextAndHook<CtxValue>, UseCtxFn<CtxValue>, UseCtxFn<CtxValue | Partial<CtxValue>>] => {
   const { assertCtxFn = assertContextExists } = options || {};
-  const Ctx = createContext<{ value: CtxValue } | undefined >(undefined);
+  const Ctx = React.createContext<{ value: CtxValue } | undefined >(undefined);
   Ctx.displayName = displayName;
 
-  const useHook = () => {
-    const ctx = useContext(Ctx);
+  const useCtx = () => {
+    const ctx = React.useContext(Ctx);
     assertCtxFn(ctx, `${displayName} not found`);
     return (ctx as any).value as CtxValue;
   };
 
   const useCtxWithoutGuarantee = () => {
-    const ctx = useContext(Ctx);
+    const ctx = React.useContext(Ctx);
     return ctx ? ctx.value : {}
   };
 
@@ -53,5 +53,5 @@ export const createContextAndHook = <CtxValue>(
     return ctx.value;
     */
 
-  return [Ctx, useHook, useCtxWithoutGuarantee];
+  return [Ctx, useCtx, useCtxWithoutGuarantee];
 }

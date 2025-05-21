@@ -18,9 +18,13 @@ import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
 import { 
     TernSecureInstanceContext,
-} from '@tern-secure/shared';
+} from '@tern-secure/shared/react';
 
-const ROOT_ELEMENT_ID = 'data-tern-secure-component';
+const ROOT_ELEMENT_ID = 'data-ternsecure-component';
+
+const debugLog = (component: string, action: string, data?: any) => {
+  console.log(`[TernSecureHostRenderer:${component}] ${action}`, data || '');
+};
 
 export type AvailableComponentProps = 
     | SignInPropsTree
@@ -68,9 +72,11 @@ function assertDOMElement(element: HTMLElement): asserts element {
 }
 
 export const mountComponentRenderer = (instance: TernSecureInstanceTree) => {
+    debugLog('Renderer', 'Initializing Renderer', instance);
     let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
 
     if (!instanceRoot) {
+        debugLog('Renderer', 'Creating root element');
         instanceRoot = document.createElement('div');
         instanceRoot.setAttribute('id', ROOT_ELEMENT_ID);
         document.body.appendChild(instanceRoot);
@@ -210,7 +216,11 @@ const Components = (props: ComponentsProps) => {
         onComponentsMounted();
     }, [onComponentsMounted]);
 
-    // Each node maps to its own LazyComponentRenderer
+    debugLog('Components', 'Rendering', { 
+        nodeCount: nodes.size,
+        activeNodes: Array.from(nodes.keys()).map(n => n.id)
+    });
+
     return (
         <LazyProviders instance={instance}>
             {Array.from(nodes.entries()).map(([node, options]) => (

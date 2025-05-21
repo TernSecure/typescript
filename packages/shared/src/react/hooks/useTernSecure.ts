@@ -7,9 +7,6 @@ import {
 } from "../ternsecureProvider";
 
 export const useTernSecure = (): TernSecureInstanceTree => {
-    useAssertWrappedByTernSecureProvider('useTernSecure');
-    return useTernSecureInstanceContext();
-
     /**
      * if no assertion is needed, you can use the following:
      *  const instance  = useTernSecureInstanceContext();
@@ -18,4 +15,7 @@ export const useTernSecure = (): TernSecureInstanceTree => {
      *  }
      *  return instance;
      */
+    
+    useAssertWrappedByTernSecureProvider('useTernSecure');
+    return useTernSecureInstanceContext();
 }

@@ -1,4 +1,4 @@
-import { useTernSecure } from '@tern-secure/shared'
+import { useTernSecure } from '@tern-secure/shared/react'
 import type { 
   SignInResponseTree,
   SignInPropsTree,

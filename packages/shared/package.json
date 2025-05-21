@@ -28,7 +28,7 @@
         "default": "./dist/index.js"
       }
     },
-    "./react" : {
+    "./react": {
       "import": {
         "types": "./dist/react/index.d.mts",
         "default": "./dist/react/index.mjs"
@@ -59,6 +59,18 @@
   "dependencies": {
     "@tern-secure/types": "workspace:*",
     "tslib": "2.4.1"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
 
   "engines": {
