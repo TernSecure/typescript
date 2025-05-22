@@ -1,25 +1,18 @@
 import React from 'react'
 import { TernSecureCtxProvider } from './TernSecureCtxProvider'
-import type { initialState, TernSecureUser } from '../types'
+import type { TernSecureProviderProps } from '../types'
 
-interface TernSecureProviderProps {
-    children: React.ReactNode
-    initialState?: initialState
-    requiresVerification?: boolean
-    loadingComponent?: React.ReactNode
-    onUserChanged?: (user: TernSecureUser | null) => Promise<void>
-}
-
-function TernSecureProviderBase({ 
-    children, 
-    initialState, 
-    requiresVerification,
-    loadingComponent,
-    onUserChanged 
-}: TernSecureProviderProps) {
+function TernSecureProviderBase(props: TernSecureProviderProps) {
+    const { 
+        children, 
+        initialState, 
+        requiresVerification = false,
+        onUserChanged
+    } = props
     return (
         <TernSecureCtxProvider
           initialState={initialState}
+          instanceOptions={props}
           requiresVerification={requiresVerification}
           onUserChanged={onUserChanged}
         >

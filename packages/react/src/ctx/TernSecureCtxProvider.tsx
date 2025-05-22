@@ -9,11 +9,14 @@ import type {
 } from '../types'
 import type {
   TernSecureState,
-  TernSecureUser
+  TernSecureUser,
+  IsomorphicTernSecureOptions
 } from '@tern-secure/types'
 
-interface TernSecureCtxProviderProps {
+
+type TernSecureCtxProviderProps = {
   children: React.ReactNode
+  instanceOptions: IsomorphicTernSecureOptions
   initialState?: initialState | undefined
   requiresVerification?: boolean
   onUserChanged?: (user: TernSecureUser | null) => Promise<void>
@@ -32,17 +35,15 @@ const defaultAuthState: TernSecureState = {
   requiresVerification: false
 }
 
-export function TernSecureCtxProvider({ 
-  children, 
-  requiresVerification = false,
-  onUserChanged 
-}: TernSecureCtxProviderProps) {
-  const [instance] = useState<IsomorphicTernSecure>(() => 
-    new IsomorphicTernSecure({
-      mode: typeof window === 'undefined' ? 'server' : 'browser'
-    })
-  )
-
+export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
+  const { 
+    children, 
+    instanceOptions,
+    initialState, 
+    requiresVerification = false,
+    onUserChanged
+  } = props
+  const { isomorphicTernSecure: instance } = useLoadIsomorphicTernSecure(instanceOptions)
   const auth = useMemo(() => ternSecureAuth, []);
 
   const [authState, setAuthState] = useState<TernSecureState>(() => ({
@@ -127,3 +128,35 @@ export function TernSecureCtxProvider({
     </IsomorphicTernSecureCtx.Provider>
   )
 }
+
+const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
+  const isomorphicTernSecure = useMemo(() => {
+    console.log('[TernSecure Provider] Creating IsomorphicTernSecure instance:', {
+      options,
+      mode: options.mode || (typeof window === 'undefined' ? 'server' : 'browser'),
+      timestamp: new Date().toISOString()
+    });
+    return IsomorphicTernSecure.getOrCreateInstance(options);
+  }, []);
+
+  // Debug log when instance is created
+  useEffect(() => {
+    console.log('[TernSecure Provider] Instance created:', {
+      hasInstance: !!isomorphicTernSecure,
+      uiState: isomorphicTernSecure.ui.state,
+      hasControls: !!isomorphicTernSecure.ui.controls,
+      timestamp: new Date().toISOString()
+    });
+
+    return () => {
+      console.log('[TernSecure Provider] Cleaning up instance:', {
+        timestamp: new Date().toISOString()
+      });
+      IsomorphicTernSecure.clearInstance();
+    };
+  }, [isomorphicTernSecure]);
+
+  return {
+    isomorphicTernSecure
+  };
+};

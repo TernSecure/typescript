@@ -23,7 +23,7 @@ import {
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
 
 const debugLog = (component: string, action: string, data?: any) => {
-  console.log(`[TernSecureHostRenderer:${component}] ${action}`, data || '');
+  console.log(`[tern-ui: TernSecureHostRenderer:${component}] ${action}`, data || '');
 };
 
 export type AvailableComponentProps = 
@@ -73,10 +73,9 @@ function assertDOMElement(element: HTMLElement): asserts element {
 
 export const mountComponentRenderer = (instance: TernSecureInstanceTree) => {
     debugLog('Renderer', 'Initializing Renderer', instance);
+    
     let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
-
     if (!instanceRoot) {
-        debugLog('Renderer', 'Creating root element');
         instanceRoot = document.createElement('div');
         instanceRoot.setAttribute('id', ROOT_ELEMENT_ID);
         document.body.appendChild(instanceRoot);

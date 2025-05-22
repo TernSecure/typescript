@@ -152,6 +152,13 @@ export interface SignUpPropsTree {
   signIn: TernSecureInstanceTree['signIn'];
 }
 
+type Mode = 'browser' | 'server';
+
+export interface IsomorphicTernSecureOptions {
+  mode?: Mode;
+  Instance?: TernSecureInstanceTree
+}
+
 /**
  * Instance interface for managing auth UI state
  */

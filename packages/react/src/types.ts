@@ -1,3 +1,4 @@
+import type { IsomorphicTernSecureOptions } from '@tern-secure/types'
 import { FirebaseOptions } from 'firebase/app'
 import { User as FirebaseUser } from 'firebase/auth'
 
@@ -80,4 +81,17 @@ export type TernSecureAuthState =  {
 export type initialState = {
   userId: string | null
   sessionId: string | undefined
+}
+
+/**
+ * TernSecureProviderProps
+ * @param interface
+ */
+
+export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
+    children: React.ReactNode
+    initialState?: initialState
+    requiresVerification?: boolean
+    loadingComponent?: React.ReactNode
+    onUserChanged?: (user: TernSecureUser | null) => Promise<void>
 }

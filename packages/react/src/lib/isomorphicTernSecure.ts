@@ -5,14 +5,19 @@ import type {
   SignInUIConfig,
   SignUpUIConfig,
   AuthErrorTree,
-  TernSecureSessionTree
+  TernSecureSessionTree,
+  IsomorphicTernSecureOptions
 } from '@tern-secure/types';
 
-type Mode = 'browser' | 'server';
-
-interface IsomorphicTernSecureOptions {
-  mode?: Mode;
+export function inBrowser(): boolean {
+  return typeof window !== 'undefined';
 }
+
+interface Browser extends TernSecureInstanceTree {
+  onComponentsReady: Promise<void>;
+  components: any;
+}
+
 
 interface PreMountState {
   signInNodes: Map<HTMLDivElement, SignInUIConfig | undefined>;
@@ -28,9 +33,9 @@ interface PreMountState {
  * in both browser and server environments
  */
 export class IsomorphicTernSecure implements TernSecureInstanceTree {
-  private readonly mode: Mode;
+  private readonly mode:  IsomorphicTernSecureOptions['mode'];
   private readonly options: IsomorphicTernSecureOptions;
-  public instance: TernSecureInstanceTree | null = null; // Made public for the check in useEffect
+  private instance: TernSecureInstanceTree | null = null;
   private premountState: PreMountState = {
     signInNodes: new Map(),
     signUpNodes: new Map(),
@@ -43,6 +48,58 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   constructor(options: IsomorphicTernSecureOptions = {}) {
     this.mode = options.mode || (typeof window === 'undefined' ? 'server' : 'browser');
     this.options = options;
+  }
+
+  static #instance: IsomorphicTernSecure | null | undefined;
+
+  static getOrCreateInstance(options: IsomorphicTernSecureOptions = {}): IsomorphicTernSecure {
+    if (!inBrowser() || !this.#instance || (options.Instance && this.#instance.instance !== options.Instance)) {
+      this.#instance = new IsomorphicTernSecure(options);
+    }
+    return this.#instance;
+  }
+  static clearInstance() {
+    this.#instance = null;
+  }
+
+  async loadTernUI(): Promise<Browser | undefined> {
+    if (this.mode !== 'browser') {
+      return;
+    }
+    try {
+      let resolveMounted: () => void;
+      const componentsReady = new Promise<void>((resolve) => {
+        resolveMounted = resolve;
+      });
+
+    const TERNSECURE_UI_READY = 'TERNSECURE_UI_READY';
+    const handleUIReady = () => {
+      console.log('[IsomorphicTernSecure] UI components mounted');
+      resolveMounted();
+    };
+
+    window.addEventListener(TERNSECURE_UI_READY, handleUIReady);
+
+    // Dispatch event to notify UI package
+    window.dispatchEvent(new CustomEvent('TERNSECURE_INIT', {
+      detail: {
+        mode: this.mode,
+        timestamp: new Date().toISOString()
+      }
+    }));
+
+    const browserInstance: Browser = {
+      ...this,
+      onComponentsReady: componentsReady,
+      components: {}
+    };
+
+    return browserInstance;
+
+    } catch (error) {
+    console.error('[IsomorphicTernSecure] Error loading UI:', error);
+    throw new Error('Failed to load TernSecure UI components');
+    }
   }
 
   // Auth State Implementation
