@@ -5,3 +5,7 @@ export {
     useTernSecureInstanceContext,
     TernSecureInstanceContext
 } from './ternsecureProvider'
+
+export {
+        createContextAndHook
+} from './ternsecureCtx'

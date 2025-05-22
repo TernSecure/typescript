@@ -1,14 +1,8 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from './useAuth'
-import { 
-  useTernSecure 
-} from '../ctx/TernSecureCtx'
-
-import type { 
-  TernSecureUser 
-} from '@tern-secure/types'
+import { useTernSecure } from '@tern-secure/shared/react'
+import type { TernSecureUser } from '@tern-secure/types'
 
 interface IdTokenResult {
   token: string | null
@@ -26,13 +20,8 @@ interface IdTokenState {
 }
 
 export function useIdTokenInternal() {
-    useTernSecure('useIdToken')
-    const {
-        isLoaded,
-        isValid,
-        user, 
-        token,
-    } = useAuth()
+    const instance = useTernSecure()
+    const { auth: { user, isAuthenticated }, ui: { state: { isReady: isLoaded } } } = instance
 
   const [tokenState, setTokenState] = useState<IdTokenState>({
     tokenResult: null,
@@ -54,7 +43,7 @@ export function useIdTokenInternal() {
   }, [])
 
   const refreshToken = useCallback(async () => {
-    if (!isValid || !user) {
+    if (!isAuthenticated || !user) {
       setTokenState({
         tokenResult: null,
         loading: false,
@@ -76,10 +65,10 @@ export function useIdTokenInternal() {
       setTokenState({
         tokenResult: null,
         loading: false,
-        error: error instanceof Error ? error : new Error('Failed to get token'),
+        error: error instanceof Error ? error : new Error('Failed to refresh token')
       })
     }
-  }, [getFormattedTokenResult, isValid, user])
+  }, [getFormattedTokenResult, isAuthenticated, user])
 
   useEffect(() => {
     if (isLoaded) {

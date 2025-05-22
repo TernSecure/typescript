@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useAuth } from './useAuth'
-import { 
-  useTernSecure 
-} from '../ctx/TernSecureCtx'
+import { useTernSecure } from '@tern-secure/shared/react'
 
 interface SessionData {
   accessToken: string | null
@@ -15,28 +12,27 @@ interface SessionData {
 
 type SessionStatus = 'active' | 'expired' | 'refreshing' | 'inactive'
 
-export function useSessionInternal() {
-    useTernSecure('useSession')
-    const { isValid, token, user, error: authError, isLoaded } = useAuth()
-
+export function useSession() {
+  const instance = useTernSecure()
+  const { user, isAuthenticated, session } = instance.auth
 
   const [sessionData, setSessionData] = useState<SessionData>({
-    accessToken: null,
-    expirationTime: null,
+    accessToken: session?.token || null,
+    expirationTime: session?.expiresAt || null,
     error: null,
     isLoading: true
   })
 
   const status = useMemo((): SessionStatus => {
     if (sessionData.isLoading) return 'refreshing'
-    if (!isValid || !sessionData.accessToken) return 'inactive'
+    if (!isAuthenticated || !sessionData.accessToken) return 'inactive'
     if (sessionData.error) return 'expired'
     if (sessionData.expirationTime && sessionData.expirationTime < Date.now()) return 'expired'
     return 'active'
-  }, [sessionData, isValid, isLoaded])
+  }, [sessionData, isAuthenticated])
 
   const refreshSession = useCallback(async () => {
-    if (!isValid) {
+    if (!isAuthenticated) {
       setSessionData({
         accessToken: null,
         expirationTime: null,
@@ -50,10 +46,15 @@ export function useSessionInternal() {
       setSessionData(prev => ({ ...prev, isLoading: true }))
       if (!user) throw new Error('No authenticated user')
 
-      const idTokenResult = await user.getIdTokenResult()
+      const token = await instance.user.getIdToken()
+      if (!token) throw new Error('Failed to get ID token')
+
+      // Set expiration to 1 hour from now (Firebase default)
+      const expirationTime = Date.now() + (60 * 60 * 1000)
+
       setSessionData({
-        accessToken: idTokenResult.token,
-        expirationTime: new Date(idTokenResult.expirationTime).getTime(),
+        accessToken: token,
+        expirationTime: expirationTime,
         error: null,
         isLoading: false
       })
@@ -65,22 +66,31 @@ export function useSessionInternal() {
         isLoading: false
       }))
     }
-  }, [isValid, user])
+  }, [isAuthenticated, user, instance.user])
 
   useEffect(() => {
-    if (isLoaded) {
-      refreshSession()
-    }
-  }, [isLoaded, refreshSession])
+    refreshSession()
+
+    // Set up a timer to refresh the token before it expires
+    const timer = setInterval(() => {
+      if (sessionData.expirationTime) {
+        const timeUntilExpiry = sessionData.expirationTime - Date.now()
+        if (timeUntilExpiry < 5 * 60 * 1000) { // Refresh 5 minutes before expiry
+          refreshSession()
+        }
+      }
+    }, 60 * 1000) // Check every minute
+
+    return () => clearInterval(timer)
+  }, [refreshSession])
 
   return {
     accessToken: sessionData.accessToken,
     expirationTime: sessionData.expirationTime,
-    error: sessionData.error || authError,
-    isLoading: sessionData.isLoading || !isLoaded,
+    error: sessionData.error,
+    isLoading: sessionData.isLoading,
     status,
-    refreshSession
+    user,
+    refresh: refreshSession
   }
 }
-
-export const useSession = useSessionInternal

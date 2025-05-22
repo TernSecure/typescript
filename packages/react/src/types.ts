@@ -55,3 +55,29 @@ export interface ConfigValidationResult {
   errors: string[]
   config: TernSecureConfig
 }
+
+/**
+ * TernSecureAuthState
+ */
+
+export type TernSecureAuthState =  {
+  userId: string | null
+  isLoaded: boolean
+  error: Error | null
+  isValid: boolean
+  isVerified: boolean
+  isAuthenticated: boolean
+  token: any | null
+  email: string | null
+  status: "loading" | "authenticated" | "unauthenticated" | "unverified"
+  requiresVerification: boolean
+}
+
+/**
+ * TernSecureInitialState
+ */
+
+export type initialState = {
+  userId: string | null
+  sessionId: string | undefined
+}

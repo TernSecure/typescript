@@ -4,7 +4,7 @@ import React, { PropsWithChildren } from 'react';
 import type { SignInUIConfig, SignUpUIConfig } from '@tern-secure/types';
 
 // Debug logging utility
-const debugLog = (component: string, action: string, data?: any) => {
+const debugLog = (component?: string, action?: string, data?: any) => {
   console.log(`[TernSecureHostRenderer:${component}] ${action}`, data || '');
 };
 
@@ -19,9 +19,9 @@ interface MountProps {
 
 type HostRendererProps = PropsWithChildren<
   MountProps & {
-    component: string;
+    component?: string;
     hideRootHtmlElement?: boolean;
-    rootProps?: React.HTMLProps<HTMLDivElement>;
+    rootProps?: JSX.IntrinsicElements['div'];
   }
 >;
 

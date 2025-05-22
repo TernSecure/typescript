@@ -3,13 +3,11 @@ export { useSignUp } from "./hooks/useSignUp"
 export { useIdToken } from "./hooks/useIdToken"
 export { useSession } from "./hooks/useSession"
 export {
-    TernSecureCtx,
-    useTernSecure,
-    getCurrentUser
-} from './ctx/TernSecureCtx'
+    TernSecureCtxProvider
+} from './ctx/TernSecureCtxProvider'
 export  {
-    TernSecureClientProvider
-} from './ctx/TernSecureClientProvider'
+    TernSecureProvider
+} from './ctx/TernSecureProvider'
 
 export {
     isAuthRoute,

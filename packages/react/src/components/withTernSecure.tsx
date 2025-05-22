@@ -1,8 +1,7 @@
-'use client'
-
 import React from 'react';
 import type { TernSecureInstanceTree } from '@tern-secure/types';
 import { useIsomorphicTernSecureCtx } from '../ctx/IsomorphicTernSecureCtx';
+import { useAssertWrappedByTernSecureProvider } from '../ctx/useAssertWrappedTernSecureProvider';
 
 type WithTernSecureProp<P> = P & {
   instance: TernSecureInstanceTree;
@@ -21,6 +20,8 @@ export const withTernSecure = <P extends { instance: TernSecureInstanceTree; com
   const displayName = options?.component || Component.displayName || Component.name || 'Component';
 
   const HOC = (props: Omit<P, 'instance'> & FallbackProp) => {
+    useAssertWrappedByTernSecureProvider(displayName || 'withTernSecure');
+
     const instance = useIsomorphicTernSecureCtx();
 
     console.log(
@@ -44,7 +45,7 @@ export const withTernSecure = <P extends { instance: TernSecureInstanceTree; com
       <Component
         {...(props as P)}
         component={displayName}
-        instance={instance as TernSecureInstanceTree}
+        instance={instance}
       />
     );
   };

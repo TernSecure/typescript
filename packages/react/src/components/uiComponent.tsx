@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useCallback, useMemo, useEffect } from 'react';
 import type {
   SignInPropsTree, 
@@ -15,13 +13,15 @@ const debugLog = (component: string, action: string, data?: any) => {
   console.log(`[TernSecure:${component}] ${action}`, data || '');
 };
 
-//export interface SignInProps {
-//  config?: SignInUIConfig;
-//  redirectUrl?: string;
-//}
+// Base props without instance since withTernSecure will provide it
+export interface SignInProps {
+  ui?: SignInUIConfig;
+  redirectUrl?: string;
+}
 
-type SignInComponentProps = SignInPropsTree & FallbackProp & { 
-  component: string;
+// Internal component props including instance from withTernSecure
+type SignInComponentProps = SignInProps & FallbackProp & {
+  component?: string;
   instance: TernSecureInstanceTree;
 };
 
@@ -35,6 +35,7 @@ export const SignIn = withTernSecure(
       debugLog('SignIn', 'Instance Status', {
         hasControls: !!controls,
         mountingStatus,
+        controlMethods: Object.keys(controls || {}),
         hasConfig: !!ui,
       });
     }, [controls, mountingStatus]);
@@ -88,7 +89,7 @@ export interface SignUpProps {
 }
 
 type SignUpComponentProps = SignUpProps & FallbackProp & {
-  component: string;
+  component?: string;
   instance: TernSecureInstanceTree;
 };
 

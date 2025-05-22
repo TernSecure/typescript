@@ -65,7 +65,7 @@ type MountingStatus = 'rendering' | 'rendered' | 'error';
 
 /**
  * Detect when a TernSecure component has mounted by watching DOM updates
- * to an element with a `data-tern-secure-component="${component}"` property.
+ * to an element with a `data-ternsecure-component="${component}"` property.
  */
 export const useWaitForComponentMount = (component?: string): MountingStatus => {
   const watcherRef = useRef<Promise<void>>();
@@ -80,7 +80,7 @@ export const useWaitForComponentMount = (component?: string): MountingStatus => 
 
     if (typeof window !== 'undefined' && !watcherRef.current) {
       watcherRef.current = waitForElementChildren({ 
-        selector: `[data-tern-secure-component="${component}"]`,
+        selector: `[data-ternsecure-component="${component}"]`,
         timeout: 10000 // 10 second timeout
       })
         .then(() => {
