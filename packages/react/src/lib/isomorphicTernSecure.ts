@@ -9,15 +9,20 @@ import type {
   IsomorphicTernSecureOptions
 } from '@tern-secure/types';
 
+declare global {
+  interface Window {
+    TernSecure: Browser | null;
+  }
+}
+
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
 interface Browser extends TernSecureInstanceTree {
   onComponentsReady: Promise<void>;
-  components: any;
+  components: TernSecureInstanceTree;
 }
-
 
 interface PreMountState {
   signInNodes: Map<HTMLDivElement, SignInUIConfig | undefined>;
@@ -26,6 +31,93 @@ interface PreMountState {
   methodCalls: Map<keyof TernSecureInstanceTree, Array<() => Promise<unknown>>>;
   authStateListeners: Set<(user: TernSecureUser | null) => void>;
   errorListeners: Set<(error: AuthErrorTree) => void>;
+}
+
+const loadTernUIScript = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        if (window.TernSecure) {
+            resolve();
+            return;
+        }
+
+        const { scriptHost, isLocalDev } = getScriptHost();
+        const version = process.env.TERN_UI_VERSION || 'latest';
+        
+        const script = document.createElement('script');
+        
+        // Use local path for development, CDN path for production
+        script.src = isLocalDev 
+            ? `http://${scriptHost}/index.browser.js`  // Local development path with explicit http protocol
+            : `https://${scriptHost}/npm/@ternsecure/tern-ui@${version}/dist/index.browser.js`; // Production path
+        
+        const handleLoad = () => {
+            if (window.TernSecure) {
+                window.removeEventListener('ternsecure:loaded', handleLoad);
+                resolve();
+            }
+        };
+
+        window.addEventListener('ternsecure:loaded', handleLoad);
+        
+        script.onerror = (error) => {
+            window.removeEventListener('ternsecure:loaded', handleLoad);
+            console.error('[TernSecure] Script load error:', {
+                src: script.src,
+                error,
+                isLocalDev
+            });
+            reject(new Error(`Failed to load TernUI script from ${script.src}: ${error}`));
+        };
+
+        document.head.appendChild(script);
+    });
+};
+
+function getScriptHost(): { scriptHost: string; isLocalDev: boolean } {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const options = {
+        proxyUrl: process.env.TERN_PROXY_URL,
+        customDomain: process.env.TERN_CUSTOM_DOMAIN,
+        frontendApi: process.env.TERN_FRONTEND_API,
+        localPort: process.env.TERN_UI_PORT || '4000' // Default port for packages/tern-ui development server
+    };
+
+    // Check for local development first
+    if (isDevelopment) {
+        // Default to localhost, but allow IP configuration through env
+        const localHost = process.env.TERN_UI_HOST || 'localhost';
+        return {
+            scriptHost: `${localHost}:${options.localPort}`, // /dist
+            isLocalDev: true
+        };
+    }
+
+    // Existing production logic
+    if (options.proxyUrl) {
+        return {
+            scriptHost: new URL(options.proxyUrl).host,
+            isLocalDev: false
+        };
+    }
+
+    if (options.customDomain) {
+        return {
+            scriptHost: options.customDomain,
+            isLocalDev: false
+        };
+    }
+
+    if (options.frontendApi) {
+        return {
+            scriptHost: `${options.frontendApi}.tern-secure.com`,
+            isLocalDev: false
+        };
+    }
+
+    return {
+        scriptHost: 'cdn.tern-secure.com',
+        isLocalDev: false
+    };
 }
 
 /**
@@ -66,39 +158,24 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     if (this.mode !== 'browser') {
       return;
     }
+
     try {
-      let resolveMounted: () => void;
-      const componentsReady = new Promise<void>((resolve) => {
-        resolveMounted = resolve;
-      });
-
-    const TERNSECURE_UI_READY = 'TERNSECURE_UI_READY';
-    const handleUIReady = () => {
-      console.log('[IsomorphicTernSecure] UI components mounted');
-      resolveMounted();
-    };
-
-    window.addEventListener(TERNSECURE_UI_READY, handleUIReady);
-
-    // Dispatch event to notify UI package
-    window.dispatchEvent(new CustomEvent('TERNSECURE_INIT', {
-      detail: {
-        mode: this.mode,
-        timestamp: new Date().toISOString()
+      await loadTernUIScript();
+      
+      if (!window.TernSecure) {
+        throw new Error('TernSecure UI script loaded but instance not initialized');
       }
-    }));
 
-    const browserInstance: Browser = {
-      ...this,
-      onComponentsReady: componentsReady,
-      components: {}
-    };
+      const browserInstance: Browser = {
+        ...this,
+        onComponentsReady: Promise.resolve(),
+        components: window.TernSecure
+      };
 
-    return browserInstance;
-
+      return browserInstance;
     } catch (error) {
-    console.error('[IsomorphicTernSecure] Error loading UI:', error);
-    throw new Error('Failed to load TernSecure UI components');
+      console.error('[IsomorphicTernSecure] Error loading UI:', error);
+      throw new Error('Failed to load TernSecure UI components');
     }
   }
 
@@ -210,20 +287,6 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
           this.premountState.signUpNodes.delete(targetNode);
         }
       },
-      //showVerify: (targetNode: HTMLDivElement): void => {
-      //  if (this.instance) {
-      //    this.instance.ui.controls.showVerify(targetNode);
-      //  } else {
-      ///    this.premountState.verifyNodes.add(targetNode);
-      //  }
-      //},
-      //hideVerify: (targetNode: HTMLDivElement): void => {
-      //  if (this.instance) {
-      //    this.instance.ui.controls.hideVerify(targetNode);
-      //  } else {
-      //    this.premountState.verifyNodes.delete(targetNode);
-      //  }
-      //},
       clearError: (): void => {
         if (this.instance) {
           this.instance.ui.controls.clearError();
@@ -317,9 +380,6 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState.signUpNodes.forEach((config, node) => {
       this.ui.controls.showSignUp(node, config);
     });
-    //this.premountState.verifyNodes.forEach(node => {
-    //  this.ui.controls.showVerify(node);
-    //});
 
     // Process queued method calls
     this.premountState.methodCalls.forEach((calls, section) => {

@@ -130,6 +130,9 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
 }
 
 const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
   const isomorphicTernSecure = useMemo(() => {
     console.log('[TernSecure Provider] Creating IsomorphicTernSecure instance:', {
       options,
@@ -137,14 +140,49 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       timestamp: new Date().toISOString()
     });
     return IsomorphicTernSecure.getOrCreateInstance(options);
-  }, []);
+  }, [options]);
 
-  // Debug log when instance is created
+  // Handle async loadTernUI
+  useEffect(() => {
+    const loadUI = async () => {
+      try {
+        console.log('[TernSecure Provider] Starting UI load:', {
+          timestamp: new Date().toISOString()
+        });
+
+        const browser = await isomorphicTernSecure.loadTernUI();
+        
+        console.log('[TernSecure Provider] UI loaded successfully:', {
+          hasBrowser: !!browser,
+          timestamp: new Date().toISOString()
+        });
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error('[TernSecure Provider] Failed to load UI:', {
+          error: err,
+          timestamp: new Date().toISOString()
+        });
+        setError(err as Error);
+        setIsLoading(false);
+      }
+    };
+
+    if (isomorphicTernSecure && options.mode !== 'server') {
+      loadUI();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isomorphicTernSecure, options.mode]);
+
+  // Debug log when instance is created and cleanup
   useEffect(() => {
     console.log('[TernSecure Provider] Instance created:', {
       hasInstance: !!isomorphicTernSecure,
       uiState: isomorphicTernSecure.ui.state,
       hasControls: !!isomorphicTernSecure.ui.controls,
+      isLoading,
+      hasError: !!error,
       timestamp: new Date().toISOString()
     });
 
@@ -154,9 +192,11 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       });
       IsomorphicTernSecure.clearInstance();
     };
-  }, [isomorphicTernSecure]);
+  }, [isomorphicTernSecure, isLoading, error]);
 
   return {
-    isomorphicTernSecure
+    isomorphicTernSecure,
+    isLoading,
+    error
   };
 };

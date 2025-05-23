@@ -4,7 +4,7 @@
     "declaration": true,
     "outDir": "./dist",
     "declarationDir": "./dist/types",
-    "declarationMap": true,
+    "declarationMap": false, //map files
     "emitDeclarationOnly": true,
     "noEmit": false,
     "skipLibCheck": true,
@@ -13,5 +13,6 @@
   },
   "include": [
     "src/index.ts",
+    "src/**/*.d.ts"
   ],
 }

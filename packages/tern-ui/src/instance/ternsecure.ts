@@ -10,15 +10,33 @@ import type {
 } from '@tern-secure/types';
 import type { MountComponentRenderer } from '../ui/Renderer';
 
+declare global {
+  interface Window {
+    TernSecure?: TernSecure;
+  }
+}
+
 export class TernSecure implements TernSecureInstanceTree {
     public static mountComponentRenderer?: MountComponentRenderer;
-
+    private static instance: TernSecure | null = null;
     #componentControls?: ReturnType<MountComponentRenderer>| null;
     #functionalInstance: Omit<TernSecureInstanceTree, 'ui'>;
 
     constructor(functionalInstance: Omit<TernSecureInstanceTree, 'ui'>) {
         this.#functionalInstance = functionalInstance;
-    };
+    }
+
+    public static getInstance(): TernSecure | null {
+        return this.instance;
+    }
+
+    public static async load(functionalInstance: Omit<TernSecureInstanceTree, 'ui'>): Promise<TernSecure> {
+        if (!this.instance) {
+            this.instance = new TernSecure(functionalInstance);
+            window.dispatchEvent(new CustomEvent('ternsecure:loaded'));
+        }
+        return this.instance;
+    }
 
     assertComponentControlsReady(controls: unknown): asserts controls is ReturnType<MountComponentRenderer> {
         if (!TernSecure.mountComponentRenderer) {

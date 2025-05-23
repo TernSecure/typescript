@@ -4,6 +4,7 @@ import { mountComponentRenderer } from './ui/Renderer';
 TernSecure.mountComponentRenderer = mountComponentRenderer;
 export { TernSecure };
 
-if (typeof module !== 'undefined' && (module as any).hot) {
-  (module as any).hot.accept();
+
+if (module.hot) {
+  module.hot.accept();
 }

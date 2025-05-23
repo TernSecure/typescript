@@ -14,11 +14,11 @@ import {
 import type {
     TernSecureComponentName
 } from '../lazyLoading/components';
-import { createRoot } from 'react-dom/client';
-import { createPortal } from 'react-dom';
 import { 
     TernSecureInstanceContext,
 } from '@tern-secure/shared/react';
+import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom';
 
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
 
@@ -109,7 +109,7 @@ export type MountComponentRenderer = typeof mountComponentRenderer;
 const componentsControls = {} as TernComponentControls;
 
 const PortalRenderer: React.FC<{ node: HTMLDivElement; children: React.ReactNode }> = ({ node, children }) => {
-  return createPortal(children, node);
+  return ReactDOM.createPortal(children, node);
 };
 
 /**
