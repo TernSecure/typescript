@@ -147,10 +147,18 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
     const loadUI = async () => {
       try {
         console.log('[TernSecure Provider] Starting UI load:', {
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          instance: !!isomorphicTernSecure,
+          uiState: isomorphicTernSecure.ui.state
+          
         });
 
         const browser = await isomorphicTernSecure.loadTernUI();
+
+        if (!browser) {
+          console.warn('[TernSecure Provider] Browser object is null/undefined after load');
+          throw new Error('Failed to load Tern UI');
+        }
         
         console.log('[TernSecure Provider] UI loaded successfully:', {
           hasBrowser: !!browser,

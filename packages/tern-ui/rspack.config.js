@@ -47,18 +47,6 @@ const sharedConfig = () => {
       chunkFilename: `[name]_index_[fullhash:6]_${packageJSON.version}.js`
     },
     externals: {
-      react: {
-        root: 'React',
-        commonjs2: 'react',
-        commonjs: 'react',
-        amd: 'react'
-      },
-      'react-dom': {
-        root: 'ReactDOM',
-        commonjs2: 'react-dom',
-        commonjs: 'react-dom',
-        amd: 'react-dom'
-      }
     },
     optimization: {
       splitChunks: {
@@ -281,13 +269,9 @@ function prodConfig() {
   ];
 }
 
-/**
- * @returns {import('@rspack/core').Configuration}
- */
 function devConfig() {
-  /**
-   * @returns {Partial<import('@rspack/core').Configuration>}
-   */
+
+  /** @type {() => import('@rspack/core').Configuration} */
   const sharedDevConfig = () => {
     return {
       module: {
@@ -331,12 +315,21 @@ function devConfig() {
       }
     };
   };
-  return {
-    ...sharedConfig(),
-    ...sharedDevConfig(),
-    mode: 'development',
-    target: ['web', 'es5'],
-  };
+
+  const configToMerge = merge(
+    entry('index.browser'),
+    entry('index'),
+    sharedConfig(),
+    sharedDevConfig(),
+    {
+      mode: 'development',
+      target: ['web', 'es5'],
+    }
+  );
+
+  const mergedConfig = configToMerge;
+
+  return mergedConfig;
 }
 
 /**

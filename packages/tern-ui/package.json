@@ -8,6 +8,7 @@
     "dist"
   ],
   "main": "dist/index.js",
+  "jsdelivr": "dist/index.browser.js",
   "module": "dist/index.mjs",
   "types": "dist/types/index.d.ts",
   "scripts": {
@@ -17,8 +18,8 @@
     "build:types": "tsc -p tsconfig.add.json",
     "dev": "rspack serve --config rspack.config.js",
     "dev:two": "pnpm clean && concurrently \"pnpm dev:build\" \" pnpm dev:types\" \"pnpm dev:watch\"",
-    "dev:build": "rspack build --config rspack.config.mjs --env development --watch",
-    "dev:watch": "rspack serve --config rspack.config.mjs --env development",
+    "dev:build": "rspack build --config rspack.config.js --env development --watch",
+    "dev:watch": "rspack serve --config rspack.config.js --env development",
     "dev:types": "tsc -p tsconfig.add.json --watch",
     "lint": "eslint src/",
     "watch": "rspack build --config rspack.config.mjs --env production --watch"

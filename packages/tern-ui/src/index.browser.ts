@@ -5,6 +5,7 @@ import type { TernSecureInstanceTree } from '@tern-secure/types';
 TernSecure.mountComponentRenderer = mountComponentRenderer;
 export { TernSecure };
 
+
 declare global {
   interface Window {
     TernSecure?: TernSecure;
