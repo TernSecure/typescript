@@ -1,3 +1,5 @@
+import 'regenerator-runtime/runtime';
+
 import { TernSecure } from './instance/ternsecure';
 import { mountComponentRenderer } from './ui/Renderer';
 import type { TernSecureInstanceTree } from '@tern-secure/types';
@@ -14,11 +16,17 @@ declare global {
   }
 }
 
+console.log('[TernSecure Browser] Global window types declared.');
+console.log('[TernSecure Browser] Checking current window state:', {
+  hasWindowTernSecure: !!window.TernSecure,
+  hasInitFunction: !!window.initTernSecureWithFunctionalCore,
+  hasFunctionalCoreProvider: !!window.ternSecureFunctionalCore,
+  typeOfFunctionalCoreProvider: typeof window.ternSecureFunctionalCore,
+});
+
 if (!window.TernSecure) {
   console.warn(
-    '[TernSecure] UI components script loaded. `window.TernSecure` is not yet initialized. ' +
-    'Call `window.initTernSecureWithFunctionalCore(functionalCore)` or ensure `window.TernSecure` ' +
-    'is set up by another script (e.g., by providing `window.ternSecureFunctionalCore` before this script runs).'
+    '[TernSecure Browser] window.TernSecure (instance) is not yet initialized. Setting up initialization logic.'
   );
 
   if (!window.initTernSecureWithFunctionalCore) {

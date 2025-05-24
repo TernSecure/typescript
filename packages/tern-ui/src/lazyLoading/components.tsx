@@ -2,7 +2,7 @@ import { lazy } from "react";
 
 const componentImportPaths = {
     SignIn: () => import(/* webpackChunkName: "signin" */ '../ui/sign-in'),
-    SignUp: () => import('../ui/sign-up'),
+    SignUp: () => import(/* webpackChunkName: "signup" */ '../ui/sign-up'),
 } as const;
 
 export const SignIn = lazy(() => componentImportPaths.SignIn().then(module => ({ default: module.SignIn })));

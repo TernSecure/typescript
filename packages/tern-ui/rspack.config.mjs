@@ -1,22 +1,25 @@
 // @ts-check
-//import rspack from '@rspack/core';
-//import path from 'path';
-//import { fileURLToPath } from 'url';
-///import { merge } from 'webpack-merge';
-//import { createRequire } from 'module';
-//import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
-
-const rspack = require('@rspack/core');
-const packageJSON = require('./package.json');
-const path = require('path');
-const { merge } = require('webpack-merge');
-const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
-
-
-//const __filename = fileURLToPath(import.meta.url); 
-//const __dirname = path.dirname(__filename);
-//const require = createRequire(import.meta.url);
+//const rspack = require('@rspack/core');
 //const packageJSON = require('./package.json');
+//const path = require('path');
+//const { merge } = require('webpack-merge');
+//const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
+//const { RsdoctorRspackPlugin } = require('@rsdoctor/rspack-plugin');
+
+
+import rspack from '@rspack/core';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { merge } from 'webpack-merge';
+import { createRequire } from 'module';
+import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
+import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+
+
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+const packageJSON = require('./package.json');
 
 const APP_ENTRY_POINTS_CONFIG = {
   index: './src/index.ts',
@@ -36,7 +39,7 @@ const entry = entryName => {
 };
 
 /**
- *  @returns { import('@rspack/cli').Configuration }
+ * @returns { import('@rspack/cli').Configuration }
  */
 const sharedConfig = () => {
   return {
@@ -46,16 +49,38 @@ const sharedConfig = () => {
     output: {
       chunkFilename: `[name]_index_[fullhash:6]_${packageJSON.version}.js`
     },
-    externals: {
-    },
+    plugins: [
+      //new RsdoctorRspackPlugin({
+      //  mode: process.env.RSDOCTOR === 'brief' ? 'brief' : 'normal',
+      //  disableClientServer: process.env.RSDOCTOR === 'brief',
+      //  supports: {
+      //    generateTileGraph: true,
+      //  }
+      //})
+    ],
     optimization: {
       splitChunks: {
         cacheGroups: {
+          signIn: {
+            minChunks: 1,
+            name: 'SignIn',
+            test: module => {
+              if (module instanceof rspack.NormalModule) {
+                return !!(module.resource && module.resource.includes('/ui/SignIn'));
+              }
+              return false;
+            },
+          },
           common: {
             minChunks: 1,
             name: 'ui-common',
             priority: -20,
-            //test: module => !!(module.resource && !module.resource.includes('/ui')),
+            test: module => {
+              if (module instanceof rspack.NormalModule) {
+                return !!(module.resource && module.resource.includes('/ui/'));
+              }
+              return false;
+            },
           },
           defaultVendors: {
             test: /[\\/]node_modules[\\/]/,
@@ -72,7 +97,8 @@ const sharedConfig = () => {
           }
         }
       }
-    }
+    },
+    ignoreWarnings: [/entrypoint size limit/, /asset size limit/, /Rspack performance recommendations/],
   };
 }
 
@@ -97,6 +123,9 @@ const typescriptLoader = () => {
     use: {
       loader: 'builtin:swc-loader',
       options: {
+        env: {
+          targets: packageJSON.browserslist
+        },
         jsc: {
           parser: {
             syntax: 'typescript',
@@ -120,6 +149,9 @@ const typescriptLoader = () => {
     use: {
       loader: 'builtin:swc-loader',
       options: {
+        env: {
+          targets: packageJSON.browserslist
+        },
         isModule: 'unknown',
       },
     },
@@ -218,8 +250,7 @@ function prodConfig() {
     sharedProdConfig(),
     prodBundler(),
     {
-      mode: 'production',
-      target: ['web', 'es5'],
+      mode: 'production'
     }
   );
 
@@ -268,8 +299,12 @@ function prodConfig() {
     CjsConfig
   ];
 }
-
-function devConfig() {
+/**
+ * @param {object} config.env
+ * @returns
+*/
+const devConfig = ({ env }) => {
+  const devUrl = new URL(env.devOrigin);
 
   /** @type {() => import('@rspack/core').Configuration} */
   const sharedDevConfig = () => {
@@ -281,10 +316,11 @@ function devConfig() {
         ]
       },
       plugins: [
-        new ReactRefreshPlugin()
+        new ReactRefreshPlugin(/** @type {any} **/ ({ overlay: { sockHost: devUrl.host } })),
       ],
       devtool: 'eval-cheap-source-map',
       output: {
+        publicPath: `${devUrl.origin}/npm`,
         crossOriginLoading: 'anonymous',
         filename: '[name].js',
         libraryTarget: 'umd',
@@ -301,9 +337,10 @@ function devConfig() {
         host: '0.0.0.0',
         port: 4000,
         hot: true,
-        liveReload: true,
         static: ['dist'],
+        liveReload: false,
         client:{
+          webSocketURL: `auto://${devUrl.host}/ws`,
           logging: 'log',
         }
       },
@@ -318,12 +355,10 @@ function devConfig() {
 
   const configToMerge = merge(
     entry('index.browser'),
-    entry('index'),
     sharedConfig(),
     sharedDevConfig(),
     {
-      mode: 'development',
-      target: ['web', 'es5'],
+      mode: 'development'
     }
   );
 
@@ -334,11 +369,10 @@ function devConfig() {
 
 /**
  * @param {{ production?: boolean } | undefined} env
- * @returns {import('@rspack/core').Configuration | import('@rspack/core').Configuration[]}
  */
-module.exports = env => {
+const build = env => {
   const isProd = env && env.production;
-  const config = isProd ? prodConfig() : devConfig();
+  const config = isProd ? prodConfig() : devConfig({env});
 
   console.log('Current environment:', isProd ? 'production' : 'development');
 
@@ -350,7 +384,7 @@ module.exports = env => {
   if (isProd) {
     console.log('Production config:', JSON.stringify(config, null, 2));
   }
-  if (!isProd) {
+  else {
     console.log('Development config:', JSON.stringify(config, null, 2));
   }
 
@@ -358,4 +392,4 @@ module.exports = env => {
   return config;
 }
 
-//export default build;
+export default build;

@@ -20,7 +20,6 @@ export {
     //SignOut,
     //SignOutButton,
     //SignUp,
-    Verify
 } from './boundary/components'
 
 export {

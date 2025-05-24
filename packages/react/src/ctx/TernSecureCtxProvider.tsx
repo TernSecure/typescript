@@ -39,7 +39,6 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   const { 
     children, 
     instanceOptions,
-    initialState, 
     requiresVerification = false,
     onUserChanged
   } = props

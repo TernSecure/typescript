@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "lib": ["es6", "DOM", "DOM.Iterable"],
     "module": "esnext",
     "moduleResolution": "Bundler",
     "noEmit": true,
@@ -16,7 +16,7 @@
     "resolveJsonModule": true,
     "sourceMap": false,
     "strict": true,
-    "target": "ES2022",
+    "target": "ES2019",
     "useUnknownInCatchVariables": false
 
   },

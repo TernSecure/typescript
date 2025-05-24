@@ -9,5 +9,4 @@ export {
     //SignOut,
     //SignOutButton,
     SignUp,
-    Verify
 } from '@tern-secure/react' 

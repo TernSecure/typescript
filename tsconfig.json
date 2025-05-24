@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": ".",
     "alwaysStrict": false,
     "declaration": true,
     "declarationMap": false,

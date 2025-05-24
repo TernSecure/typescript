@@ -27,9 +27,6 @@ export {
     SignUp,
 } from './components/uiComponent'
 export {
-    Verify
-} from './components/verify'
-export {
     AuthBackground
 } from './components/background'
 export {

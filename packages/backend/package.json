@@ -22,9 +22,7 @@
   "devDependencies": {
     "firebase-admin": "^12.0.0",
     "jose": "^5.0.0",
-    "next": "15.3.2",
-    "rimraf": "^5.0.0",
-    "eslint": "^9.15.0"
+    "next": "15.3.2"
   },
   "engines": {
     "node": ">=20"

@@ -69,7 +69,7 @@ const loadTernUIScript = async (): Promise<void> => {
             reject(new Error(`Failed to load TernUI script from ${script.src}: ${error}`));
         };
 
-        document.head.appendChild(script);
+        document.body.appendChild(script);
     });
 };
 

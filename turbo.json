@@ -22,6 +22,24 @@
         "cache": false,
         "persistent": true
       },
-      "lint": {}
+      "lint": {
+        "dependsOn": ["^build"],
+        "inputs": [
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.json",
+        "**/*.md",
+        "**/*.mdx",
+        ".github/**",
+        "!*/package.json",
+        "!CHANGELOG.md",
+        "!dist/**",
+        "!examples/**",
+        "!node_modules/**"
+      ],
+        "outputs": []
+      }
     }
   }
