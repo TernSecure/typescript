@@ -1,49 +1,23 @@
-import 'regenerator-runtime/runtime';
-
 import { TernSecure } from './instance/ternsecure';
 import { mountComponentRenderer } from './ui/Renderer';
-import type { TernSecureInstanceTree } from '@tern-secure/types';
+
+console.log('[Tern-UI index.browser.ts] Script loaded and executing.');
 
 TernSecure.mountComponentRenderer = mountComponentRenderer;
-export { TernSecure };
 
 
-declare global {
-  interface Window {
-    TernSecure?: TernSecure;
-    initTernSecureWithFunctionalCore?: (functionalCore: Omit<TernSecureInstanceTree, 'ui'>) => TernSecure | undefined;
-    ternSecureFunctionalCore?: Omit<TernSecureInstanceTree, 'ui'>; // Optional: for pre-configuration
-  }
-}
+const apiKey = document.querySelector('[data-api-key]')?.getAttribute('data-api-key') || window.apiKey || '';
+const domain = document.querySelector('script[data-domain]')?.getAttribute('data-domain') || window.customDomain || '';
+const proxyUrl = document.querySelector('[data-proxy-url]')?.getAttribute('data-proxy-url') || window.proxyUrl || '';
 
-console.log('[TernSecure Browser] Global window types declared.');
-console.log('[TernSecure Browser] Checking current window state:', {
-  hasWindowTernSecure: !!window.TernSecure,
-  hasInitFunction: !!window.initTernSecureWithFunctionalCore,
-  hasFunctionalCoreProvider: !!window.ternSecureFunctionalCore,
-  typeOfFunctionalCoreProvider: typeof window.ternSecureFunctionalCore,
-});
 
 if (!window.TernSecure) {
-  console.warn(
-    '[TernSecure Browser] window.TernSecure (instance) is not yet initialized. Setting up initialization logic.'
-  );
-
-  if (!window.initTernSecureWithFunctionalCore) {
-    window.initTernSecureWithFunctionalCore = (functionalCore: Omit<TernSecureInstanceTree, 'ui'>): TernSecure | undefined => {
-        if (!window.TernSecure) {
-            window.TernSecure = new TernSecure(functionalCore);
-        }
-        return window.TernSecure;
-    }
-  }
-
-  if (window.ternSecureFunctionalCore && typeof window.ternSecureFunctionalCore === 'function') {
-    window.initTernSecureWithFunctionalCore(window.ternSecureFunctionalCore);
-
-  }
+  window.TernSecure = new TernSecure(domain);
+  window.dispatchEvent(new CustomEvent('ternsecure:ready', { 
+    detail: { instance: window.TernSecure } 
+  }));
 } else {
-    console.log('[TernSecure] UI components script loaded. `window.TernSecure` was already present.');
+    console.warn('[Tern-UI index.browser.ts] window.TernSecure ALREADY DEFINED:', window.TernSecure);
 }
 
 if (module.hot) {

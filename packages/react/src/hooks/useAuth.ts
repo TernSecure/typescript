@@ -19,8 +19,8 @@ export function useAuth(): AuthState {
 
   return {
     userId: instance.auth.user?.uid ?? null,
-    isLoaded: instance.ui.state.isReady,
-    error: instance.ui.state.error,
+    isLoaded: instance.isReady,
+    error: instance.error,
     isValid: !!instance.auth.user,
     isVerified: instance.auth.user?.emailVerified ?? false,
     isAuthenticated: instance.auth.isAuthenticated,

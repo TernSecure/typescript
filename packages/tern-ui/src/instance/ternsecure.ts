@@ -1,42 +1,104 @@
 import type {
-    TernSecureInstanceTree,
-    TernSecureUser,
-    TernSecureSessionTree,
-    SignInResponseTree,
+    TernSecureInstanceTree as TernSecureInterface,
+    TernSecureInstanceTreeOptions,
     SignInUIConfig,
     SignUpUIConfig,
     SignInPropsTree,
-    SignUpPropsTree,
+    TernSecureInstanceTreeStatus,
 } from '@tern-secure/types';
-import type { MountComponentRenderer } from '../ui/Renderer';
+import { EventEmitter } from '@tern-secure/shared/eventBus'
+import type { MountComponentRenderer } from '../ui/Renderer'
+import { TernSecureBase } from './resources/base';
+
+export type DomainOrProxyUrl =
+  | {
+      proxyUrl?: never;
+      domain?: string | ((url: URL) => string);
+    }
+  | {
+      proxyUrl?: string | ((url: URL) => string);
+      domain?: never;
+    };
+
 
 declare global {
   interface Window {
     TernSecure?: TernSecure;
+    apiKey?: string;
+    customDomain: TernSecureInterface['customDomain'];
+    proxyUrl?: TernSecureInterface['proxyUrl'];
+    projectId?: TernSecureInterface['projectId'];
   }
 }
 
-export class TernSecure implements TernSecureInstanceTree {
+export class TernSecure implements TernSecureInterface {
     public static mountComponentRenderer?: MountComponentRenderer;
-    private static instance: TernSecure | null = null;
     #componentControls?: ReturnType<MountComponentRenderer>| null;
-    #functionalInstance: Omit<TernSecureInstanceTree, 'ui'>;
+    #options: TernSecureInstanceTreeOptions = {};
+    #status: TernSecureInterface['status'] = 'loading';
+    #eventBus = new EventEmitter();
+    //#customDomain: DomainOrProxyUrl['domain'];
+    #proxyUrl: DomainOrProxyUrl['proxyUrl'];
 
-    constructor(functionalInstance: Omit<TernSecureInstanceTree, 'ui'>) {
-        this.#functionalInstance = functionalInstance;
-    }
+    public proxyUrl?: string;
+    public apiKey?: string;
+    public customDomain?: string | undefined;
+    public projectId?: string;
+    public static environment = process.env.NODE_ENV || 'production';
+    public isVisible = false;
+    public currentView: 'signIn' | 'signUp' | null = null;
+    public error: Error | null = null;
+    public isLoading = false;
 
-    public static getInstance(): TernSecure | null {
-        return this.instance;
-    }
-
-    public static async load(functionalInstance: Omit<TernSecureInstanceTree, 'ui'>): Promise<TernSecure> {
-        if (!this.instance) {
-            this.instance = new TernSecure(functionalInstance);
-            window.dispatchEvent(new CustomEvent('ternsecure:loaded'));
+    public constructor(domain: string) {
+        if (!domain) {
+            throw new Error('TernSecure requires a domain or proxy URL to be initialized.');
         }
-        return this.instance;
+
+        console.log('[TernSecure constructor] Initializing... Received domain:', domain);
+        this.customDomain = domain;
+        console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
+        this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
+        this.#setStatus('ready');
+        console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
+
+        //TernSecureBase.ternsecure = this
     }
+
+    get isReady(): boolean {
+        return this.#status === 'ready';
+    }
+
+    get status(): TernSecureInterface['status'] {
+        return this.#status;
+    }
+
+    public load = async (options?: TernSecureInstanceTreeOptions): Promise<void> => {
+        if (this.isReady) {
+            console.warn('TernSecure instance is already loaded.');
+            return;
+        };
+
+        this.#options = this.#initOptions(options);
+
+        if (this.#options.environment) {
+            TernSecure.environment = this.#options.environment;
+        }
+
+        try {
+            if (TernSecure.mountComponentRenderer && !this.#componentControls) {
+                this.#componentControls = TernSecure.mountComponentRenderer(
+                    this,
+                    this.#options,
+                );
+            }
+        } catch (error) {
+            this.error = error as Error;
+            this.#setStatus('error');
+            throw error;
+        }
+    };
+
 
     assertComponentControlsReady(controls: unknown): asserts controls is ReturnType<MountComponentRenderer> {
         if (!TernSecure.mountComponentRenderer) {
@@ -46,97 +108,156 @@ export class TernSecure implements TernSecureInstanceTree {
             throw new Error('TernSecure UI components are not ready yet.');
         }
     }
+    
+    public showSignIn(node: HTMLDivElement, config?: SignInUIConfig): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        const componentProps: SignInPropsTree = {
+            ui: config,
+            signIn: this.signIn,
+        }
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.mountComponent({
+                name: 'SignIn',
+                node,
+                props: componentProps,
+                appearanceKey: config?.appearance?.colors?.primary || 'default',
+            }),
+        );
+        this.currentView = 'signIn';
+        this.isVisible = true;
+    }
 
-    // UI State - managed by this class, reflecting what the renderer might need or what is controlled.
-    public ui: TernSecureInstanceTree['ui'] = {
-        state: {
-            isReady: true, // UI part is ready to be shown by tern-ui
-            isVisible: false, // This might be controlled per component instance
-            currentView: null,
-            isLoading: false,
-            error: null,
+    public hideSignIn(node: HTMLDivElement): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.unmountComponent({ 
+                node,
+            }),
+        );
+    }
+    public showSignUp(node: HTMLDivElement, config?: SignUpUIConfig): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        const componentProps: SignInPropsTree = {
+            ui: config,
+            signIn: this.signIn,
+        }
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.mountComponent({
+                name: 'SignUp',
+                node,
+                props: componentProps,
+                appearanceKey: config?.appearance?.colors?.primary || 'default',
+            }),
+        );
+        this.currentView = 'signUp';
+        this.isVisible = true;
+    }
+    
+    public hideSignUp(node: HTMLDivElement): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.unmountComponent({ 
+                node,
+            }),
+        );
+    }
+    public clearError(): void {
+        this.error = null;
+    }
+    
+    public setLoading(isLoading: boolean): void {
+        this.isLoading = isLoading;
+    }
+
+
+    public signIn: TernSecureInterface['signIn'] = {
+        withEmail: async (email: string, password: string) => {
+            // Implementation for email/password sign in
+            throw new Error('Method not implemented.');
         },
-        controls: {
-            showSignIn: (node: HTMLDivElement, config?: SignInUIConfig) => {
-                this.assertComponentControlsReady(this.#componentControls);
-                const componentProps: SignInPropsTree = {
-                    ui: config,
-                    signIn: this.#functionalInstance.signIn,
-                }
-                this.#componentControls.ensureMounted().then(controls =>
-                    controls.mountComponent({
-                        name: 'SignIn',
-                        node,
-                        props: componentProps,
-                        appearanceKey: config?.appearance?.colors?.primary || 'default',
-                    }),
-                );
-                this.ui.state.currentView = 'signIn';
-                this.ui.state.isVisible = true;
-            },
-            hideSignIn: (node: HTMLDivElement) => {
-                this.assertComponentControlsReady(this.#componentControls);
-                this.#componentControls.ensureMounted().then(controls =>
-                    controls.unmountComponent({ 
-                        node,
-                    }),
-                );
-            },
-            showSignUp: (node: HTMLDivElement, config?: SignUpUIConfig) => {
-                this.assertComponentControlsReady(this.#componentControls);
-                const componentProps: SignInPropsTree = {
-                    ui: config,
-                    signIn: this.#functionalInstance.signIn,
-                }
-                this.#componentControls.ensureMounted().then(controls =>
-                    controls.mountComponent({
-                        name: 'SignUp',
-                        node,
-                        props: componentProps,
-                        appearanceKey: config?.appearance?.colors?.primary || 'default',
-                    }),
-                );
-                this.ui.state.currentView = 'signUp';
-                this.ui.state.isVisible = true;
-            },
-            hideSignUp: (node: HTMLDivElement) => {
-                this.assertComponentControlsReady(this.#componentControls);
-                this.#componentControls.ensureMounted().then(controls =>
-                    controls.unmountComponent({ 
-                        node,
-                    }),
-                );
-            },
-            clearError: () => {
-                this.ui.state.error = null;
-                // Potentially notify functionalInstance or re-render components if error is displayed within them
-            },
-            setLoading: (isLoading: boolean) => {
-                this.ui.state.isLoading = isLoading;
-                // Potentially re-render components if loading state is displayed within them
-            },
+        withGoogle: async () => {
+            // Implementation for Google OAuth sign in
+            throw new Error('Method not implemented.');
         },
-    };
-
-
-    // Delegate auth, user, platform, and events to the functionalInstance
-    public get auth(): TernSecureInstanceTree['auth'] {
-        return this.#functionalInstance.auth;
+        withMicrosoft: async () => {
+            // Implementation for Microsoft OAuth sign in
+            throw new Error('Method not implemented.');
+        },
     }
 
-    public get signIn(): TernSecureInstanceTree['signIn'] {
-        return this.#functionalInstance.signIn;
+    public get auth(): TernSecureInterface['auth'] {
+        return {
+            user: null,
+            session: null,
+            isAuthenticated: false,
+            requiresVerification: false,
+        };
     }
 
-    public get user(): TernSecureInstanceTree['user'] {
-        return this.#functionalInstance.user;
+    public get user(): TernSecureInterface['user'] {
+        return {
+            signOut: async () => {
+                throw new Error('Method not implemented.');
+            },
+            getIdToken: async () => {
+                throw new Error('Method not implemented.');
+            },
+            sendVerificationEmail: async () => {
+                throw new Error('Method not implemented.');
+            },
+            create: async (email: string, password: string) => {
+                throw new Error('Method not implemented.');
+            },
+        };
     }
 
-    public get platform(): TernSecureInstanceTree['platform'] {
-        return this.#functionalInstance.platform;
+    public get events(): TernSecureInterface['events'] {
+        return {
+            onAuthStateChanged: (callback) => {
+                throw new Error('Method not implemented.');
+            },
+            onError: (callback) => {
+                throw new Error('Method not implemented.');
+            },
+            onStatusChanged: (callback) => {
+                this.#eventBus.on('statusChange', callback);
+                return () => {
+                    this.#eventBus.off('statusChange', callback);
+                };
+            }
+        };
     }
 
-    public get events(): TernSecureInstanceTree['events'] {
-        return this.#functionalInstance.events;
+    public async getRedirectResult(): Promise<any> {
+        throw new Error('getRedirectResult not implemented');
+    }
+    
+    public shouldRedirect(currentPath: string): boolean | string {
+        throw new Error('shouldRedirect not implemented');
+    }
+    
+    public constructUrlWithRedirect(baseUrl: string): string {
+        throw new Error('constructUrlWithRedirect not implemented');
+    }
+    
+    public redirectToLogin(redirectUrl?: string): void {
+        throw new Error('redirectToLogin not implemented');
+    }
+
+    #setStatus(newStatus: TernSecureInstanceTreeStatus): void {
+        if (this.#status !== newStatus) {
+            this.#status = newStatus;
+            this.#eventBus.emit('statusChange', this.#status);
+
+            if (newStatus === 'ready') {
+                this.#eventBus.emit('ready');
+            }
+        }
+    }
+    
+    #initOptions = (options?: TernSecureInstanceTreeOptions): TernSecureInstanceTreeOptions => {
+        return {
+            ...options,
+        }
     }
 }

@@ -1,8 +1,18 @@
-import type { IsomorphicTernSecureOptions } from '@tern-secure/types'
 import { FirebaseOptions } from 'firebase/app'
 import { User as FirebaseUser } from 'firebase/auth'
+import type { 
+  TernSecureInstanceTree,
+  TernSecureInstanceTreeOptions
+ } from '@tern-secure/types'
 
-
+declare global {
+  interface Window {
+    apiKey?: string;
+    customDomain?: TernSecureInstanceTree['customDomain'];
+    proxyUrl?: TernSecureInstanceTree['proxyUrl'];
+    projectId?: TernSecureInstanceTree['projectId'];
+  }
+}
 
 /**
  * TernSecure User
@@ -83,6 +93,10 @@ export type initialState = {
   sessionId: string | undefined
 }
 
+export interface BrowserConstructor {
+  new (customDomain?: string): Browser;
+}
+
 /**
  * TernSecureProviderProps
  * @param interface
@@ -93,5 +107,20 @@ export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
     initialState?: initialState
     requiresVerification?: boolean
     loadingComponent?: React.ReactNode
+    bypassApiKey?: boolean
     onUserChanged?: (user: TernSecureUser | null) => Promise<void>
+}
+
+export interface Browser extends TernSecureInstanceTree {
+  load: (options?: TernSecureInstanceTreeOptions) => Promise<void>;
+  onComponentsReady: Promise<void>;
+  components: any;
+}
+
+export type IsomorphicTernSecureOptions = TernSecureInstanceTreeOptions & {
+  TernSecure?: Browser;
+  apiKey?: string;
+  customDomain?: string;
+  proxyUrl?: string;
+  projectId?: string;
 }

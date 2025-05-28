@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>TernUI Integration Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Initialize window properties before script loads -->
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-semibold text-gray-900">TernUI Test Environment</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="status-indicator" class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-0.5 text-sm font-medium text-gray-800">
+                        Initializing...
+                    </span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-lg font-medium leading-6 text-gray-900">TernSecure Integration Status</h2>
+                
+                <!-- Status Cards -->
+                <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Script Status</dt>
+                            <dd id="script-status" class="mt-1 text-3xl font-semibold text-gray-900">Loading...</dd>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <dt class="text-sm font-medium text-gray-500 truncate">TernSecure Instance</dt>
+                            <dd id="instance-status" class="mt-1 text-3xl font-semibold text-gray-900">Waiting...</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Actions -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Test Actions</h3>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <button id="show-signin" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Show Sign In
+                        </button>
+                        <button id="show-signup" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Show Sign Up
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Debug Console -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 max-h-48 overflow-y-auto">
+        <div id="debug-console" class="font-mono text-sm"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Debug logger
+        const log = (message) => {
+            const debugConsole = document.getElementById('debug-console');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toISOString()}] ${message}`;
+            debugConsole.prepend(logEntry);
+        };
+
+
+        const TernSecure = window.TernSecure | undefined;
+
+        log('TernSecure:', TernSecure);
+        
+
+        // Monitor script loading
+        log('Page initialization started');
+        
+        // Update status indicators
+        const updateStatus = (status) => {
+            document.getElementById('status-indicator').textContent = status;
+        };
+
+
+        let ternSecureCheckInterval;
+        const checkTernSecureInstance = () => {
+            if (window.TernSecure) {
+                log('TernSecure instance detected on window');
+                document.getElementById('script-status').textContent = 'Loaded';
+                document.getElementById('instance-status').textContent = 'Ready';
+                updateStatus('Ready');
+                clearInterval(ternSecureCheckInterval);
+                
+                // Enable buttons
+                document.getElementById('show-signin').disabled = false;
+                document.getElementById('show-signup').disabled = false;
+            }
+        };
+
+        ternSecureCheckInterval = setInterval(checkTernSecureInstance, 100);
+
+        window.addEventListener('ternsecure:ready', (event) => {
+            log('TernSecure ready event received');
+            clearInterval(ternSecureCheckInterval);
+            checkTernSecureInstance();
+        });
+
+
+        // Listen for script error
+
+        // Set up test action handlers
+        document.getElementById('show-signin').addEventListener('click', () => {
+            const ternSecureInstance = window.TernSecure;
+            if (ternSecureInstance?.showSignIn) {
+                ternSecureInstance.showSignIn();
+                log('Show Sign In requested');
+            } else {
+                log('TernSecure instance not ready or showSignIn method not available');
+            }
+        });
+
+        document.getElementById('show-signup').addEventListener('click', () => {
+            const ternSecureInstance = window.TernSecure;
+            if (ternSecureInstance?.showSignUp) {
+                ternSecureInstance.showSignUp();
+                log('Show Sign Up requested');
+            } else {
+                log('TernSecure instance not ready or showSignUp method not available');
+            }
+        });
+
+        document.getElementById('show-signin').disabled = true;
+        document.getElementById('show-signup').disabled = true;
+    </script>
+
+    <!-- TernSecure Script -->
+    <script
+        src="http://cdn.lifesprintcare.ca/dist/index.browser.js"
+        data-api-key="pk1090"
+        data-domain="localhost"
+        data-proxy-url="https://cdn.ternui.dev"
+        onload="console.log('[TernUI Test Page] Script loaded successfully'); document.getElementById('script-status').textContent = 'Loaded';"
+        onerror="console.log('[TernUI Test Page] Script failed to load'); document.getElementById('script-status').textContent = 'Error'; updateStatus('Error');"
+    ></script>
+</body>
+</html>

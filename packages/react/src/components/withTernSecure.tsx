@@ -29,15 +29,7 @@ export const withTernSecure = <P extends { instance: TernSecureInstanceTree; com
       instance,
     );
 
-    if (!instance) {
-      return options?.renderWhileLoading ? props.fallback || null : null;
-    }
-
-    if (!instance.ui.state.isReady && options?.renderWhileLoading) {
-      return props.fallback || null;
-    }
-
-    if (!instance.ui.state.isReady && !options?.renderWhileLoading) {
+    if (!instance.isReady && !options?.renderWhileLoading) {
       return null;
     }
 

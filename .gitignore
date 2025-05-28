@@ -6,6 +6,7 @@ dist/types
 exampless
 
 # local env files
+.env*
 .env*.local
 .env*.production
 copilot-instructions.md

@@ -5,12 +5,13 @@ import { onAuthStateChanged } from "firebase/auth"
 import { ternSecureAuth } from '../utils/client-init'
 import { IsomorphicTernSecure } from "../lib/isomorphicTernSecure"
 import type { 
-  initialState, 
+  initialState,
+  IsomorphicTernSecureOptions,
 } from '../types'
 import type {
+  TernSecureInstanceTreeStatus,
   TernSecureState,
   TernSecureUser,
-  IsomorphicTernSecureOptions
 } from '@tern-secure/types'
 
 
@@ -42,7 +43,7 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     requiresVerification = false,
     onUserChanged
   } = props
-  const { isomorphicTernSecure: instance } = useLoadIsomorphicTernSecure(instanceOptions)
+  const { isomorphicTernSecure: instance,  } = useLoadIsomorphicTernSecure(instanceOptions)
   const auth = useMemo(() => ternSecureAuth, []);
 
   const [authState, setAuthState] = useState<TernSecureState>(() => ({
@@ -90,9 +91,9 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
       }
 
       instance.auth.requiresVerification = requiresVerification
-      instance.ui.controls.clearError()
-      instance.ui.state.isLoading = false
-      instance.ui.state.currentView = null
+      instance.clearError()
+      instance.setLoading(false)
+      // currentView is now a getter property, no need to set it directly
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
@@ -141,15 +142,51 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
     return IsomorphicTernSecure.getOrCreateInstance(options);
   }, [options]);
 
+  const [instanceStatus, setInstanceStatus] = useState<TernSecureInstanceTreeStatus>(isomorphicTernSecure.status)
+  
+  useEffect(() => {
+    const unsubscribeStatus = isomorphicTernSecure.events.onStatusChanged?.((newStatus) => {
+      console.log('[TernSecure Provider] Status changed:', {
+        oldStatus: instanceStatus,
+        newStatus,
+        isReady: isomorphicTernSecure.isReady,
+        timestamp: new Date().toISOString()
+      });
+      
+      setInstanceStatus(newStatus);
+      setIsLoading(newStatus === 'loading');
+      
+      if (newStatus === 'ready' && error) {
+        setError(null);
+      }
+    });
+    
+    const unsubscribeError = isomorphicTernSecure.events.onError((errorEvent) => {
+      console.error('[TernSecure Provider] Error event:', errorEvent);
+      setError(errorEvent instanceof Error ? errorEvent : new Error('Unknown error'));
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubscribeStatus?.();
+      unsubscribeError?.();
+    };
+  }, [isomorphicTernSecure, instanceStatus, error]);
+
   // Handle async loadTernUI
   useEffect(() => {
     const loadUI = async () => {
+      if (isomorphicTernSecure.isReady || options.mode === 'server') {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         console.log('[TernSecure Provider] Starting UI load:', {
           timestamp: new Date().toISOString(),
           instance: !!isomorphicTernSecure,
-          uiState: isomorphicTernSecure.ui.state
-          
+          isReady: isomorphicTernSecure.isReady,
+          isLoading: isomorphicTernSecure.isLoading
         });
 
         const browser = await isomorphicTernSecure.loadTernUI();
@@ -163,8 +200,6 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
           hasBrowser: !!browser,
           timestamp: new Date().toISOString()
         });
-
-        setIsLoading(false);
       } catch (err) {
         console.error('[TernSecure Provider] Failed to load UI:', {
           error: err,
@@ -174,21 +209,18 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
         setIsLoading(false);
       }
     };
-
-    if (isomorphicTernSecure && options.mode !== 'server') {
-      loadUI();
-    } else {
-      setIsLoading(false);
-    }
+    
+    loadUI();
   }, [isomorphicTernSecure, options.mode]);
 
   // Debug log when instance is created and cleanup
   useEffect(() => {
     console.log('[TernSecure Provider] Instance created:', {
       hasInstance: !!isomorphicTernSecure,
-      uiState: isomorphicTernSecure.ui.state,
-      hasControls: !!isomorphicTernSecure.ui.controls,
-      isLoading,
+      isReady: isomorphicTernSecure.isReady,
+      isLoading: isomorphicTernSecure.isLoading,
+      hasShowSignIn: !!isomorphicTernSecure.showSignIn,
+      loadingState: isLoading,
       hasError: !!error,
       timestamp: new Date().toISOString()
     });
@@ -199,11 +231,12 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       });
       IsomorphicTernSecure.clearInstance();
     };
-  }, [isomorphicTernSecure, isLoading, error]);
+  }, [isomorphicTernSecure, instanceStatus, isLoading, error]);
 
   return {
     isomorphicTernSecure,
     isLoading,
-    error
+    error,
+    status: instanceStatus
   };
 };

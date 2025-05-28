@@ -1,6 +1,7 @@
 import { FirebaseOptions } from 'firebase/app'
 import { User as FirebaseUser } from 'firebase/auth'
 import { ERRORS } from './errors'
+import type { TernSecureProviderProps } from '@tern-secure/react'
 
 
 /**
@@ -139,6 +140,15 @@ export interface SignInProps extends RedirectConfig {
     description?: string
     socialButton?: string
   }
+}
+
+
+export type TernSecureNextProps = TernSecureProviderProps & {
+  apiKey?: string
+  requiresVerification?: boolean
+  loginPath?: string
+  signUpPath?: string
+  loadingComponent?: React.ReactNode
 }
 
 

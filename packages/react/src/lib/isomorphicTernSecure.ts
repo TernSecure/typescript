@@ -6,23 +6,31 @@ import type {
   SignUpUIConfig,
   AuthErrorTree,
   TernSecureSessionTree,
-  IsomorphicTernSecureOptions
+  TernSecureInstanceTreeStatus,
+  TernSecureInstanceTreeOptions
 } from '@tern-secure/types';
+import type { 
+  Browser, 
+  BrowserConstructor, 
+  IsomorphicTernSecureOptions 
+} from '../types'
+import { EventEmitter } from '@tern-secure/shared/eventBus'
+import { loadTernUIScript } from '@tern-secure/shared/loadTernUIScript';
 
-declare global {
-  interface Window {
-    TernSecure: Browser | null;
-  }
+const ENVIRONMENT = process.env.NODE_ENV;
+
+export interface Global {
+  TernSecure: Browser | null;
 }
+
+declare const global: Global;
 
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
-interface Browser extends TernSecureInstanceTree {
-  onComponentsReady: Promise<void>;
-  components: TernSecureInstanceTree;
-}
+export type TernSecureProps = | Browser | BrowserConstructor | null | undefined
+
 
 interface PreMountState {
   signInNodes: Map<HTMLDivElement, SignInUIConfig | undefined>;
@@ -33,101 +41,18 @@ interface PreMountState {
   errorListeners: Set<(error: AuthErrorTree) => void>;
 }
 
-const loadTernUIScript = async (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        if (window.TernSecure) {
-            resolve();
-            return;
-        }
-
-        const { scriptHost, isLocalDev } = getScriptHost();
-        const version = process.env.TERN_UI_VERSION || 'latest';
-        
-        const script = document.createElement('script');
-        
-        // Use local path for development, CDN path for production
-        script.src = isLocalDev 
-            ? `http://${scriptHost}/index.browser.js`  // Local development path with explicit http protocol
-            : `https://${scriptHost}/npm/@ternsecure/tern-ui@${version}/dist/index.browser.js`; // Production path
-        
-        const handleLoad = () => {
-            if (window.TernSecure) {
-                window.removeEventListener('ternsecure:loaded', handleLoad);
-                resolve();
-            }
-        };
-
-        window.addEventListener('ternsecure:loaded', handleLoad);
-        
-        script.onerror = (error) => {
-            window.removeEventListener('ternsecure:loaded', handleLoad);
-            console.error('[TernSecure] Script load error:', {
-                src: script.src,
-                error,
-                isLocalDev
-            });
-            reject(new Error(`Failed to load TernUI script from ${script.src}: ${error}`));
-        };
-
-        document.body.appendChild(script);
-    });
-};
-
-function getScriptHost(): { scriptHost: string; isLocalDev: boolean } {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const options = {
-        proxyUrl: process.env.TERN_PROXY_URL,
-        customDomain: process.env.TERN_CUSTOM_DOMAIN,
-        frontendApi: process.env.TERN_FRONTEND_API,
-        localPort: process.env.TERN_UI_PORT || '4000' // Default port for packages/tern-ui development server
-    };
-
-    // Check for local development first
-    if (isDevelopment) {
-        // Default to localhost, but allow IP configuration through env
-        const localHost = process.env.TERN_UI_HOST || 'localhost';
-        return {
-            scriptHost: `${localHost}:${options.localPort}`, // /dist
-            isLocalDev: true
-        };
-    }
-
-    // Existing production logic
-    if (options.proxyUrl) {
-        return {
-            scriptHost: new URL(options.proxyUrl).host,
-            isLocalDev: false
-        };
-    }
-
-    if (options.customDomain) {
-        return {
-            scriptHost: options.customDomain,
-            isLocalDev: false
-        };
-    }
-
-    if (options.frontendApi) {
-        return {
-            scriptHost: `${options.frontendApi}.tern-secure.com`,
-            isLocalDev: false
-        };
-    }
-
-    return {
-        scriptHost: 'cdn.tern-secure.com',
-        isLocalDev: false
-    };
-}
 
 /**
  * IsomorphicTernSecure class manages the auth state and UI rendering
  * in both browser and server environments
  */
 export class IsomorphicTernSecure implements TernSecureInstanceTree {
-  private readonly mode:  IsomorphicTernSecureOptions['mode'];
+  private readonly _mode:  'browser' | 'server';
   private readonly options: IsomorphicTernSecureOptions;
-  private instance: TernSecureInstanceTree | null = null;
+  private readonly TernSecure: TernSecureProps;
+  private ternui: Browser | null = null;
+  #status: TernSecureInstanceTreeStatus = 'loading';
+  #customDomain?: string;
   private premountState: PreMountState = {
     signInNodes: new Map(),
     signUpNodes: new Map(),
@@ -137,222 +62,298 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     errorListeners: new Set(),
   };
 
-  constructor(options: IsomorphicTernSecureOptions = {}) {
-    this.mode = options.mode || (typeof window === 'undefined' ? 'server' : 'browser');
-    this.options = options;
+  static #instance: IsomorphicTernSecure | null | undefined;
+  #eventBus = new EventEmitter();
+
+  get isReady(): boolean {
+    return this.ternui?.isReady || false;
   }
 
-  static #instance: IsomorphicTernSecure | null | undefined;
+  get status(): TernSecureInstanceTreeStatus {
+    if (!this.ternui) {
+      return this.#status;
+    }
+    return (
+      this.ternui.status || 
+      (this.ternui.isReady ? 'ready' : 'loading')
+    )
+  }
 
-  static getOrCreateInstance(options: IsomorphicTernSecureOptions = {}): IsomorphicTernSecure {
-    if (!inBrowser() || !this.#instance || (options.Instance && this.#instance.instance !== options.Instance)) {
+  get isLoading(): boolean {
+    return this.ternui?.isLoading || false;
+  }
+
+  get error(): Error | null {
+    return this.ternui?.error || null;
+  }
+
+  static getOrCreateInstance(options: IsomorphicTernSecureOptions) {
+    if (
+      !inBrowser() || 
+      !this.#instance || 
+      (options.TernSecure && this.#instance.TernSecure !== options.TernSecure)) {
       this.#instance = new IsomorphicTernSecure(options);
     }
+
     return this.#instance;
   }
+  
   static clearInstance() {
     this.#instance = null;
   }
 
+  // Configuration properties delegated to core instance
+  get customDomain(): string  {
+    if (typeof this.#customDomain === 'function') {
+      throw new Error('Unsported customDomain type: function');
+    }
+    return this.#customDomain || '';
+  }
+
+  get proxyUrl(): string | undefined {
+    return this.ternui?.proxyUrl || this.options.proxyUrl;
+  }
+
+  get apiKey(): string | undefined {
+    return this.ternui?.apiKey || this.options.apiKey;
+  }
+
+  get projectId(): string | undefined {
+    return this.ternui?.projectId;
+  }
+
+  get environment() {
+    return this.ternui?.environment || this.options.environment || undefined;
+  }
+
+  get mode(): 'browser' | 'server' | undefined {
+    return this._mode;
+  }
+
+  constructor(options: IsomorphicTernSecureOptions) {
+    const { TernSecure = null, customDomain } = options || {};
+    this.#customDomain = customDomain;
+    this.options = options;
+    this.TernSecure = TernSecure;
+    this._mode = inBrowser() ? 'browser' : 'server';
+    this.#eventBus.emit('statusChange', this.status);
+
+    if(!this.options.environment) {
+      this.options.environment = ENVIRONMENT;
+    }
+
+    if (this.#customDomain) {
+      void this.loadTernUI();
+    }
+
+    console.log('[IsomorphicTernSecure] Constructor called:', {
+      mode: this._mode,
+      TernSecure: this.TernSecure,
+      isReady: this.isReady,
+      status: this.status,
+      ternui: this.ternui,
+      loadTernUI: this.loadTernUI(),
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Core auth state - delegate to core instance
+  get auth(): TernSecureInstanceTree['auth'] {
+    return this.ternui?.auth || {
+      user: null,
+      session: null,
+      isAuthenticated: false,
+      requiresVerification: false,
+    };
+  }
+
+  // UI state properties - delegate to core instance
+  get isVisible(): boolean {
+    return this.ternui?.isVisible || false;
+  }
+
+  get currentView(): 'signIn' | 'signUp' | 'verify' | null {
+    return this.ternui?.currentView || null;
+  }
+
+  // Core authentication methods - delegate to core instance
+  get signIn(): TernSecureInstanceTree['signIn'] {
+    return this.ternui?.signIn || {
+      withEmail: async () => { throw new Error('TernSecure instance not initialized'); },
+      withGoogle: async () => { throw new Error('TernSecure instance not initialized'); },
+      withMicrosoft: async () => { throw new Error('TernSecure instance not initialized'); },
+    };
+  }
+
+  // User management methods - delegate to core instance
+  get user(): TernSecureInstanceTree['user'] {
+    return this.ternui?.user || {
+      signOut: async () => { throw new Error('TernSecure instance not initialized'); },
+      getIdToken: async () => { throw new Error('TernSecure instance not initialized'); },
+      sendVerificationEmail: async () => { throw new Error('TernSecure instance not initialized'); },
+      create: async () => { throw new Error('TernSecure instance not initialized'); },
+    };
+  }
+
+  // UI control methods
+  showSignIn = (targetNode: HTMLDivElement, config?: SignInUIConfig): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.showSignIn(targetNode, config);
+    } else {
+      this.premountState.signInNodes.set(targetNode, config);
+    }
+  };
+
+  hideSignIn = (targetNode: HTMLDivElement): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.hideSignIn(targetNode);
+    } else {
+      this.premountState.signInNodes.delete(targetNode);
+    }
+  };
+
+  showSignUp = (targetNode: HTMLDivElement, config?: SignUpUIConfig): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.showSignUp(targetNode, config);
+    } else {
+      this.premountState.signUpNodes.set(targetNode, config);
+    }
+  };
+
+  hideSignUp = (targetNode: HTMLDivElement): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.hideSignUp(targetNode);
+    } else {
+      this.premountState.signUpNodes.delete(targetNode);
+    }
+  };
+
+  clearError = (): void => {
+    if (this.ternui?.clearError) {
+      this.ternui.clearError();
+    }
+  };
+
+  setLoading = (isLoading: boolean): void => {
+    if (this.ternui?.setLoading) {
+      this.ternui.setLoading(isLoading);
+    }
+  };
+
+  // Platform methods - delegate to core instance
+  getRedirectResult = async (): Promise<any> => {
+    if (!this.ternui?.getRedirectResult) {
+      throw new Error('TernSecure instance not initialized');
+    }
+    return this.ternui.getRedirectResult();
+  };
+
+  shouldRedirect = (currentPath: string): boolean | string => {
+    if (!this.ternui?.shouldRedirect) {
+      return false;
+    }
+    return this.ternui.shouldRedirect(currentPath);
+  };
+
+  constructUrlWithRedirect = (baseUrl: string): string => {
+    if (!this.ternui?.constructUrlWithRedirect) {
+      return baseUrl;
+    }
+    return this.ternui.constructUrlWithRedirect(baseUrl);
+  };
+
+  redirectToLogin = (redirectUrl?: string): void => {
+    if (this.ternui?.redirectToLogin) {
+      this.ternui.redirectToLogin(redirectUrl);
+    }
+  };
+
+  // Event handling - delegate to core instance with fallback to premount state
+  get events(): TernSecureInstanceTree['events'] {
+    return {
+      onAuthStateChanged: (callback: (user: TernSecureUser | null) => void) => {
+        if (this.ternui?.events) {
+          return this.ternui.events.onAuthStateChanged(callback);
+        }
+        this.premountState.authStateListeners.add(callback);
+        return () => {
+          this.premountState.authStateListeners.delete(callback);
+        };
+      },
+      onError: (callback: (error: AuthErrorTree) => void) => {
+        if (this.ternui?.events) {
+          return this.ternui.events.onError(callback);
+        }
+        this.premountState.errorListeners.add(callback);
+        return () => {
+          this.premountState.errorListeners.delete(callback);
+        };
+      },
+      onStatusChanged: (callback: (status: TernSecureInstanceTreeStatus) => void) => {
+        return this.#eventBus.on('statusChange', callback);
+      }
+    };
+  }
+
   async loadTernUI(): Promise<Browser | undefined> {
-    if (this.mode !== 'browser') {
+    console.log('[IsomorphicTernSecure] loadTernUI called:', {
+      mode: this._mode,
+      isReady: this.isReady,
+      status: this.status,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (this._mode !== 'browser' || this.isReady) {
       console.warn('[IsomorphicTernSecure] loadTernUI called in non-browser mode');
       return;
     }
 
     try {
-      await loadTernUIScript();
-      
-      if (!window.TernSecure) {
-        throw new Error('TernSecure UI script loaded but instance not initialized');
+      if(this.TernSecure) {
+        let c: TernSecureProps;
+        console.log('[IsomorphicTernSecure] this.TernSecure: defined, checking readiness...');
+        //const TernSecureHasLoadMethod = typeof this.TernSecure.load === 'function';
+        if (isConstructor<BrowserConstructor>(this.TernSecure)) {
+          c = new this.TernSecure();
+          this.beforeLoad(c);
+          await c.load(this.options);
+        } else {
+          console.log('[IsomorphicTernSecure] this.TernSecure: does not have load method.');
+          c = this.TernSecure;
+          if (!c.isReady) {
+            this.beforeLoad(c);
+            await c.load(this.options);
+          }
+        }
+        global.TernSecure = c;
+      } else {
+        if(!global.TernSecure) {
+          await loadTernUIScript({
+            ...this.options,
+            customDomain: this.#customDomain,
+          })
+        }
+
+        if(!global.TernSecure) {
+          throw new Error('TernSecure instance is not available globally');
+        }
+
+        this.beforeLoad(global.TernSecure);
+        await global.TernSecure.load(this.options);
       }
 
-      const browserInstance: Browser = {
-        ...this,
-        onComponentsReady: Promise.resolve(),
-        components: window.TernSecure
-      };
-
-      return browserInstance;
-    } catch (error) {
-      console.error('[IsomorphicTernSecure] Error loading UI:', error);
-      throw new Error('Failed to load TernSecure UI components');
+      if(global.TernSecure?.isReady) {
+        console.log('[IsomorphicTernSecure] global.TernSecure.ready: Injecting TernUI...');
+        return this.injectTernUI(global.TernSecure);
+      }
+      return;
+    } catch (err) {
+      const error = err as Error;
+      this.#eventBus.emit('error');
+      console.error(error.stack || error.message || error);
+      return;
     }
   }
-
-  // Auth State Implementation
-  public auth = {
-    user: null as TernSecureUser | null,
-    session: null as TernSecureSessionTree | null,
-    isAuthenticated: false,
-    requiresVerification: false,
-  };
-
-  // Core Auth Methods
-  public signIn = {
-    withEmail: async (email: string, password: string): Promise<SignInResponseTree> => {
-      if (this.instance) {
-        return this.instance.signIn.withEmail(email, password);
-      }
-      const promise = () => this.instance?.signIn.withEmail(email, password);
-      this.queueMethodCall('signIn', promise);
-      throw new Error('TernSecure not initialized');
-    },
-    withGoogle: async (): Promise<void> => {
-      if (this.instance) {
-        return this.instance.signIn.withGoogle();
-      }
-      const promise = () => this.instance?.signIn.withGoogle();
-      this.queueMethodCall('signIn', promise);
-      throw new Error('TernSecure not initialized');
-    },
-    withMicrosoft: async (): Promise<void> => {
-      if (this.instance) {
-        return this.instance.signIn.withMicrosoft();
-      }
-      const promise = () => this.instance?.signIn.withMicrosoft();
-      this.queueMethodCall('signIn', promise);
-      throw new Error('TernSecure not initialized');
-    },
-  };
-
-  // User Management Methods
-  public user = {
-    signOut: async (): Promise<void> => {
-      if (this.instance) {
-        return this.instance.user.signOut();
-      }
-      const promise = () => this.instance?.user.signOut();
-      this.queueMethodCall('user', promise);
-      throw new Error('TernSecure not initialized');
-    },
-    getIdToken: async (): Promise<string | null> => {
-      if (this.instance) {
-        return this.instance.user.getIdToken();
-      }
-      return null;
-    },
-    sendVerificationEmail: async (): Promise<void> => {
-      if (this.instance) {
-        return this.instance.user.sendVerificationEmail();
-      }
-      const promise = () => this.instance?.user.sendVerificationEmail();
-      this.queueMethodCall('user', promise);
-      throw new Error('TernSecure not initialized');
-    },
-    create: async (email: string, password: string): Promise<SignInResponseTree> => {
-      if (this.instance) {
-        return this.instance.user.create(email, password);
-      }
-      const promise = () => this.instance?.user.create(email, password);
-      this.queueMethodCall('user', promise);
-      throw new Error('TernSecure not initialized');
-    },
-  };
-
-  // UI State Management
-  public ui = {
-    state: {
-      isReady: true,
-      isVisible: false,
-      currentView: null as 'signIn' | 'signUp' | 'verify' | null,
-      isLoading: false,
-      error: null as Error | null,
-    },
-    controls: {
-      showSignIn: (targetNode: HTMLDivElement, config?: SignInUIConfig): void => {
-        if (this.instance) {
-          this.instance.ui.controls.showSignIn(targetNode, config);
-        } else {
-          this.premountState.signInNodes.set(targetNode, config);
-        }
-      },
-      hideSignIn: (targetNode: HTMLDivElement): void => {
-        if (this.instance) {
-          this.instance.ui.controls.hideSignIn(targetNode);
-        } else {
-          this.premountState.signInNodes.delete(targetNode);
-        }
-      },
-      showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig): void => {
-        if (this.instance) {
-          this.instance.ui.controls.showSignUp(targetNode, config);
-        } else {
-          this.premountState.signUpNodes.set(targetNode, config);
-        }
-      },
-      hideSignUp: (targetNode: HTMLDivElement): void => {
-        if (this.instance) {
-          this.instance.ui.controls.hideSignUp(targetNode);
-        } else {
-          this.premountState.signUpNodes.delete(targetNode);
-        }
-      },
-      clearError: (): void => {
-        if (this.instance) {
-          this.instance.ui.controls.clearError();
-        }
-        this.ui.state.error = null;
-      },
-      setLoading: (isLoading: boolean): void => {
-        if (this.instance) {
-          this.instance.ui.controls.setLoading(isLoading);
-        }
-        this.ui.state.isLoading = isLoading;
-      },
-    },
-  };
-
-  // Platform Integration
-  public platform = {
-    getRedirectResult: async (): Promise<any> => {
-      if (this.instance) {
-        return this.instance.platform.getRedirectResult();
-      }
-      const promise = () => this.instance?.platform.getRedirectResult();
-      this.queueMethodCall('platform', promise);
-      throw new Error('TernSecure not initialized');
-    },
-    shouldRedirect: (currentPath: string): boolean | string => {
-      if (this.instance) {
-        return this.instance.platform.shouldRedirect(currentPath);
-      }
-      return false;
-    },
-    constructUrlWithRedirect: (baseUrl: string): string => {
-      if (this.instance) {
-        return this.instance.platform.constructUrlWithRedirect(baseUrl);
-      }
-      return baseUrl;
-    },
-    redirectToLogin: (redirectUrl?: string): void => {
-      if (this.instance) {
-        this.instance.platform.redirectToLogin(redirectUrl);
-      }
-    },
-  };
-
-  // Event Handling
-  public events = {
-    onAuthStateChanged: (callback: (user: TernSecureUser | null) => void) => {
-      if (this.instance) {
-        return this.instance.events.onAuthStateChanged(callback);
-      }
-      this.premountState.authStateListeners.add(callback);
-      return () => {
-        this.premountState.authStateListeners.delete(callback);
-      };
-    },
-    onError: (callback: (error: AuthErrorTree) => void) => {
-      if (this.instance) {
-        return this.instance.events.onError(callback);
-      }
-      this.premountState.errorListeners.add(callback);
-      return () => {
-        this.premountState.errorListeners.delete(callback);
-      };
-    },
-  };
 
   private queueMethodCall<T>(
     section: keyof TernSecureInstanceTree,
@@ -367,19 +368,48 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState.methodCalls.set(section, calls);
   }
 
+  private beforeLoad = (ternui: Browser | undefined) => {
+    if (!ternui) {
+      throw new Error('Failed to inject TernUI');
+    }
+  };
+
+  private injectTernUI = (ternui: Browser | undefined) => {
+    if (!ternui) {
+      throw new Error('TernUI instance is not initialized');
+    }
+
+    this.ternui = ternui;
+
+    this.premountState.signInNodes.forEach((config, node) => {
+      ternui.showSignIn(node, config);
+    });
+
+    this.premountState.signUpNodes.forEach((config, node) => {
+      ternui.showSignUp(node, config);
+    });
+
+    if (typeof this.ternui.status === 'undefined') {
+      this.#eventBus.emit('statusChange', 'ready');
+    }
+
+    return this.ternui;
+    
+  };
+
   /**
    * Update the instance and process any queued operations
    */
   public __internal_updateInstance(instance: TernSecureInstanceTree) {
-    this.instance = instance;
-    this.ui.state.isReady = true;
+    // Sync the core instance if needed
+    //Object.assign(this.TernSecure, instance);
 
     // Process pre-mounted nodes
     this.premountState.signInNodes.forEach((config, node) => {
-      this.ui.controls.showSignIn(node, config);
+      this.showSignIn(node, config);
     });
     this.premountState.signUpNodes.forEach((config, node) => {
-      this.ui.controls.showSignUp(node, config);
+      this.showSignUp(node, config);
     });
 
     // Process queued method calls
@@ -395,10 +425,10 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
     // Process event listeners
     this.premountState.authStateListeners.forEach(callback => {
-      if (this.instance) this.instance.events.onAuthStateChanged(callback);
+      if (this.ternui?.events) this.ternui.events.onAuthStateChanged(callback);
     });
     this.premountState.errorListeners.forEach(callback => {
-      if (this.instance) this.instance.events.onError(callback);
+      if (this.ternui?.events) this.ternui.events.onError(callback);
     });
 
     // Clear premount state
@@ -412,3 +442,9 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     };
   }
 }
+
+
+export function isConstructor<T>(f: any): f is T {
+  return typeof f === 'function';
+}
+

@@ -1,0 +1,54 @@
+name: Upload to GCS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/tern-ui/**'
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd packages/tern-ui && npm ci
+
+      - name: Build project
+        working-directory: packages/tern-ui
+        run: |
+          npm run build
+          ls -la dist/
+
+      - name: Verify dist directory
+        working-directory: packages/tern-ui
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "dist directory not found!"
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Upload to Google Cloud Storage
+        working-directory: packages/tern-ui
+        run: |
+          gcloud storage cp -r dist/* gs://${{ secrets.GCS_BUCKET }}/tern-ui/
+          echo "Upload completed to gs://${{ secrets.GCS_BUCKET }}/tern-ui/"

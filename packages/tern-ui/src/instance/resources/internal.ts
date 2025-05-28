@@ -1,0 +1,1 @@
+export type { TernSecure } from '../ternsecure';

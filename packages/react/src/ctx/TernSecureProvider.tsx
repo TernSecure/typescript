@@ -7,14 +7,24 @@ function TernSecureProviderBase(props: TernSecureProviderProps) {
         children, 
         initialState, 
         requiresVerification = false,
-        onUserChanged
+        bypassApiKey,
+        onUserChanged,
+        ...restProps
     } = props
+
+    const { customDomain = '', TernSecure: userInitialised } = restProps
+
+    if (!userInitialised) {
+        if(!customDomain) {
+        console.warn('TernSecureProvider: Instance is not initialized. Please ensure you have provided the correct instance options.')
+        }
+    }
+
     return (
         <TernSecureCtxProvider
           initialState={initialState}
-          instanceOptions={props}
+          instanceOptions={restProps}
           requiresVerification={requiresVerification}
-          onUserChanged={onUserChanged}
         >
             {children}
         </TernSecureCtxProvider>

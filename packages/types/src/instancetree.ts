@@ -58,22 +58,18 @@ export interface BaseAuthUIConfig {
   renderMode?: 'modal' | 'page' | 'embedded';
   /** Layout direction */
   layout?: 'vertical' | 'horizontal';
-  /** Loading state indicator configuration */
-  loading?: {
-    /** Custom loading message */
-    message?: string;
-    /** Loading spinner variant */
-    spinnerVariant?: 'circular' | 'linear' | 'dots';
-  };
+  /** Custom loading message */
+  loadingMessage?: string;
+  /** Loading spinner variant */
+  loadingSpinnerVariant?: 'circular' | 'linear' | 'dots';
   /** Accessibility configuration */
   a11y?: {
     /** ARIA labels and descriptions */
     labels?: Record<string, string>;
-    /** Focus behavior configuration */
-    focus?: {
-      initialFocus?: string;
-      trapFocus?: boolean;
-    };
+    /** Element to receive initial focus */
+    initialFocus?: string;
+    /** Whether to trap focus within the auth UI */
+    trapFocus?: boolean;
   };
 }
 
@@ -154,15 +150,39 @@ export interface SignUpPropsTree {
 
 type Mode = 'browser' | 'server';
 
-export interface IsomorphicTernSecureOptions {
+export type TernSecureInstanceTreeOptions = {
+  initialSession?: TernSecureSessionTree | null;
+  defaultAppearance?: Appearance;
+  platform?: {
+    defaultLoginRedirectUrl?: string;
+    defaultLogoutRedirectUrl?: string;
+    oauthRedirectUrl?: string;
+  }
   mode?: Mode;
-  Instance?: TernSecureInstanceTree
+  onAuthStateChanged?: (user: TernSecureUser | null) => void;
+  onError?: (error: AuthErrorTree) => void;
+  environment?: string | undefined;
+  requireverification?: boolean;
 }
+
+export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';
 
 /**
  * Instance interface for managing auth UI state
  */
 export interface TernSecureInstanceTree {
+  customDomain?: string;
+  proxyUrl?: string;
+  apiKey?: string;
+  projectId?: string;
+  environment?: string | undefined;
+  mode?: Mode;
+  isReady: boolean;
+  status: TernSecureInstanceTreeStatus; 
+  isVisible: boolean;
+  currentView: 'signIn' | 'signUp' | 'verify' | null;
+  isLoading: boolean;
+  error: Error | null;
   /** Authentication State */
   auth: {
     /** Current authenticated user */
@@ -197,40 +217,23 @@ export interface TernSecureInstanceTree {
     create: (email: string, password: string) => Promise<SignInResponseTree>;
   };
 
-  /** UI State Management (for UI packages) */
-  ui: {
-    /** Current UI state */
-    state: {
-      isReady: boolean; 
-      isVisible: boolean;
-      currentView: 'signIn' | 'signUp' | 'verify' | null;
-      isLoading: boolean;
-      error: Error | null;
-    };
-    /** UI control methods */
-    controls: {
-      showSignIn: (targetNode: HTMLDivElement, config?: SignInUIConfig) => void;
-      hideSignIn: (targetNode: HTMLDivElement) => void;
-      showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
-      hideSignUp: (targetNode: HTMLDivElement) => void;
-      //showVerify: (targetNode: HTMLDivElement) => void;
-      //hideVerify: (targetNode: HTMLDivElement) => void;
-      clearError: () => void;
-      setLoading: (isLoading: boolean) => void;
-    };
-  };
+  showSignIn: (targetNode: HTMLDivElement, config?: SignInUIConfig) => void;
+  hideSignIn: (targetNode: HTMLDivElement) => void;
+  showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
+  hideSignUp: (targetNode: HTMLDivElement) => void;
+  //showVerify: (targetNode: HTMLDivElement) => void;
+  //hideVerify: (targetNode: HTMLDivElement) => void;
+  clearError: () => void;
+  setLoading: (isLoading: boolean) => void;
 
-  /** Platform Integration */
-  platform: {
-    /** Get redirect result from OAuth flows */
-    getRedirectResult: () => Promise<any>;
-    /** Check if redirect is needed */
-    shouldRedirect: (currentPath: string) => boolean | string;
-    /** Construct URL with redirect parameters */
-    constructUrlWithRedirect: (baseUrl: string) => string;
-    /** Navigate to login page */
-    redirectToLogin: (redirectUrl?: string) => void;
-  };
+  /** Get redirect result from OAuth flows */
+  getRedirectResult: () => Promise<any>;
+  /** Check if redirect is needed */
+  shouldRedirect: (currentPath: string) => boolean | string;
+  /** Construct URL with redirect parameters */
+  constructUrlWithRedirect: (baseUrl: string) => string;
+  /** Navigate to login page */
+  redirectToLogin: (redirectUrl?: string) => void;
 
   /** Error and Event Handling */
   events: {
@@ -238,5 +241,7 @@ export interface TernSecureInstanceTree {
     onAuthStateChanged: (callback: (user: TernSecureUser | null) => void) => () => void;
     /** Subscribe to error events */
     onError: (callback: (error: AuthErrorTree) => void) => () => void;
+    /** Status */
+    onStatusChanged: (callback: (status: TernSecureInstanceTreeStatus) => void) => () => void;
   };
 }

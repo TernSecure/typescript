@@ -28,6 +28,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./*": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    },
     "./react": {
       "import": {
         "types": "./dist/react/index.d.mts",

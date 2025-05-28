@@ -28,7 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TernSecureProvider>
+        <TernSecureProvider requireverification={false} customDomain="http://localhost:4000">
         {children}
         </TernSecureProvider>
       </body>

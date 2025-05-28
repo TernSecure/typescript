@@ -21,7 +21,7 @@ interface IdTokenState {
 
 export function useIdTokenInternal() {
     const instance = useTernSecure()
-    const { auth: { user, isAuthenticated }, ui: { state: { isReady: isLoaded } } } = instance
+    const { auth: { user, isAuthenticated }, isReady: isLoaded } = instance
 
   const [tokenState, setTokenState] = useState<IdTokenState>({
     tokenResult: null,

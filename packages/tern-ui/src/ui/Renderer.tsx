@@ -5,6 +5,7 @@ import type {
     SignUpUIConfig,
     SignInPropsTree,
     SignUpPropsTree,
+    TernSecureInstanceTreeOptions,
 } from '@tern-secure/types';
 import {
     SignIn,
@@ -58,10 +59,12 @@ export type TernComponentControls = {
 
 interface ComponentsProps {
   instance?: TernSecureInstanceTree;
+  options?: TernSecureInstanceTreeOptions;
   onComponentsMounted: () => void;
 }
 
 interface ComponentsState {
+    options: TernSecureInstanceTreeOptions | undefined;
     nodes: Map<HTMLDivElement, HtmlNodeOptions>;
 }
 
@@ -71,7 +74,7 @@ function assertDOMElement(element: HTMLElement): asserts element {
   }
 }
 
-export const mountComponentRenderer = (instance: TernSecureInstanceTree) => {
+export const mountComponentRenderer = (instance: TernSecureInstanceTree, options: TernSecureInstanceTreeOptions) => {
     debugLog('Renderer', 'Initializing Renderer', instance);
     
     let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
@@ -93,6 +96,7 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree) => {
             root.render(
                 <Components
                     instance={instance}
+                    options={options}
                     onComponentsMounted={() => {
                         if (componentsControlsResolver) {
                             componentsControlsResolver(componentsControls);
@@ -159,6 +163,7 @@ const LazyComponentRenderer = ({ node, name, props, componentKey }: LazyComponen
 const Components = (props: ComponentsProps) => {
     const { instance, onComponentsMounted } = props;
     const [state, setState] = useState<ComponentsState>({
+        options: props.options,
         nodes: new Map(),
     });
 

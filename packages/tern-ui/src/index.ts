@@ -1,3 +1,5 @@
+import 'regenerator-runtime/runtime';
+
 import { TernSecure } from './instance/ternsecure';
 import { mountComponentRenderer } from './ui/Renderer';
 

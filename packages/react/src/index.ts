@@ -33,3 +33,15 @@ export {
     cn
 } from './lib/utils'
 
+export type {
+    IsomorphicTernSecureOptions,
+    Browser,
+    TernSecureProviderProps,
+    initialState
+} from './types'
+
+export {
+    loadTernUIScript,
+    ternUIgetScriptUrl
+} from '@tern-secure/shared/loadTernUIScript'
+

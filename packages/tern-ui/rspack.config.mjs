@@ -46,9 +46,6 @@ const sharedConfig = () => {
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
     },
-    output: {
-      chunkFilename: `[name]_index_[fullhash:6]_${packageJSON.version}.js`
-    },
     plugins: [
       //new RsdoctorRspackPlugin({
       //  mode: process.env.RSDOCTOR === 'brief' ? 'brief' : 'normal',
@@ -58,6 +55,10 @@ const sharedConfig = () => {
       //  }
       //})
     ],
+    output: {
+      chunkFilename: `[name]_index_[fullhash:6]_${packageJSON.version}.js`
+    },
+    externals: undefined,
     optimization: {
       splitChunks: {
         cacheGroups: {
@@ -102,10 +103,8 @@ const sharedConfig = () => {
   };
 }
 
-/**
- * @returns {import('@rspack/core').RuleSetRule}
- */
-function cssLoader() {
+/** @type { () => (import('@rspack/core').RuleSetRule) }  */
+const cssLoader = () => {
   return {
     test: /\.css$/,
     use: ['postcss-loader'],
@@ -125,6 +124,7 @@ const typescriptLoader = () => {
       options: {
         env: {
           targets: packageJSON.browserslist
+
         },
         jsc: {
           parser: {
@@ -166,22 +166,20 @@ const typescriptDevLoader = () => {
     {
       test: /\.(jsx?|tsx?)$/,
       exclude: /node_modules/,
-      use: {
-        loader: 'builtin:swc-loader',
-        options: {
-          jsc: {
-            target: 'esnext',
-            parser: {
-              syntax: 'typescript',
-              tsx: true
-            },
-            externalHelpers: true,
-            transform: {
-              react: {
-                runtime: 'automatic',
-                development: true,
-                refresh: true
-              },
+      loader: 'builtin:swc-loader',
+      options: {
+        jsc: {
+          target: 'esnext',
+          parser: {
+            syntax: 'typescript',
+            tsx: true
+          },
+          externalHelpers: true,
+          transform: {
+            react: {
+              runtime: 'automatic',
+              development: true,
+              refresh: true
             },
           },
         },
@@ -190,10 +188,8 @@ const typescriptDevLoader = () => {
   ];
 }
 
-/**
- * @returns {{ module: { rules: import('@rspack/core').RuleSetRule[] }}}
- */
-function prodBundler() {
+/** @type { () => (import('@rspack/core').Configuration) } */
+const prodBundler = () => {
   return {
     module: {
       rules: [
@@ -205,7 +201,7 @@ function prodBundler() {
 }
 
 /** @type { () => (import('@rspack/core').Configuration) } */
-const sharedProdConfig = () =>{
+const sharedProdConfig = () => {
   return {
     devtool: false,
     output: {
@@ -244,7 +240,7 @@ const sharedProdConfig = () =>{
 /**
  * @returns {import('@rspack/core').Configuration[]}
  */
-function prodConfig() {
+const prodConfig = () => {
   const baseProdConfig = merge(
     sharedConfig(),
     sharedProdConfig(),
@@ -254,9 +250,15 @@ function prodConfig() {
     }
   );
 
-  const BrowserConfig = merge(baseProdConfig, {
-    ...entry('index.browser'),
-  });
+  const BrowserConfig = merge(
+    entry('index.browser'),
+    sharedConfig(),
+    sharedProdConfig(),
+    prodBundler(),
+    {
+      mode: 'production'
+    }
+  );
 
   const EsmConfig = merge(baseProdConfig, {
     ...entry('index'),
@@ -300,11 +302,14 @@ function prodConfig() {
   ];
 }
 /**
+ * @param {object} config
  * @param {object} config.env
  * @returns
 */
 const devConfig = ({ env }) => {
-  const devUrl = new URL(env.devOrigin);
+  const devOriginFromEnv = env.devOrigin || 'http://localhost:4000';
+  const devUrl = new URL(devOriginFromEnv);
+  const isTest = env.test
 
   /** @type {() => import('@rspack/core').Configuration} */
   const sharedDevConfig = () => {
@@ -316,15 +321,21 @@ const devConfig = ({ env }) => {
         ]
       },
       plugins: [
-        new ReactRefreshPlugin(/** @type {any} **/ ({ overlay: { sockHost: devUrl.host } })),
+        new ReactRefreshPlugin(/** @type {any} **/ ({ overlay: { sockHost: devUrl.host } })), 
+          isTest && new rspack.HtmlRspackPlugin({
+            minify: false,
+            template:'./public/index.html',
+            inject: false
+          })
       ],
       devtool: 'eval-cheap-source-map',
       output: {
-        publicPath: `${devUrl.origin}/npm`,
+        //path: path.resolve(__dirname, 'dist'),
+        //publicPath: env.devOrigin ? `${devUrl.origin}` : '/cdn/',
         crossOriginLoading: 'anonymous',
         filename: '[name].js',
         libraryTarget: 'umd',
-        //globalObject: '(typeof self !== "undefined" ? self : this)' // confirm
+        //globalObject: 'globalThis',
       },
       optimization: {
         minimize: false,
@@ -337,11 +348,9 @@ const devConfig = ({ env }) => {
         host: '0.0.0.0',
         port: 4000,
         hot: true,
-        static: ['dist'],
         liveReload: false,
         client:{
           webSocketURL: `auto://${devUrl.host}/ws`,
-          logging: 'log',
         }
       },
       cache: true,
@@ -382,10 +391,10 @@ const build = env => {
   //}, null, 2));
 
   if (isProd) {
-    console.log('Production config:', JSON.stringify(config, null, 2));
+    console.log('Config for production build:', JSON.stringify(config, null, 2));
   }
   else {
-    console.log('Development config:', JSON.stringify(config, null, 2));
+    console.log('Config for development build:', JSON.stringify(config, null, 2));
   }
 
 

@@ -1,20 +1,10 @@
 import React from "react"
-import { TernSecureProvider as TernSecureClientProvider } from "@tern-secure/react"
+import { TernSecureProvider as TernSecureReactProvider } from "@tern-secure/react"
+import type { TernSecureNextProps } from "../../types"
+import { allNextProviderPropsWithEnv } from "../../utils/allNextProviderProps"
+import { TernUIScript } from "../../utils/tern-ui-script";
 
 
-/**
- * Configuration options for TernSecure authentication
- */
-export interface TernSecureConfig {
-  /** Whether email verification is required (defaults to true) */
-  requiresVerification?: boolean
-  /** Custom path for login page (defaults to /sign-in) */
-  loginPath?: string
-  /** Custom path for signup page (defaults to /sign-up) */
-  signUpPath?: string
-  /** Custom loading component */
-  loadingComponent?: React.ReactNode
-}
 
 // Loading fallback component
 /*function TernSecureLoadingFallback() {
@@ -45,21 +35,13 @@ export interface TernSecureConfig {
  *   )
  * }
  */
-export async function TernSecureProvider({ 
-  children,
-  requiresVerification = true,
-  //loginPath,
-  //signUpPath,
-  loadingComponent,
- }: React.PropsWithChildren<TernSecureConfig>) {
+export function TernSecureProvider(props: React.PropsWithChildren<TernSecureNextProps>) {
+  const {children, ...nextProps } = props;
+  const providerProps = allNextProviderPropsWithEnv(nextProps);
   return (
-    <TernSecureClientProvider
-      requiresVerification={requiresVerification}
-      //loginPath={loginPath}
-      //signUpPath={signUpPath}
-      loadingComponent={loadingComponent}
-    >
+    <TernSecureReactProvider {...providerProps}>
+      <TernUIScript />
         {children}
-    </TernSecureClientProvider>
+    </TernSecureReactProvider>
   )
 }

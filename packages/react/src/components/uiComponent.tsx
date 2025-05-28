@@ -28,37 +28,36 @@ type SignInComponentProps = SignInProps & FallbackProp & {
 export const SignIn = withTernSecure(
   ({ instance, component, fallback, ui }: SignInComponentProps) => {
     const mountingStatus = useWaitForComponentMount(component);
-    const shouldShowFallback = mountingStatus === 'rendering' || !instance.ui?.controls;
-    const controls = instance.ui?.controls;
+    const shouldShowFallback = mountingStatus === 'rendering' || !instance.isReady;
 
     useEffect(() => {
       debugLog('SignIn', 'Instance Status', {
-        hasControls: !!controls,
+        isReady: instance.isReady,
         mountingStatus,
-        controlMethods: Object.keys(controls || {}),
+        hasSignInMethod: !!instance.showSignIn,
         hasConfig: !!ui,
       });
-    }, [controls, mountingStatus]);
+    }, [instance.isReady, mountingStatus, instance.showSignIn, ui]);
 
     const mount = useCallback((el: HTMLDivElement) => {
       debugLog('SignIn', 'Mounting', { ui });
-      controls?.showSignIn?.(el, ui);
-    }, [controls, ui]);
+      instance.showSignIn(el, ui);
+    }, [instance, ui]);
 
     const unmount = useCallback((el: HTMLDivElement) => {
       debugLog('SignIn', 'Unmounting');
-      controls?.hideSignIn?.(el);
-    }, [controls]);
+      instance.hideSignIn(el);
+    }, [instance]);
 
     const updateProps = useCallback((params: { node: HTMLDivElement; props: SignInUIConfig }) => {
       debugLog('SignIn', 'Updating Props', params.props);
-      controls?.showSignIn?.(params.node, params.props);
-    }, [controls]);
+      instance.showSignIn(params.node, params.props);
+    }, [instance]);
 
     const rendererProps = useMemo(() => ({
       ...ui,
       signIn: instance.signIn,
-    } as SignInUIConfig), [ui, instance.signIn ]);
+    } as SignInUIConfig), [ui, instance.signIn]);
 
     const rendererRootProps = useMemo(() => ({
       ...(shouldShowFallback && fallback && { style: { display: 'none' } }),
@@ -67,7 +66,7 @@ export const SignIn = withTernSecure(
     return (
       <>
         {shouldShowFallback && fallback}
-        {controls && (
+        {instance.isReady && (
           <TernSecureHostRenderer
             component={component}
             mount={mount}
@@ -96,31 +95,31 @@ type SignUpComponentProps = SignUpProps & FallbackProp & {
 export const SignUp = withTernSecure(
   ({ instance, component, fallback, config, redirectUrl = '/' }: SignUpComponentProps) => {
     const mountingStatus = useWaitForComponentMount(component);
-    const shouldShowFallback = mountingStatus === 'rendering' || !instance.ui?.controls;
-    const controls = instance.ui?.controls;
+    const shouldShowFallback = mountingStatus === 'rendering' || !instance.isReady;
 
     useEffect(() => {
       debugLog('SignUp', 'Instance Status', {
-        hasControls: !!controls,
+        isReady: instance.isReady,
         mountingStatus,
+        hasSignUpMethod: !!instance.showSignUp,
         hasConfig: !!config,
       });
-    }, [controls, mountingStatus, config]);
+    }, [instance.isReady, mountingStatus, instance.showSignUp, config]);
 
     const mount = useCallback((el: HTMLDivElement) => {
       debugLog('SignUp', 'Mounting', { config });
-      controls?.showSignUp?.(el, config);
-    }, [controls, config]);
+      instance.showSignUp(el, config);
+    }, [instance, config]);
 
     const unmount = useCallback((el: HTMLDivElement) => {
       debugLog('SignUp', 'Unmounting');
-      controls?.hideSignUp?.(el);
-    }, [controls]);
+      instance.hideSignUp(el);
+    }, [instance]);
 
     const updateProps = useCallback((params: { node: HTMLDivElement; props: SignUpUIConfig }) => {
       debugLog('SignUp', 'Updating Props', params.props);
-      controls?.showSignUp?.(params.node, params.props);
-    }, [controls]);
+      instance.showSignUp(params.node, params.props);
+    }, [instance]);
 
     const rendererProps = useMemo(() => ({
       ...config,
@@ -135,7 +134,7 @@ export const SignUp = withTernSecure(
     return (
       <>
         {shouldShowFallback && fallback}
-        {controls && (
+        {instance.isReady && (
           <TernSecureHostRenderer
             component={component}
             mount={mount}
