@@ -17,7 +17,7 @@ const directoryName = 'dist';
 const bucketName = process.env.GCS_BUCKET_NAME;
 const origin = ['*'];
 const responseHeader = ['Content-Type'];
-const maxAgeSeconds = 3600;
+const maxAgeSeconds = 6;
 
 // https://cloud.google.com/appengine/docs/standard/java/javadoc/com/google/appengine/api/urlfetch/HTTPMethod
 const method = ['GET'];

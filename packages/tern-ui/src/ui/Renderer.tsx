@@ -1,27 +1,24 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState , useLayoutEffect, lazy} from 'react';
 import type {
     TernSecureInstanceTree,
-    SignInUIConfig,
-    SignUpUIConfig,
     SignInPropsTree,
     SignUpPropsTree,
     TernSecureInstanceTreeOptions,
 } from '@tern-secure/types';
 import {
-    SignIn,
-    SignUp,
     TernSecureComponents
 } from '../lazyLoading/components';
-import type {
-    TernSecureComponentName
+import {
+    TernSecureComponentName,
+    preloadComponent
 } from '../lazyLoading/components';
-import { 
-    TernSecureInstanceContext,
-} from '@tern-secure/shared/react';
-import { createRoot } from 'react-dom/client';
 import ReactDOM from 'react-dom';
 
+const TernSecureContextWrapper = lazy(() => import('../ctx').then(module => ({ default: module.TernSecureContextWrapper })));
+
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
+
+
 
 const debugLog = (component: string, action: string, data?: any) => {
   console.log(`[tern-ui: TernSecureHostRenderer:${component}] ${action}`, data || '');
@@ -77,36 +74,78 @@ function assertDOMElement(element: HTMLElement): asserts element {
 export const mountComponentRenderer = (instance: TernSecureInstanceTree, options: TernSecureInstanceTreeOptions) => {
     debugLog('Renderer', 'Initializing Renderer', instance);
     
-    let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
-    if (!instanceRoot) {
-        instanceRoot = document.createElement('div');
-        instanceRoot.setAttribute('id', ROOT_ELEMENT_ID);
-        document.body.appendChild(instanceRoot);
+    const getOrCreateRoot = () => {
+        let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
+        console.log('[Renderer] Looking for existing root:', { 
+            elementId: ROOT_ELEMENT_ID, 
+            found: !!instanceRoot 
+        });
+
+        if (!instanceRoot) {
+            instanceRoot = document.createElement('div');
+            instanceRoot.setAttribute('id', ROOT_ELEMENT_ID);
+            // Hide the root container since it's just for React
+            instanceRoot.style.display = 'none';
+            instanceRoot.style.position = 'absolute';
+            document.body.appendChild(instanceRoot);
+            
+            console.log('[Renderer] Created React root container:', {
+                element: instanceRoot,
+                id: instanceRoot.id,
+                parentNode: instanceRoot.parentNode,
+                bodyChildren: document.body.children.length,
+                allTernSecureElements: document.querySelectorAll('[data-ternsecure-component]').length
+            });
+
+            debugLog('Renderer', 'Created React root container');
+        } else {
+            console.log('[Renderer] Using existing root container:', {
+                element: instanceRoot,
+                parentNode: instanceRoot.parentNode
+            });
+        }
+        return instanceRoot;
+    };
+
+
+    let componentsControlsResolver: Promise<TernComponentControls> | undefined;
+
+    const componentsControlsPromise = () => {
+        let resolve: (value?: any) => void = () => {};
+        let reject: (value?: any) => void = () => {};
+        const promise =  new Promise((res, rej) => {
+            resolve = res;
+            reject = rej;
+        });
+        return { promise, resolve, reject };
     }
+    
 
-    let componentsControlsResolver: (controls: TernComponentControls) => void;
-    const componentsControlsPromise = new Promise<TernComponentControls>((resolve) => {
-        componentsControlsResolver = resolve;
-    });
-
-    const root = createRoot(instanceRoot);
+    //const root = createRoot(instanceRoot);
     
     return {
-        ensureMounted: async () => {
-            root.render(
+        ensureMounted: async (props?: {preloadHint: TernSecureComponentName}) => {
+            const { preloadHint } = props || {};
+            if (!componentsControlsResolver) {
+                const instanceRoot = getOrCreateRoot();
+                const deferredPromise = componentsControlsPromise();
+                if (preloadHint) {
+                    void preloadComponent(preloadHint)
+                }
+               componentsControlsResolver = import ('../lazyLoading/common').then(({ createRoot }) => {
+                createRoot(instanceRoot).render(
                 <Components
-                    instance={instance}
-                    options={options}
-                    onComponentsMounted={() => {
-                        if (componentsControlsResolver) {
-                            componentsControlsResolver(componentsControls);
-                        }
-                    }}
-                />
+                  instance={instance}
+                  options={options}
+                  onComponentsMounted={deferredPromise.resolve}
+                />,
             );
-            return componentsControlsPromise;
-        },
-    }
+            return deferredPromise.promise.then(() => componentsControls);
+        });
+        }
+        return componentsControlsResolver.then(controls => controls);
+    },
+}
 }
 
 export type MountComponentRenderer = typeof mountComponentRenderer;
@@ -127,9 +166,9 @@ type LazyProvidersProps = React.PropsWithChildren<{
 }>;
 const LazyProviders = (props: LazyProvidersProps) => {
     return (
-        <TernSecureInstanceContext.Provider value={props.instance}>
-                {props.children}
-        </TernSecureInstanceContext.Provider>
+        <TernSecureContextWrapper instance={props.instance}>
+            {props.children}
+        </TernSecureContextWrapper>
     );
 };
 
@@ -161,7 +200,7 @@ const LazyComponentRenderer = ({ node, name, props, componentKey }: LazyComponen
 };
 
 const Components = (props: ComponentsProps) => {
-    const { instance, onComponentsMounted } = props;
+    const { instance } = props;
     const [state, setState] = useState<ComponentsState>({
         options: props.options,
         nodes: new Map(),
@@ -169,7 +208,7 @@ const Components = (props: ComponentsProps) => {
 
     const { nodes } = state;
     
-    useEffect(() => {
+    useLayoutEffect(() => {
         componentsControls.mountComponent = params => {
             const { name, node, props: componentProps, appearanceKey } = params;
             assertDOMElement(node);
@@ -217,8 +256,8 @@ const Components = (props: ComponentsProps) => {
             });
         };
 
-        onComponentsMounted();
-    }, [onComponentsMounted]);
+        props.onComponentsMounted();
+    }, []);
 
     debugLog('Components', 'Rendering', { 
         nodeCount: nodes.size,
@@ -226,8 +265,10 @@ const Components = (props: ComponentsProps) => {
     });
 
     return (
-        <LazyProviders instance={instance}>
-            {Array.from(nodes.entries()).map(([node, options]) => (
+        <LazyProviders
+          instance={props.instance}
+        >
+            {[...nodes].map(([node, options]) => (
                 <LazyComponentRenderer
                     key={options.key}
                     node={node}

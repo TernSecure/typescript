@@ -53,8 +53,8 @@ export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
     if ( isDevelopment) {
         const localHost = process.env.TERN_UI_HOST || 'localhost';
         const localPort = options?.localPort || process.env.TERN_UI_PORT || '4000';
-        //return `http://${localHost}:${localPort}/index.browser.js`;
-        return `https://storage.googleapis.com/cdn.lifesprintcare.ca/dist/index.browser.js`
+        return `http://${localHost}:${localPort}/index.browser.js`;
+        //return `http://cdn.lifesprintcare.ca/dist/index.browser.js`
     }
 
     const ternsecureCDN = options?.customDomain || 

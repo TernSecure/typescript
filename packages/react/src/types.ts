@@ -97,6 +97,10 @@ export interface BrowserConstructor {
   new (customDomain?: string): Browser;
 }
 
+
+export interface HeadlessUIBrowserConstructor {
+  new (customDomain?: string): HeadlessUIBrowser;
+}
 /**
  * TernSecureProviderProps
  * @param interface
@@ -111,14 +115,25 @@ export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
     onUserChanged?: (user: TernSecureUser | null) => Promise<void>
 }
 
-export interface Browser extends TernSecureInstanceTree {
+export interface HeadlessUIBrowser extends TernSecureInstanceTree {
   load: (options?: TernSecureInstanceTreeOptions) => Promise<void>;
+}
+
+export interface Browser extends HeadlessUIBrowser {
   onComponentsReady: Promise<void>;
   components: any;
 }
 
+export type TernSecureProps = 
+  | HeadlessUIBrowserConstructor
+  | HeadlessUIBrowser 
+  | Browser 
+  | BrowserConstructor 
+  | null 
+  | undefined
+
 export type IsomorphicTernSecureOptions = TernSecureInstanceTreeOptions & {
-  TernSecure?: Browser;
+  TernSecure?: TernSecureProps;
   apiKey?: string;
   customDomain?: string;
   proxyUrl?: string;

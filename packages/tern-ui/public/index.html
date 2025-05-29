@@ -57,6 +57,24 @@
                             Show Sign Up
                         </button>
                     </div>
+                    
+                    <!-- Component Target Containers -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Component Containers</h3>
+                        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                            <!-- Sign In Container -->
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 min-h-[400px]">
+                                <h4 class="text-sm font-medium text-gray-500 mb-4">Sign In Component</h4>
+                                <div id="signin-container" class="w-full h-full"></div>
+                            </div>
+                            
+                            <!-- Sign Up Container -->
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 min-h-[400px]">
+                                <h4 class="text-sm font-medium text-gray-500 mb-4">Sign Up Component</h4>
+                                <div id="signup-container" class="w-full h-full"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,21 +139,37 @@
         // Set up test action handlers
         document.getElementById('show-signin').addEventListener('click', () => {
             const ternSecureInstance = window.TernSecure;
-            if (ternSecureInstance?.showSignIn) {
-                ternSecureInstance.showSignIn();
-                log('Show Sign In requested');
+            const targetContainer = document.getElementById('signin-container');
+            
+            if (ternSecureInstance?.showSignIn && targetContainer) {
+                ternSecureInstance.showSignIn(targetContainer, {
+                    appearance: {
+                        colors: {
+                            primary: '#4F46E5'
+                        }
+                    }
+                });
+                log('Show Sign In requested with target container');
             } else {
-                log('TernSecure instance not ready or showSignIn method not available');
+                log('TernSecure instance not ready or target container not found');
             }
         });
 
         document.getElementById('show-signup').addEventListener('click', () => {
             const ternSecureInstance = window.TernSecure;
-            if (ternSecureInstance?.showSignUp) {
-                ternSecureInstance.showSignUp();
-                log('Show Sign Up requested');
+            const targetContainer = document.getElementById('signup-container');
+            
+            if (ternSecureInstance?.showSignUp && targetContainer) {
+                ternSecureInstance.showSignUp(targetContainer, {
+                    appearance: {
+                        colors: {
+                            primary: '#059669'
+                        }
+                    }
+                });
+                log('Show Sign Up requested with target container');
             } else {
-                log('TernSecure instance not ready or showSignUp method not available');
+                log('TernSecure instance not ready or target container not found');
             }
         });
 
@@ -145,7 +179,7 @@
 
     <!-- TernSecure Script -->
     <script
-        src="http://cdn.lifesprintcare.ca/dist/index.browser.js"
+        src="./index.browser.js"
         data-api-key="pk1090"
         data-domain="localhost"
         data-proxy-url="https://cdn.ternui.dev"

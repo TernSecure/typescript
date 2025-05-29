@@ -30,29 +30,7 @@ export const SignIn = withTernSecure(
     const mountingStatus = useWaitForComponentMount(component);
     const shouldShowFallback = mountingStatus === 'rendering' || !instance.isReady;
 
-    useEffect(() => {
-      debugLog('SignIn', 'Instance Status', {
-        isReady: instance.isReady,
-        mountingStatus,
-        hasSignInMethod: !!instance.showSignIn,
-        hasConfig: !!ui,
-      });
-    }, [instance.isReady, mountingStatus, instance.showSignIn, ui]);
 
-    const mount = useCallback((el: HTMLDivElement) => {
-      debugLog('SignIn', 'Mounting', { ui });
-      instance.showSignIn(el, ui);
-    }, [instance, ui]);
-
-    const unmount = useCallback((el: HTMLDivElement) => {
-      debugLog('SignIn', 'Unmounting');
-      instance.hideSignIn(el);
-    }, [instance]);
-
-    const updateProps = useCallback((params: { node: HTMLDivElement; props: SignInUIConfig }) => {
-      debugLog('SignIn', 'Updating Props', params.props);
-      instance.showSignIn(params.node, params.props);
-    }, [instance]);
 
     const rendererProps = useMemo(() => ({
       ...ui,
@@ -69,9 +47,9 @@ export const SignIn = withTernSecure(
         {instance.isReady && (
           <TernSecureHostRenderer
             component={component}
-            mount={mount}
-            unmount={unmount}
-            updateProps={updateProps}
+            mount={instance.showSignIn}
+            unmount={instance.hideSignIn}
+            //updateProps={instance.up}
             props={rendererProps}
             rootProps={rendererRootProps}
           />
@@ -106,7 +84,7 @@ export const SignUp = withTernSecure(
       });
     }, [instance.isReady, mountingStatus, instance.showSignUp, config]);
 
-    const mount = useCallback((el: HTMLDivElement) => {
+{/*    const mount = useCallback((el: HTMLDivElement) => {
       debugLog('SignUp', 'Mounting', { config });
       instance.showSignUp(el, config);
     }, [instance, config]);
@@ -119,7 +97,7 @@ export const SignUp = withTernSecure(
     const updateProps = useCallback((params: { node: HTMLDivElement; props: SignUpUIConfig }) => {
       debugLog('SignUp', 'Updating Props', params.props);
       instance.showSignUp(params.node, params.props);
-    }, [instance]);
+    }, [instance]); */}
 
     const rendererProps = useMemo(() => ({
       ...config,
@@ -137,9 +115,9 @@ export const SignUp = withTernSecure(
         {instance.isReady && (
           <TernSecureHostRenderer
             component={component}
-            mount={mount}
-            unmount={unmount}
-            updateProps={updateProps}
+            mount={instance.showSignUp}
+            unmount={instance.hideSignUp}
+            //updateProps={instance.}
             props={rendererProps}
             rootProps={rendererRootProps}
           />

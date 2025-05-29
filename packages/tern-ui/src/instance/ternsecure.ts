@@ -59,10 +59,10 @@ export class TernSecure implements TernSecureInterface {
         this.customDomain = domain;
         console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
         this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
-        this.#setStatus('ready');
+        //this.#setStatus('ready');
         console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
 
-        //TernSecureBase.ternsecure = this
+        TernSecureBase.ternsecure = this
     }
 
     get isReady(): boolean {
@@ -92,6 +92,8 @@ export class TernSecure implements TernSecureInterface {
                     this.#options,
                 );
             }
+            this.#setStatus('ready');
+            this.#eventBus.emit('ready')
         } catch (error) {
             this.error = error as Error;
             this.#setStatus('error');
@@ -110,6 +112,10 @@ export class TernSecure implements TernSecureInterface {
     }
     
     public showSignIn(node: HTMLDivElement, config?: SignInUIConfig): void {
+        if (!node) {
+            throw new Error('showSignIn requires a valid HTMLDivElement as the first parameter');
+        }
+
         this.assertComponentControlsReady(this.#componentControls);
         const componentProps: SignInPropsTree = {
             ui: config,
@@ -128,6 +134,9 @@ export class TernSecure implements TernSecureInterface {
     }
 
     public hideSignIn(node: HTMLDivElement): void {
+        if (!node) {
+            throw new Error('hideSignIn requires a valid HTMLDivElement as the first parameter');
+        }
         this.assertComponentControlsReady(this.#componentControls);
         this.#componentControls.ensureMounted().then(controls =>
             controls.unmountComponent({ 
@@ -136,6 +145,10 @@ export class TernSecure implements TernSecureInterface {
         );
     }
     public showSignUp(node: HTMLDivElement, config?: SignUpUIConfig): void {
+        if (!node) {
+            throw new Error('showSignUp requires a valid HTMLDivElement as the first parameter');
+        }
+
         this.assertComponentControlsReady(this.#componentControls);
         const componentProps: SignInPropsTree = {
             ui: config,
@@ -154,6 +167,9 @@ export class TernSecure implements TernSecureInterface {
     }
     
     public hideSignUp(node: HTMLDivElement): void {
+        if (!node) {
+            throw new Error('hideSignUp requires a valid HTMLDivElement as the first parameter');
+        }
         this.assertComponentControlsReady(this.#componentControls);
         this.#componentControls.ensureMounted().then(controls =>
             controls.unmountComponent({ 

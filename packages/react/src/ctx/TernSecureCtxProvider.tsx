@@ -139,6 +139,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       mode: options.mode || (typeof window === 'undefined' ? 'server' : 'browser'),
       timestamp: new Date().toISOString()
     });
+
     return IsomorphicTernSecure.getOrCreateInstance(options);
   }, [options]);
 
@@ -175,43 +176,10 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
 
   // Handle async loadTernUI
   useEffect(() => {
-    const loadUI = async () => {
-      if (isomorphicTernSecure.isReady || options.mode === 'server') {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        console.log('[TernSecure Provider] Starting UI load:', {
-          timestamp: new Date().toISOString(),
-          instance: !!isomorphicTernSecure,
-          isReady: isomorphicTernSecure.isReady,
-          isLoading: isomorphicTernSecure.isLoading
-        });
-
-        const browser = await isomorphicTernSecure.loadTernUI();
-
-        if (!browser) {
-          console.warn('[TernSecure Provider] Browser object is null/undefined after load');
-          throw new Error('Failed to load Tern UI');
-        }
-        
-        console.log('[TernSecure Provider] UI loaded successfully:', {
-          hasBrowser: !!browser,
-          timestamp: new Date().toISOString()
-        });
-      } catch (err) {
-        console.error('[TernSecure Provider] Failed to load UI:', {
-          error: err,
-          timestamp: new Date().toISOString()
-        });
-        setError(err as Error);
-        setIsLoading(false);
-      }
-    };
-    
-    loadUI();
-  }, [isomorphicTernSecure, options.mode]);
+    void isomorphicTernSecure.initialize({ //check awai
+      appearance: options.defaultAppearance
+    })
+  }, [options.mode, options.defaultAppearance]);
 
   // Debug log when instance is created and cleanup
   useEffect(() => {
@@ -231,7 +199,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       });
       IsomorphicTernSecure.clearInstance();
     };
-  }, [isomorphicTernSecure, instanceStatus, isLoading, error]);
+  }, []);
 
   return {
     isomorphicTernSecure,
