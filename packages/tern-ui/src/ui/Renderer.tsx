@@ -1,8 +1,6 @@
 import React, { Suspense, useState, useLayoutEffect } from 'react';
 import type {
     TernSecureInstanceTree,
-    SignInPropsTree,
-    SignUpPropsTree,
     TernSecureInstanceTreeOptions,
 } from '@tern-secure/types';
 import {

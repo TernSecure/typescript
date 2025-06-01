@@ -1,7 +1,7 @@
 'use client'
 
-import { Input } from './input'
-import { Label } from './label'
+import { Input } from '../elements/input'
+import { Label } from '../elements/label'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { 
@@ -77,7 +77,6 @@ export function PasswordField({
       {label && (
         <Label htmlFor={field.name}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
       <div className="relative">
@@ -90,7 +89,7 @@ export function PasswordField({
           onChange={(e) => field.handleChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          required={required}
+          required
           className="pr-10"
         />
         <button
@@ -126,7 +125,6 @@ export function EmailField({
       {label && (
         <Label htmlFor={field.name}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
       <Input
@@ -138,7 +136,7 @@ export function EmailField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        required={required}
+        required
       />
       <FieldErrors />
     </div>
