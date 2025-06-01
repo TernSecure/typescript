@@ -2,6 +2,7 @@
 
 import { Alert, AlertDescription } from '../components/elements/alert'
 import { Loader2 } from 'lucide-react'
+import { Button } from '../components/elements/button'
 import { cn } from '../lib/utils'
 
 interface FormErrorsProps {
@@ -38,10 +39,10 @@ export function FormButton({
   className
 }: FormButtonProps) {
   return (
-    <button
+    <Button
       type="submit"
       disabled={!canSubmit || isSubmitting}
-      className={cn("w-full", className)}
+      className={cn("w-full backgroundColor: 'var(--tern-primary, #2563EB)'", className)}
     >
       {isSubmitting ? (
         <>
@@ -51,7 +52,7 @@ export function FormButton({
       ) : (
         submitText
       )}
-    </button>
+    </Button>
   )
 }
 

@@ -6,6 +6,14 @@ import type {
 import { SocialSignIn } from './social-sign-in';
 import { EmailSignIn } from './email-sign-in';
 import { cn } from '../../lib/utils';
+import { 
+  Card,
+  CardTitle,
+  CardDescription,
+  CardHeader,
+  CardContent,
+  CardFooter 
+} from '../../components/elements'
 
 // SignInProps now directly extends SignInPropsTree.
 // It will inherit ui, onError, onSuccess, and the new 'signIn' methods prop.
@@ -52,17 +60,21 @@ export function SignIn({
   };
 
   return (
-    <div className={cn('bg-white p-8 rounded-lg shadow-md w-full max-w-md', className)}>
+    <div className="relative flex items-center justify-center">
+    <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
+      <CardHeader className="space-y-1 text-center">
       {logo && (
         <div className="flex justify-center mb-6">
           {/* Assuming logo is a URL. If it can be an SVG string, more complex rendering is needed */}
           <img src={logo} alt={appName ? `${appName} Logo` : 'Application Logo'} className="h-16 w-auto" />
         </div>
       )}
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Sign in to {appName || 'your account'}
-      </h2>
-
+      <CardTitle className={cn("font-bold")}> Sign in to {appName || 'your account'} </CardTitle>
+        <CardDescription className={cn("text-muted-foreground")}>
+          Please sign in to continue
+        </CardDescription>
+        </CardHeader>
+      <CardContent className="space-y-4">
       {isEmailSignInEnabled && signIn?.withEmail && (
         <EmailSignIn
           onError={handleError}
@@ -84,11 +96,20 @@ export function SignIn({
           onSuccess={handleSocialSuccess}
           redirectUrl={redirectUrl}
           isDisabled={false}
-          // Pass down the social button configuration
           config={socialButtonsConfig} 
         />
       )}
-    </div>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <p className="text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <a href="/sign-up" className="text-primary hover:underline">
+          Sign up
+          </a>
+        </p>
+      </CardFooter>
+    </Card>
+  </div>
   );
 }
 

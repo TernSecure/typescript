@@ -66,7 +66,7 @@ type MountingStatus = 'rendering' | 'rendered' | 'error';
  * to an element with a `data-ternsecure-component="${component}"` property.
  */
 export const useWaitForComponentMount = (component?: string): MountingStatus => {
-  const watcherRef = useRef<Promise<void>>();
+  const watcherRef = useRef<Promise<void> | undefined>(undefined);
   const [status, setStatus] = useState<MountingStatus>('rendering');
 
   useEffect(() => {

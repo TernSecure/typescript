@@ -21,7 +21,7 @@ type HostRendererProps = PropsWithChildren<
   MountProps & {
     component?: string;
     hideRootHtmlElement?: boolean;
-    rootProps?: JSX.IntrinsicElements['div'];
+    rootProps?: React.JSX.IntrinsicElements['div'];
   }
 >;
 

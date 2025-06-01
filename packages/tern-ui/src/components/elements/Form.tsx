@@ -4,6 +4,8 @@ import {
   PasswordField,
 } from './FieldControl'
 
+import { Button } from './button'
+
 const { 
   fieldContext, 
   useFieldContext, 
@@ -15,7 +17,7 @@ export function SubscribeButton({ label }: { label: string }) {
   const form = useFormContext()
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
-      {(isSubmitting) => <button disabled={isSubmitting}>{label}</button>}
+      {(isSubmitting) => <Button disabled={isSubmitting}>{label}</Button>}
     </form.Subscribe>
   )
 }

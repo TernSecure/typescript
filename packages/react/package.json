@@ -31,10 +31,6 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@radix-ui/react-label": "^2.1.1",
-    "@radix-ui/react-separator": "^1.1.1",
-    "@radix-ui/react-slot": "^1.2.2",
-    "@tanstack/react-form": "^1.11.1",
     "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
     "class-variance-authority": "^0.7.1",
@@ -47,6 +43,8 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.6",
     "@tailwindcss/postcss": "^4.1.6",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
     "autoprefixer": "^10.4.21",
     "esbuild-plugin-postcss2": "^0.1.2",
     "firebase": "^11.0.0",

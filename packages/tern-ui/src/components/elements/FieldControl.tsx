@@ -1,6 +1,7 @@
 'use client'
 
 import { Input } from './input'
+import { Label } from './label'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { 
@@ -42,10 +43,10 @@ export function TextField({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor={field.name}>
+        <Label htmlFor={field.name}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        </Label>
       )}
       <Input
         id={field.name}
@@ -74,10 +75,10 @@ export function PasswordField({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor={field.name}>
+        <Label htmlFor={field.name}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        </Label>
       )}
       <div className="relative">
         <Input
@@ -123,10 +124,10 @@ export function EmailField({
   return (
     <div className="space-y-2">
       {label && (
-        <label htmlFor={field.name}>
+        <Label htmlFor={field.name}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        </Label>
       )}
       <Input
         id={field.name}
