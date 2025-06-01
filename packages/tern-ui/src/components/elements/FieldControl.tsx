@@ -1,6 +1,6 @@
 'use client'
 
-import { Input } from '../components/input'
+import { Input } from './input'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { 

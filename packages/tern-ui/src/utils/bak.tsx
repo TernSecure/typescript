@@ -7,11 +7,11 @@ import type {
 } from '@tern-secure/types';
 import {
     TernSecureComponents
-} from '../lazyLoading/components';
+} from '../components/lazyLoading/components';
 import {
     TernSecureComponentName,
     preloadComponent
-} from '../lazyLoading/components';
+} from '../components/lazyLoading/components';
 import { 
     TernSecureInstanceContext,
 } from '@tern-secure/shared/react';

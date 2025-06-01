@@ -1,9 +1,7 @@
 import { useTernSecure } from '@tern-secure/shared/react'
 import type { 
-  SignInResponseTree,
   SignInPropsTree,
   AuthErrorTree,
-  TernSecureInstanceTree // Keep this for TernSecureInstanceTree['signIn'] type
 } from '@tern-secure/types';
 import { SocialSignIn } from './social-sign-in';
 import { EmailSignIn } from './email-sign-in';

@@ -233,7 +233,10 @@ export class TernSecure implements TernSecureInterface {
                 throw new Error('Method not implemented.');
             },
             onError: (callback) => {
-                throw new Error('Method not implemented.');
+                this.#eventBus.on('error', callback);
+                return () => {
+                    this.#eventBus.off('error', callback);
+                };
             },
             onStatusChanged: (callback) => {
                 this.#eventBus.on('statusChange', callback);

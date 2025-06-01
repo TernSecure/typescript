@@ -22,8 +22,9 @@ import { loadTernUIScript } from '@tern-secure/shared/loadTernUIScript';
 
 const ENVIRONMENT = process.env.NODE_ENV;
 
+
 export interface Global {
-  TernSecure: Browser |  HeadlessUIBrowser | null;
+  TernSecure?: HeadlessUIBrowser | Browser;
 }
 
 declare const global: Global;
@@ -197,17 +198,23 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   }
 
   async loadTernUI(): Promise<HeadlessUIBrowser | Browser | undefined> {
-    console.log('[IsomorphicTernSecure] loadTernUI called:', {
-      mode: this._mode,
-      isReady: this.isReady,
-      status: this.status,
-      timestamp: new Date().toISOString(),
-    });
-
     if (this._mode !== 'browser' || this.isReady) {
       console.warn('[IsomorphicTernSecure] loadTernUI called in non-browser mode');
       return;
     }
+
+    if (typeof window !== 'undefined') {
+      window.customDomain = this.#customDomain;
+    }
+
+    console.log('[IsomorphicTernSecure] loadTernUI called:', {
+      mode: this._mode,
+      ternSecure: this.TernSecure,
+      isReady: this.isReady,
+      status: this.status,
+      customDomain: this.#customDomain,
+      timestamp: new Date().toISOString(),
+    });
 
     try {
       if(this.TernSecure) {
@@ -228,6 +235,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
         }
         global.TernSecure = coreInstance;
       } else {
+        console.log('[IsomorphicTernSecure] Loading TernSecure from script is called...');
         if(!global.TernSecure) {
           console.log('[IsomorphicTernSecure] Loading TernSecure from script...');
           await loadTernUIScript({
@@ -258,6 +266,14 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   }
 
   private beforeLoad = (ternui: Browser | HeadlessUIBrowser | undefined) => {
+    console.log('[IsomorphicTernSecure] beforeLoad called with TernUI:', {
+      ternui,
+      isReady: ternui?.isReady,
+      status: ternui?.status,
+      premountedSignInNodes: this.premountState.signInNodes.size,
+      premountedSignUpNodes: this.premountState.signUpNodes.size
+    });
+
     if (!ternui) {
       throw new Error('Failed to inject TernUI');
     }
@@ -282,6 +298,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     });
 
     this.ternui = ternui;
+
     this.subscribeToTernUIEvents();
 
     this.premountState.signInNodes.forEach((config, node) => {
@@ -293,6 +310,9 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
       console.log('[IsomorphicTernSecure] Processing premounted SignUp node', { node, config });
       ternui.showSignUp(node, config);
     });
+
+      this.#status = 'ready';
+      this.#eventBus.emit('statusChange', 'ready');
 
     if (typeof this.ternui.status === 'undefined') {
       this.#status = 'ready';
@@ -326,6 +346,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
         ternuiStatus: this.ternui?.status
       });
 
+      this.#status = newStatus;
       this.#eventBus.emit('statusChange', newStatus);
     });
 
@@ -339,14 +360,15 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
   #awaitForTernUI(): Promise<HeadlessUIBrowser | Browser>{
     return new Promise<HeadlessUIBrowser | Browser>(resolve => {
+      console.log('[IsomorphicTernSecure] Awaiting TernUI initialization...');
       resolve(this.ternui!);
     });
   }
 
-  initialize = async (initOptions?: {
-    appearance?: any
-  }): Promise<void> => {
+  initialize = async (props: any): Promise<void> => {
+    console.log('[IsomorphicTernSecure] Initialize is called with options:', props);
     try {
+      console.log('[IsomorphicTernSecure] Initializing TernUI...');
       await this.#awaitForTernUI();
       console.log('[IsomorphicTernSecure] TernUI initialized successfully');
     } catch (error) {
@@ -451,7 +473,10 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
         };
       },
       onStatusChanged: (callback: (status: TernSecureInstanceTreeStatus) => void) => {
-        const unsubscribe = this.#eventBus.on('statusChange', callback);
+        if (this.ternui?.events?.onStatusChanged) {
+          return this.ternui.events.onStatusChanged(callback);
+        }
+        this.#eventBus.on('statusChange', callback);
         return () => {
           this.#eventBus.off('statusChange', callback);
         };

@@ -1,6 +1,9 @@
 {  "compilerOptions": {
     "allowJs": false,
     "baseUrl": "src",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "declaration": false,
     "esModuleInterop": true,
     "isolatedModules": true,

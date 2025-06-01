@@ -1,5 +1,5 @@
-import NextScript from 'next/script'
-import { ternUIgetScriptUrl } from '@tern-secure/react'
+import Script from 'next/script'
+import { ternUIgetScriptUrl, constructScriptAttributes } from '@tern-secure/react'
 import type { TernSecureNextProps } from '../types'
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -29,18 +29,24 @@ export function TernUIScript({
         return null;
     }
 
-    const scriptUrl = ternUIgetScriptUrl({
+    const scriptOptions = {
         customDomain: effectiveDomain,
         proxyUrl,
         version,
         nonce,
-    });
+    };
+
+    const scriptUrl = ternUIgetScriptUrl(scriptOptions);
+    const scriptAttributes = constructScriptAttributes(scriptOptions);
 
     return (
-        <NextScript
+        <Script
           src={scriptUrl}
+          data-ternui-script
+          async
           nonce={nonce}
           strategy={undefined}
+            {...scriptAttributes}
           //crossOrigin= {undefined}
         />
     )

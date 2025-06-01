@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState , useLayoutEffect, lazy} from 'react';
+import React, { Suspense, useState, useLayoutEffect } from 'react';
 import type {
     TernSecureInstanceTree,
     SignInPropsTree,
@@ -6,27 +6,28 @@ import type {
     TernSecureInstanceTreeOptions,
 } from '@tern-secure/types';
 import {
-    TernSecureComponents
-} from '../lazyLoading/components';
-import {
-    TernSecureComponentName,
     preloadComponent
-} from '../lazyLoading/components';
-import ReactDOM from 'react-dom';
+} from '../components/lazyLoading/components';
+import type {
+    TernSecureComponentName
+} from '../components/lazyLoading/components';
 
-const TernSecureContextWrapper = lazy(() => import('../ctx').then(module => ({ default: module.TernSecureContextWrapper })));
+import {
+    LazyComponentRenderer,
+    LazyProviders
+} from '../components/lazyLoading/providersCtx'
+
+import type {
+    AvailableComponentProps
+} from '../components/types';
 
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
-
 
 
 const debugLog = (component: string, action: string, data?: any) => {
   console.log(`[tern-ui: TernSecureHostRenderer:${component}] ${action}`, data || '');
 };
 
-export type AvailableComponentProps = 
-    | SignInPropsTree
-    | SignUpPropsTree;
 
 interface HtmlNodeOptions {
     /** Unique key for React rendering */
@@ -85,8 +86,8 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree, options
             instanceRoot = document.createElement('div');
             instanceRoot.setAttribute('id', ROOT_ELEMENT_ID);
             // Hide the root container since it's just for React
-            instanceRoot.style.display = 'none';
-            instanceRoot.style.position = 'absolute';
+            //instanceRoot.style.display = 'none';
+            //instanceRoot.style.position = 'absolute';
             document.body.appendChild(instanceRoot);
             
             console.log('[Renderer] Created React root container:', {
@@ -110,7 +111,7 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree, options
 
     let componentsControlsResolver: Promise<TernComponentControls> | undefined;
 
-    const componentsControlsPromise = () => {
+    const createDeferredPromise = () => {
         let resolve: (value?: any) => void = () => {};
         let reject: (value?: any) => void = () => {};
         const promise =  new Promise((res, rej) => {
@@ -126,23 +127,26 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree, options
     return {
         ensureMounted: async (props?: {preloadHint: TernSecureComponentName}) => {
             const { preloadHint } = props || {};
+
             if (!componentsControlsResolver) {
                 const instanceRoot = getOrCreateRoot();
-                const deferredPromise = componentsControlsPromise();
+                const deferred = createDeferredPromise();
+
                 if (preloadHint) {
                     void preloadComponent(preloadHint)
                 }
-               componentsControlsResolver = import ('../lazyLoading/common').then(({ createRoot }) => {
+
+               componentsControlsResolver = import ('../components/lazyLoading/common').then(({ createRoot }) => {
                 createRoot(instanceRoot).render(
-                <Components
-                  instance={instance}
-                  options={options}
-                  onComponentsMounted={deferredPromise.resolve}
-                />,
+                  <Components
+                    instance={instance}
+                    options={options}
+                    onComponentsMounted={deferred.resolve}
+                   />,
             );
-            return deferredPromise.promise.then(() => componentsControls);
+            return deferred.promise.then(() => componentsControls);
         });
-        }
+    }
         return componentsControlsResolver.then(controls => controls);
     },
 }
@@ -151,53 +155,6 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree, options
 export type MountComponentRenderer = typeof mountComponentRenderer;
 const componentsControls = {} as TernComponentControls;
 
-const PortalRenderer: React.FC<{ node: HTMLDivElement; children: React.ReactNode }> = ({ node, children }) => {
-  return ReactDOM.createPortal(children, node);
-};
-
-/**
- * LazyProviders handles UI-specific context for lazily loaded components.
- * This separates the UI rendering context from the instance context,
- * making it easier to manage UI-specific concerns.
- */
-type LazyProvidersProps = React.PropsWithChildren<{
-    instance: any;
-    children: any;
-}>;
-const LazyProviders = (props: LazyProvidersProps) => {
-    return (
-        <TernSecureContextWrapper instance={props.instance}>
-            {props.children}
-        </TernSecureContextWrapper>
-    );
-};
-
-type LazyComponentRendererProps = {
-    node: HTMLDivElement;
-    name: TernSecureComponentName;
-    props?: AvailableComponentProps;
-    componentKey: string;
-}
-
-/**
- * LazyComponentRenderer handles rendering a single component through a portal
- * with proper Suspense and error boundaries.
- */
-const LazyComponentRenderer = ({ node, name, props, componentKey }: LazyComponentRendererProps) => {
-    const ComponentToRender = TernSecureComponents[name];
-    if (!ComponentToRender) {
-        console.warn(`TernSecure component "${name}" not found.`);
-        return null;
-    }
-
-    return (
-        <PortalRenderer node={node} key={componentKey}>
-            <Suspense fallback={<div>Loading {name}...</div>}>
-                <ComponentToRender {...props as any} />
-            </Suspense>
-        </PortalRenderer>
-    );
-};
 
 const Components = (props: ComponentsProps) => {
     const { instance } = props;
@@ -263,8 +220,8 @@ const Components = (props: ComponentsProps) => {
         nodeCount: nodes.size,
         activeNodes: Array.from(nodes.keys()).map(n => n.id)
     });
-
     return (
+    <Suspense fallback={''}>
         <LazyProviders
           instance={props.instance}
         >
@@ -278,5 +235,6 @@ const Components = (props: ComponentsProps) => {
                 />
             ))}
         </LazyProviders>
+        </Suspense>
     );
 };

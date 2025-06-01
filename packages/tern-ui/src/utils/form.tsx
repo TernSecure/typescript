@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, AlertDescription } from '../components/alert'
+import { Alert, AlertDescription } from '../components/elements/alert'
 import { Loader2 } from 'lucide-react'
 import { cn } from '../lib/utils'
 

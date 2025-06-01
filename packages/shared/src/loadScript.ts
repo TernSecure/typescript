@@ -27,22 +27,49 @@
         script.async = async || false;
         script.defer = defer || false;
 
-        script.addEventListener('ternsecure:loaded', () => {
-          script.remove();
-          resolve(script);
-        });
+        let resolved = false;
+        let timeoutId: NodeJS.Timeout | null = null;
 
-        script.addEventListener('error', (error) => {
+        const cleanup = () => {
+          script.removeEventListener('load', handleLoad);
+          script.removeEventListener('error', handleError);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+        };
+        
+        const handleLoad = () => {
+          if (resolved) return;
+          console.log(`[loadScript] Script loaded successfully: ${src}`);
+
+          resolved = true;
+          cleanup();
+          resolve(script);
+        };
+        
+        const handleError = (error: ErrorEvent) => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
           script.remove();
-          reject(new Error(`Failed to load script: ${src}, Error: ${error}`));
-        });
+          console.error(`[loadScript] Failed to load script: ${src}`, error);
+          reject(new Error(`Failed to load script: ${src}, Error: ${error.message || error}`));
+        };
+        
+        script.addEventListener('load', handleLoad);
+        script.addEventListener('error', handleError);
 
         script.src = src;
         script.nonce = nonce;
         beforeLoad?.(script);
+
+        console.log(`[loadScript] Appending script to document body: ${src}`);
         document.body.appendChild(script)
       });
     };
 
-    return retry(load, { shouldRetry: (_, iterations) => iterations <=5 });
+    return load()
+
+    //return retry(load, { shouldRetry: (_, iterations) => iterations <=5 });
   }

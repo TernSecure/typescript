@@ -225,6 +225,7 @@ const sharedProdConfig = () => {
             },
           },
         }),
+        new rspack.LightningCssMinimizerRspackPlugin(),
       ],
     },
     plugins: [],
@@ -232,6 +233,9 @@ const sharedProdConfig = () => {
       alias: {
         'core-js': path.dirname(require.resolve('core-js/package.json')),
       }
+    },
+    experiments : {
+      css: true
     }
   };
 }
@@ -355,6 +359,7 @@ const devConfig = ({ env }) => {
       },
       cache: true,
       experiments: {
+        css: true,
          cache: {
            type: 'persistent',
          }

@@ -43,7 +43,7 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     requiresVerification = false,
     onUserChanged
   } = props
-  const { isomorphicTernSecure: instance,  } = useLoadIsomorphicTernSecure(instanceOptions)
+  const { isomorphicTernSecure: instance, status} = useLoadIsomorphicTernSecure(instanceOptions)
   const auth = useMemo(() => ternSecureAuth, []);
 
   const [authState, setAuthState] = useState<TernSecureState>(() => ({
@@ -119,6 +119,7 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
 
   const contextValue = {
     value: instance,
+    status,
     authState
   }
 
@@ -134,19 +135,13 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
   const [error, setError] = useState<Error | null>(null);
 
   const isomorphicTernSecure = useMemo(() => {
-    console.log('[TernSecure Provider] Creating IsomorphicTernSecure instance:', {
-      options,
-      mode: options.mode || (typeof window === 'undefined' ? 'server' : 'browser'),
-      timestamp: new Date().toISOString()
-    });
-
     return IsomorphicTernSecure.getOrCreateInstance(options);
   }, [options]);
 
-  const [instanceStatus, setInstanceStatus] = useState<TernSecureInstanceTreeStatus>(isomorphicTernSecure.status)
+  const [instanceStatus, setInstanceStatus] = useState(isomorphicTernSecure.status)
   
   useEffect(() => {
-    const unsubscribeStatus = isomorphicTernSecure.events.onStatusChanged?.((newStatus) => {
+    const unsubscribeStatus = isomorphicTernSecure.events.onStatusChanged((newStatus) => {
       console.log('[TernSecure Provider] Status changed:', {
         oldStatus: instanceStatus,
         newStatus,
@@ -172,7 +167,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       unsubscribeStatus?.();
       unsubscribeError?.();
     };
-  }, [isomorphicTernSecure, instanceStatus, error]);
+  }, [instanceStatus, error]);
 
   // Handle async loadTernUI
   useEffect(() => {
@@ -186,6 +181,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
     console.log('[TernSecure Provider] Instance created:', {
       hasInstance: !!isomorphicTernSecure,
       isReady: isomorphicTernSecure.isReady,
+      status: isomorphicTernSecure.status,
       isLoading: isomorphicTernSecure.isLoading,
       hasShowSignIn: !!isomorphicTernSecure.showSignIn,
       loadingState: isLoading,

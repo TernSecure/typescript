@@ -110,26 +110,38 @@
         };
 
 
-        let ternSecureCheckInterval;
-        const checkTernSecureInstance = () => {
-            if (window.TernSecure) {
-                log('TernSecure instance detected on window');
-                document.getElementById('script-status').textContent = 'Loaded';
-                document.getElementById('instance-status').textContent = 'Ready';
-                updateStatus('Ready');
-                clearInterval(ternSecureCheckInterval);
-                
-                // Enable buttons
-                document.getElementById('show-signin').disabled = false;
-                document.getElementById('show-signup').disabled = false;
+        //let ternSecureCheckInterval;
+        //let ternSecureInstance = null;
+
+        const checkTernSecureInstance = async () => {
+            if(!window.TernSecure) {
+                log('TernSecure instance not found on window');
+                throw new Error('TernSecure instance not found');
+            }
+            
+            try {
+                ternSecureInstance = window.TernSecure;
+                await window.TernSecure.load();
+            log('TernSecure instance detected on window');
+            document.getElementById('script-status').textContent = 'Loaded';
+            document.getElementById('instance-status').textContent = 'Ready';
+            updateStatus('Ready');
+            clearInterval(ternSecureCheckInterval);
+            // Enable buttons
+            document.getElementById('show-signin').disabled = false;
+            document.getElementById('show-signup').disabled = false;
+        } catch (error) {
+                log('Error loading TernSecure instance:', error);
+                document.getElementById('script-status').textContent = 'Error';
+                document.getElementById('instance-status').textContent = 'Error';
+                updateStatus('Error');
             }
         };
 
-        ternSecureCheckInterval = setInterval(checkTernSecureInstance, 100);
+        //ternSecureCheckInterval = setInterval(checkTernSecureInstance, 100);
 
-        window.addEventListener('ternsecure:ready', (event) => {
+        window.addEventListener('load', (event) => {
             log('TernSecure ready event received');
-            clearInterval(ternSecureCheckInterval);
             checkTernSecureInstance();
         });
 

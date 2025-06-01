@@ -5,15 +5,17 @@
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "dist/*.css"
   ],
   "main": "dist/index.js",
   "jsdelivr": "dist/index.browser.js",
   "module": "dist/index.mjs",
+  "style": "dist/index.css",
   "types": "dist/types/index.d.ts",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm build:js && pnpm build:types",
+    "build": "pnpm build:js && pnpm build:types && pnpm upload:gcs",
     "build:js": "pnpm clean && rspack build --config rspack.config.mjs --env production",
     "build:types": "tsc -p tsconfig.add.json",
     "upload:gcs": "node ../../scripts/gcs.mjs",
@@ -38,7 +40,8 @@
     "lucide-react": "^0.468.0",
     "regenerator-runtime": "0.13.11",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.3.3"
   },
   "devDependencies": {
     "@rsdoctor/rspack-plugin": "^0.4.13",
