@@ -38,7 +38,7 @@ export interface TernSecureConfig extends FirebaseOptions {
   storageBucket: string
   messagingSenderId: string
   appId: string
-  measurementId?: string // Optional for analytics
+  measurementId?: string
 }
 
 export interface SignInResponse {
@@ -117,6 +117,7 @@ export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
 
 export interface HeadlessUIBrowser extends TernSecureInstanceTree {
   load: (options?: TernSecureInstanceTreeOptions) => Promise<void>;
+  setTernAuth: (provider: any) => void;
 }
 
 export interface Browser extends HeadlessUIBrowser {
@@ -138,4 +139,5 @@ export type IsomorphicTernSecureOptions = TernSecureInstanceTreeOptions & {
   customDomain?: string;
   proxyUrl?: string;
   projectId?: string;
+  firebaseConfig?: TernSecureConfig;
 }

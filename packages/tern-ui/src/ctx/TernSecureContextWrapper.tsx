@@ -1,8 +1,9 @@
 import { 
     TernSecureInstanceContext,
+    TernSecureAuthContext
 } from '@tern-secure/shared/react';
 import type {
-    TernSecureInstanceTree
+    TernSecureInstanceTree,
 } from '@tern-secure/types';
 import React, { useMemo } from 'react';
 
@@ -11,12 +12,17 @@ type TernSecureContextWrapperProps = {
     children: React.ReactNode;
 }
 
-export function TernSecureContextWrapper(props: TernSecureContextWrapperProps) {
+export function TernSecureContextWrapper(props: TernSecureContextWrapperProps): React.JSX.Element | null {
     const ternSecure = props.instance
     const ternSecureCtx = useMemo(() => ({value: ternSecure}), [])
+    const ternSecureAuthCtx = useMemo(() => ({
+        value: ternSecure.ternAuth
+    }), [ternSecure.ternAuth]);
     return (
         <TernSecureInstanceContext.Provider value={ternSecureCtx}>
-            {props.children}
+            <TernSecureAuthContext.Provider value={ternSecureAuthCtx}>
+                {props.children}
+            </TernSecureAuthContext.Provider>
         </TernSecureInstanceContext.Provider>
     );
 }

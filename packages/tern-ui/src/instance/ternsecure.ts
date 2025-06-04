@@ -5,6 +5,10 @@ import type {
     SignUpUIConfig,
     SignInPropsTree,
     TernSecureInstanceTreeStatus,
+    SignInAttributesTree,
+    SignInFormValuesTree,
+    SignInResponseTree,
+    TernSecureAuthProvider
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
@@ -33,12 +37,14 @@ declare global {
 
 export class TernSecure implements TernSecureInterface {
     public static mountComponentRenderer?: MountComponentRenderer;
+    public static authProviderFactory?: () => TernSecureAuthProvider;
     #componentControls?: ReturnType<MountComponentRenderer>| null;
     #options: TernSecureInstanceTreeOptions = {};
     #status: TernSecureInterface['status'] = 'loading';
     #eventBus = new EventEmitter();
     //#customDomain: DomainOrProxyUrl['domain'];
     #proxyUrl: DomainOrProxyUrl['proxyUrl'];
+    //#authProvider?: TernSecureAuthProvider;
 
     public proxyUrl?: string;
     public apiKey?: string;
@@ -49,6 +55,7 @@ export class TernSecure implements TernSecureInterface {
     public currentView: 'signIn' | 'signUp' | null = null;
     public error: Error | null = null;
     public isLoading = false;
+    public ternAuth: TernSecureAuthProvider | undefined;
 
     public constructor(domain: string) {
         if (!domain) {
@@ -58,6 +65,9 @@ export class TernSecure implements TernSecureInterface {
         console.log('[TernSecure constructor] Initializing... Received domain:', domain);
         this.customDomain = domain;
         console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
+
+        //this.#initTernAuth();
+
         this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
         //this.#setStatus('ready');
         console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
@@ -86,6 +96,8 @@ export class TernSecure implements TernSecureInterface {
         }
 
         try {
+            //this.#ensureAuthProvider();
+
             if (TernSecure.mountComponentRenderer && !this.#componentControls) {
                 this.#componentControls = TernSecure.mountComponentRenderer(
                     this,
@@ -111,22 +123,14 @@ export class TernSecure implements TernSecureInterface {
         }
     }
     
-    public showSignIn(node: HTMLDivElement, config?: SignInUIConfig): void {
-        if (!node) {
-            throw new Error('showSignIn requires a valid HTMLDivElement as the first parameter');
-        }
-
+    public showSignIn(node: HTMLDivElement, config?: SignInPropsTree): void {
         this.assertComponentControlsReady(this.#componentControls);
-        const componentProps: SignInPropsTree = {
-            ui: config,
-            signIn: this.signIn,
-        }
         this.#componentControls.ensureMounted().then(controls =>
             controls.mountComponent({
                 name: 'SignIn',
                 node,
-                props: componentProps,
-                appearanceKey: config?.appearance?.colors?.primary || 'default',
+                props: config,
+                appearanceKey: config?.ui?.appearance?.colors?.primary || 'default',
             }),
         );
         this.currentView = 'signIn';
@@ -152,7 +156,7 @@ export class TernSecure implements TernSecureInterface {
         this.assertComponentControlsReady(this.#componentControls);
         const componentProps: SignInPropsTree = {
             ui: config,
-            signIn: this.signIn,
+            //signIn: this.signIn,
         }
         this.#componentControls.ensureMounted().then(controls =>
             controls.mountComponent({
@@ -186,28 +190,22 @@ export class TernSecure implements TernSecureInterface {
     }
 
 
-    public signIn: TernSecureInterface['signIn'] = {
-        withEmail: async (email: string, password: string) => {
-            // Implementation for email/password sign in
-            throw new Error('Method not implemented.');
-        },
-        withGoogle: async () => {
-            // Implementation for Google OAuth sign in
-            throw new Error('Method not implemented.');
-        },
-        withMicrosoft: async () => {
-            // Implementation for Microsoft OAuth sign in
-            throw new Error('Method not implemented.');
-        },
-    }
-
     public get auth(): TernSecureInterface['auth'] {
         return {
             user: null,
             session: null,
-            isAuthenticated: false,
-            requiresVerification: false,
         };
+    }
+
+    public setTernAuth(ternAuth: TernSecureAuthProvider): void {
+        if (!ternAuth) {
+            console.warn('[TernSecure] ternAuth is not defined');
+            return;
+        }
+        
+        this.ternAuth = ternAuth;
+        console.log('[TernSecure] TernAuth provider set:', ternAuth);
+        this.#eventBus.emit('authProviderReady', ternAuth);
     }
 
     public get user(): TernSecureInterface['user'] {
@@ -262,6 +260,46 @@ export class TernSecure implements TernSecureInterface {
     public redirectToLogin(redirectUrl?: string): void {
         throw new Error('redirectToLogin not implemented');
     }
+
+    public static setAuthProviderFactory(factory: () => TernSecureAuthProvider): void {
+        TernSecure.authProviderFactory = factory;
+    }
+
+    public initializeTernAuth(): void {
+        if (!this.ternAuth) {
+            this.#initTernAuth();
+        }
+    }
+
+    #ensureAuthProvider(): void {
+        if (!this.ternAuth && TernSecure.authProviderFactory) {
+            try {
+                const authProvider= TernSecure.authProviderFactory();
+                this.setTernAuth(authProvider);
+                console.log('[TernSecure] Auth provider initialized via factory');
+            } catch (error) {
+                console.error('[TernSecure] Error initializing auth provider:', error);
+                throw new Error(`Failed to initialize authentication provider: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        } else {
+            console.warn('[TernSecure] No auth provider factory defined. TernSecure will not have authentication capabilities.');
+        }
+    }
+
+    #initTernAuth(): void {
+        if (TernSecure.authProviderFactory) {
+            try {
+                const authProvider = TernSecure.authProviderFactory();
+                this.setTernAuth(authProvider);
+                console.log('[TernSecure] Auth provider initialized via factory')
+            } catch (error) {
+                console.error('[TernSecure] Error initializing auth provider:', error);
+            }
+        } else {
+            console.warn('[TernSecure] No auth provider factory defined. TernSecure will not have authentication capabilities.');
+        }
+    }
+
 
     #setStatus(newStatus: TernSecureInstanceTreeStatus): void {
         if (this.#status !== newStatus) {

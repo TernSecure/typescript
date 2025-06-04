@@ -20,12 +20,12 @@ export function SignUp({
   className, 
 }: SignUpProps) {
   const instance = useTernSecure();
-  const { signIn } = instance;
+  const signIn  = instance.ternAuth;
   const appName = ui?.appName
   const logo = ui?.logo;
   const passwordRequirements = ui?.passwordRequirements;
 
-  const isEmailSignUpEnabled = !!signIn?.withEmail;
+  const isEmailSignUpEnabled = !!signIn?.withEmailAndPassword;
 
   const handleEmailSuccess = () => {
     if (onSuccess) {

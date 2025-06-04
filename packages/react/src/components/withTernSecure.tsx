@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TernSecureInstanceTree } from '@tern-secure/types';
 import { useIsomorphicTernSecureCtx } from '../ctx/IsomorphicTernSecureCtx';
-import { useAssertWrappedByTernSecureProvider } from '../ctx/useAssertWrappedTernSecureProvider';
+import { useAssertWrappedByTernSecureProvider } from '../hooks/useAssertWrappedTernSecureProvider';
 
 type WithTernSecureProp<P> = P & {
   instance: TernSecureInstanceTree;

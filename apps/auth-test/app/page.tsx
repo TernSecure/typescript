@@ -3,7 +3,9 @@
 import { useAuth } from "@tern-secure/nextjs";
 
 export default function Home() {
-  const { user, token, signOut } = useAuth();
+  const { user, token } = useAuth();
+  console.log("User:", user);
+  console.log("Token:", token);
   return (
     <div>
       {user ? (

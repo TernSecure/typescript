@@ -1,13 +1,21 @@
 "use client"
-import { useTernSecure } from '@tern-secure/shared/react'
+import { 
+  useTernSecure,
+  UserContext,
+  SessionContext,
+  useUserContext
+} from '@tern-secure/shared/react'
 import type { 
   TernSecureState,
   TernSecureUser,
 } from '@tern-secure/types'
 
+import { useAssertWrappedByTernSecureProvider } from './useAssertWrappedTernSecureProvider'
+import { useAuthProviderCtx } from '../ctx/AuthProvider'
+
 interface AuthState extends TernSecureState {
   user: TernSecureUser | null
-  signOut: () => Promise<void>
+  //signOut: () => Promise<void>
 }
 
 /**
@@ -15,22 +23,22 @@ interface AuthState extends TernSecureState {
  * @returns Authentication state and methods
  */
 export function useAuth(): AuthState {
-  const instance = useTernSecure()
+  const ternSecureAuthCtx = useAuthProviderCtx()
+  const userContext = useUserContext()
+  useAssertWrappedByTernSecureProvider('useAuth')
+  const instance = ternSecureAuthCtx
 
   return {
-    userId: instance.auth.user?.uid ?? null,
-    isLoaded: instance.isReady,
+    userId: instance.userId,
+    isLoaded: instance.isLoaded,
     error: instance.error,
-    isValid: !!instance.auth.user,
-    isVerified: instance.auth.user?.emailVerified ?? false,
-    isAuthenticated: instance.auth.isAuthenticated,
-    token: instance.auth.session?.token ?? null,
-    email: instance.auth.user?.email ?? null,
-    status: instance.auth.isAuthenticated ? "authenticated" 
-            : instance.auth.user?.emailVerified ? "unverified" 
-            : "unauthenticated",
-    requiresVerification: instance.auth.requiresVerification ?? false,
-    user: instance.auth.user,
-    signOut: instance.user.signOut
+    isValid: !!instance.isValid,
+    isVerified: instance.isVerified,
+    isAuthenticated: instance.isAuthenticated,
+    token: instance.token ?? null,
+    email: instance.email ?? null,
+    status: instance.status,
+    requiresVerification: false,
+    user: userContext,
   }
 }

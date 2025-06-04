@@ -2,13 +2,22 @@
 
 import { useContext } from 'react';
 import type { 
-    TernSecureInstanceTree
+    TernSecureInstanceTree,
 } from '@tern-secure/types';
 import { createContextAndHook } from './ternsecureCtx';
 
-// Create instance context
+// Create TernSecure instance context
 const [TernSecureInstanceContext, useTernSecureInstanceContext] = 
   createContextAndHook<TernSecureInstanceTree>('TernSecureInstanceContext');
+
+const [TernSecureAuthContext, useTernSecureAuthContext] =
+  createContextAndHook<TernSecureInstanceTree['ternAuth']>('TernSecureAuthContext');
+
+const [SessionContext, useSessionContext] = 
+createContextAndHook<TernSecureInstanceTree['auth']['session']>('SessionContext');
+
+const [UserContext, useUserContext] = 
+createContextAndHook<TernSecureInstanceTree['auth']['user']>('UserContext');
 
 // Assert helper
 function useAssertWrappedByTernSecureProvider(displayNameOrFn: string | (() => void)): void {
@@ -34,6 +43,12 @@ Possible fixes:
 
 export {
   TernSecureInstanceContext,
+  TernSecureAuthContext,
+  SessionContext,
+  UserContext,
+  useTernSecureAuthContext,
+  useSessionContext,
+  useUserContext,
   useTernSecureInstanceContext,
   useAssertWrappedByTernSecureProvider
 };

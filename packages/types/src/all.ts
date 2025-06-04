@@ -95,5 +95,5 @@ export interface TernSecureState {
   token: any | null
   email: string | null
   status: "loading" | "authenticated" | "unauthenticated" | "unverified"
-  requiresVerification: boolean
+  requiresVerification?: boolean
 }

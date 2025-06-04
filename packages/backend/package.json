@@ -20,9 +20,12 @@
     "tslib": "2.4.1"
   },
   "devDependencies": {
-    "firebase-admin": "^12.0.0",
     "jose": "^5.0.0",
     "next": "15.3.2"
+  },
+  "peerDependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase": "^11.0.0"
   },
   "engines": {
     "node": ">=20"

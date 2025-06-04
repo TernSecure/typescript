@@ -1,18 +1,102 @@
-import { Appearance } from './theme';
-import { TernSecureUser } from './all';
+import type { 
+  Appearance,
+  BaseAuthUIConfig,
+  SignInUIConfig,
+ } from './theme';
+import type { TernSecureUser } from './all';
+import type { TernSecureAuthProvider } from 'auth';
+import type { 
+  AuthErrorTree,
+  SignInPropsTree,
+  SignInResponseTree,
+} from './signin'
 
-export interface TernSecureSessionTree {
-  token: string | null;
-  expiresAt?: number;
+export type SessionStatus = 'active' | 'expired' | 'revoked' | 'pending';
+
+export declare interface ParsedToken {
+    /** Expiration time of the token. */
+    'exp'?: string;
+    /** UID of the user. */
+    'sub'?: string;
+    /** Time at which authentication was performed. */
+    'auth_time'?: string;
+    /** Issuance time of the token. */
+    'iat'?: string;
+    /** Firebase specific claims, containing the provider(s) used to authenticate the user. */
+    'firebase'?: {
+        'sign_in_provider'?: string;
+        'sign_in_second_factor'?: string;
+        'identities'?: Record<string, string>;
+    };
+    /** Map of any additional custom claims. */
+    [key: string]: unknown;
 }
 
-export type SignInFormValuesTree = {
-  email: string;
-  password: string;
-  phoneNumber?: string;
-};
+/**
+ * Core properties for any session that is or was authenticated.
+ * These properties are guaranteed to exist for active, expired, or revoked sessions.
+ */
+interface AuthenticatedSessionBase {
+  /** The Firebase Auth ID token JWT string. */
+  token: string;
+  /** The ID token expiration time (e.g., UTC string or Unix timestamp). */
+  expirationTime: string;
+  /** The ID token issuance time. */
+  issuedAtTime: string;
+  /** Time at which authentication was performed (from token claims). */
+  authTime: string;
+  /**
+  * The entire payload claims of the ID token including the standard reserved claims
+  * as well as custom claims.
+  */
+  claims: ParsedToken;
+   /**
+   * Time the user last signed in.
+   * This could be from Firebase User metadata or persisted by TernSecure.
+   */
+  lastSignedAt?: number;
+}
 
-export type SignInInitialValueTree = Partial<SignInFormValuesTree>;
+
+/**
+ * Represents a session when the user is authenticated and the token is considered active.
+ */
+export interface ActiveSession extends AuthenticatedSessionBase {
+  status: 'active';
+}
+
+/**
+ * Represents a session when the user was authenticated, but the token has expired.
+ */
+export interface ExpiredSession extends AuthenticatedSessionBase {
+  status: 'expired';
+}
+
+/**
+ * Represents a session when the user was authenticated, but the token has been revoked.
+ */
+export interface RevokedSession extends AuthenticatedSessionBase {
+  status: 'revoked';
+}
+
+/**
+ * Represents a session that is awaiting some action.
+ */
+export interface PendingSession extends AuthenticatedSessionBase { 
+  status: 'pending';
+}
+
+
+/**
+ * Defines the possible states of a user's session within TernSecure.
+ * This is a discriminated union based on the `status` property.
+ * The actual `TernSecureUser` (Firebase User object) is typically stored separately,
+ * for example, in `TernSecureInstanceTree.auth.user`.
+ */
+export type TernSecureSessionTree = ActiveSession | ExpiredSession | RevokedSession;
+
+
+export type SignedInSession = ActiveSession | PendingSession | ExpiredSession | RevokedSession;
 
 export type SignUpFormValuesTree = {
   email: string;
@@ -23,79 +107,6 @@ export type SignUpFormValuesTree = {
 
 export type SignUpInitialValueTree = Partial<SignUpFormValuesTree>;
 
-export interface SignInResponseTree {
-  success: boolean;
-  message?: string;
-  error?: any | undefined;
-  user?: any;
-}
-
-export interface AuthErrorTree extends Error {
-  code?: any | string;
-  message: string;
-  response?: SignInResponseTree;
-}
-
-export function isSignInResponseTree(value: any): value is SignInResponseTree {
-  return (
-    typeof value === 'object' &&
-    'success' in value &&
-    typeof value.success === 'boolean'
-  );
-}
-
-/**
- * Base UI configuration shared between SignIn and SignUp
- */
-export interface BaseAuthUIConfig {
-  /** Visual appearance configuration */
-  appearance?: Appearance;
-  /** Application logo URL or SVG string */
-  logo?: string;
-  /** Application name for display */
-  appName?: string;
-  /** Render mode for cross-platform support */
-  renderMode?: 'modal' | 'page' | 'embedded';
-  /** Layout direction */
-  layout?: 'vertical' | 'horizontal';
-  /** Custom loading message */
-  loadingMessage?: string;
-  /** Loading spinner variant */
-  loadingSpinnerVariant?: 'circular' | 'linear' | 'dots';
-  /** Accessibility configuration */
-  a11y?: {
-    /** ARIA labels and descriptions */
-    labels?: Record<string, string>;
-    /** Element to receive initial focus */
-    initialFocus?: string;
-    /** Whether to trap focus within the auth UI */
-    trapFocus?: boolean;
-  };
-}
-
-/**
- * Sign-in specific UI configuration
- */
-export interface SignInUIConfig extends BaseAuthUIConfig {
-  /** Social sign-in buttons configuration */
-  socialButtons?: {
-    google?: boolean;
-    microsoft?: boolean;
-    layout?: 'vertical' | 'horizontal';
-    size?: 'small' | 'medium' | 'large';
-  };
-  /** "Remember me" checkbox configuration */
-  rememberMe?: {
-    enabled?: boolean;
-    defaultChecked?: boolean;
-  };
-  /** Sign-up link configuration */
-  signUpLink?: {
-    enabled?: boolean;
-    text?: string;
-    href?: string;
-  };
-}
 
 /**
  * Sign-up specific UI configuration
@@ -117,20 +128,6 @@ export interface SignUpUIConfig extends BaseAuthUIConfig {
   };
 }
 
-/**
- * Props for SignIn component focusing on UI concerns
- */
-export interface SignInPropsTree {
-  /** Initial form values */
-  initialValue?: SignInInitialValueTree;
-  /** UI configuration */
-  ui?: SignInUIConfig;
-  /** Callbacks */
-  onError?: (error: AuthErrorTree) => void;
-  onSuccess?: (user: TernSecureUser | null) => void;
-  /** The actual sign-in methods */
-  signIn: TernSecureInstanceTree['signIn'];
-}
 
 /**
  * Props for SignUp component focusing on UI concerns
@@ -144,8 +141,6 @@ export interface SignUpPropsTree {
   onSubmit?: (values: SignUpFormValuesTree) => Promise<void>;
   onError?: (error: AuthErrorTree) => void;
   onSuccess?: (user: TernSecureUser | null) => void;
-  /** The sign-in methods, potentially for linking to sign-in or other shared auth actions */
-  signIn: TernSecureInstanceTree['signIn'];
 }
 
 type Mode = 'browser' | 'server';
@@ -188,22 +183,11 @@ export interface TernSecureInstanceTree {
     /** Current authenticated user */
     user: TernSecureUser | null;
     /** Current session information */
-    session: TernSecureSessionTree | null;
-    /** Whether user is authenticated */
-    isAuthenticated: boolean;
-    /** Whether email verification is required */
-    requiresVerification?: boolean;
+    session: SignedInSession | null;
   };
 
   /** Core Authentication Methods */
-  signIn: {
-    /** Email/password sign in */
-    withEmail: (email: string, password: string) => Promise<SignInResponseTree>;
-    /** Google OAuth sign in */
-    withGoogle: () => Promise<void>;
-    /** Microsoft OAuth sign in */
-    withMicrosoft: () => Promise<void>;
-  };
+  ternAuth: TernSecureAuthProvider;
 
   /** User Management Methods */
   user: {
@@ -217,7 +201,7 @@ export interface TernSecureInstanceTree {
     create: (email: string, password: string) => Promise<SignInResponseTree>;
   };
 
-  showSignIn: (targetNode: HTMLDivElement, config?: SignInUIConfig) => void;
+  showSignIn: (targetNode: HTMLDivElement, config?: SignInPropsTree) => void;
   hideSignIn: (targetNode: HTMLDivElement) => void;
   showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
   hideSignUp: (targetNode: HTMLDivElement) => void;

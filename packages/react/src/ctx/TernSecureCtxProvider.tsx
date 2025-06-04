@@ -1,18 +1,25 @@
 'use client'
+
 import React, { useEffect, useState, useCallback, useMemo } from "react"
 import { IsomorphicTernSecureCtx } from "./IsomorphicTernSecureCtx"
-import { onAuthStateChanged } from "firebase/auth"
-import { ternSecureAuth } from '../utils/client-init'
 import { IsomorphicTernSecure } from "../lib/isomorphicTernSecure"
+import { TernSecureAuthProvider as AuthProvider } from "../lib/authProviderReg"
 import type { 
   initialState,
   IsomorphicTernSecureOptions,
 } from '../types'
 import type {
-  TernSecureInstanceTreeStatus,
-  TernSecureState,
+  SignedInSession,
   TernSecureUser,
+  TernSecureAuthProvider
 } from '@tern-secure/types'
+import { 
+  TernSecureAuthContext,
+  SessionContext,
+  UserContext
+} from '@tern-secure/shared/react'
+import { useAuthState } from "../hooks/useAuthState"
+import { AuthProviderCtx, AuthProviderCtxValue } from "./AuthProvider"
 
 
 type TernSecureCtxProviderProps = {
@@ -23,19 +30,6 @@ type TernSecureCtxProviderProps = {
   onUserChanged?: (user: TernSecureUser | null) => Promise<void>
 }
 
-const defaultAuthState: TernSecureState = {
-  userId: null,
-  isLoaded: false,
-  error: null,
-  isValid: false,
-  isVerified: false,
-  isAuthenticated: false,
-  token: null,
-  email: null,
-  status: "loading",
-  requiresVerification: false
-}
-
 export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   const { 
     children, 
@@ -43,89 +37,99 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     requiresVerification = false,
     onUserChanged
   } = props
+  
   const { isomorphicTernSecure: instance, status} = useLoadIsomorphicTernSecure(instanceOptions)
-  const auth = useMemo(() => ternSecureAuth, []);
 
-  const [authState, setAuthState] = useState<TernSecureState>(() => ({
-    ...defaultAuthState,
-    requiresVerification
-  }))
+  const { authState, setupAuthListener } = useAuthState(
+    requiresVerification,
+    onUserChanged,
+  )
 
-  const updateAuthState = useCallback(async (user: TernSecureUser | null) => {
-    try {
-      if (user) {
-        const token = await user.getIdToken()
-        const isValid = !!user.uid
-        const isVerified = user.emailVerified
-        const isAuthenticated = isValid && (!requiresVerification || isVerified)
+  const {
+    userId,
+    isLoaded,
+    error,
+    token,
+    email,
+    isValid,
+    isVerified,
+    isAuthenticated,
+  } = authState;
 
-        setAuthState({
-          userId: user.uid,
-          isLoaded: true,
-          error: null,
-          isValid,
-          isVerified,
-          isAuthenticated,
-          token,
-          email: user.email,
-          status: isAuthenticated ? "authenticated" : isVerified ? "unverified" : "unauthenticated",
-          requiresVerification
-        })
+    const authProvider = useMemo(() => {
+    console.log('[TernSecureCtxProvider] Creating TernSecureAuthProvider instance...')
+    const provider = AuthProvider.getOrCreateInstance();
+    console.log('[TernSecureCtxProvider] TernSecureAuthProvider instance created:', provider);
+    return provider;
+  }, []);
 
-        // Update instance state
-        instance.auth.session = { token }
-        instance.auth.user = user
-        instance.auth.isAuthenticated = isAuthenticated
-      } else {
-        setAuthState({
-          ...defaultAuthState,
-          isLoaded: true,
-          status: "unauthenticated",
-          requiresVerification
-        })
-
-        // Update instance state
-        instance.auth.session = null
-        instance.auth.user = null
-        instance.auth.isAuthenticated = false
-      }
-
-      instance.auth.requiresVerification = requiresVerification
-      instance.clearError()
-      instance.setLoading(false)
-      // currentView is now a getter property, no need to set it directly
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoaded: true,
-        error: error as Error,
-        status: "unauthenticated"
-      }))
-      console.error("Error updating auth state:", error)
-    }
-  }, [instance, requiresVerification])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (onUserChanged) {
-        // Since TernSecureUser is a type alias for Firebase User, this is type-safe
-        await onUserChanged(firebaseUser)
-      }
-      await updateAuthState(firebaseUser)
-    })
+    if (instance && authProvider) {
+      instance.setAuthProvider(authProvider);
+    }
+  }, [instance, authProvider]);
 
+  useEffect(() => {
+    const unsubscribe = setupAuthListener()
     return () => unsubscribe()
-  }, [onUserChanged, updateAuthState])
+  }, [setupAuthListener])
 
-  const contextValue = {
+  const authCtx: AuthProviderCtxValue = useMemo(() => {
+    return {
+      ...authState,
+    }
+  }, [authState]);
+
+  const sessionData = useMemo<SignedInSession | null>(() => 
+    instance.auth.session || (authState.isAuthenticated ? {
+      status: authState.isValid ? 'active' : 'expired',
+      token: authState.token || '',
+      expirationTime: '',
+      issuedAtTime: '',
+      authTime: '',
+      claims: {}
+    } : null)
+  , [authState, instance.auth.session])
+
+
+  const ternsecureCtx = useMemo(() => ({
     value: instance,
     status,
-    authState
-  }
+    authState: authCtx,
+  }), [instance, status])
+
+  const userCtx = useMemo(() => ({
+    value: instance.auth.user
+  }), [instance.auth.user])
+
+  const sessionCtx = useMemo(() => ({
+    value: sessionData,
+  }), [sessionData])
+
+  const ternAuthCtx = useMemo(() => ({
+    value: authProvider
+  }), []);
+
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider authState:', authState);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider ternsecureCtx:', ternsecureCtx);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider sessionData:', sessionData);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider userCtx:', userCtx);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider sessionCtx:', sessionCtx);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider ternAuthCtx:', ternAuthCtx);
+  console.log('[TernSecureCtxProvider] TernSecureCtxProvider authContext:', authCtx);
 
   return (
-    <IsomorphicTernSecureCtx.Provider value={contextValue}>
-      {children}
+    <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
+      <TernSecureAuthContext.Provider value={ternAuthCtx}>
+        <SessionContext.Provider value={sessionCtx}>
+          <AuthProviderCtx.Provider value={{ value: authCtx}}>
+            <UserContext.Provider value={userCtx}>
+              {children}
+            </UserContext.Provider>
+          </AuthProviderCtx.Provider>
+        </SessionContext.Provider>
+      </TernSecureAuthContext.Provider>
     </IsomorphicTernSecureCtx.Provider>
   )
 }
@@ -142,13 +146,6 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
   
   useEffect(() => {
     const unsubscribeStatus = isomorphicTernSecure.events.onStatusChanged((newStatus) => {
-      console.log('[TernSecure Provider] Status changed:', {
-        oldStatus: instanceStatus,
-        newStatus,
-        isReady: isomorphicTernSecure.isReady,
-        timestamp: new Date().toISOString()
-      });
-      
       setInstanceStatus(newStatus);
       setIsLoading(newStatus === 'loading');
       
@@ -158,7 +155,6 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
     });
     
     const unsubscribeError = isomorphicTernSecure.events.onError((errorEvent) => {
-      console.error('[TernSecure Provider] Error event:', errorEvent);
       setError(errorEvent instanceof Error ? errorEvent : new Error('Unknown error'));
       setIsLoading(false);
     });
@@ -178,21 +174,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
 
   // Debug log when instance is created and cleanup
   useEffect(() => {
-    console.log('[TernSecure Provider] Instance created:', {
-      hasInstance: !!isomorphicTernSecure,
-      isReady: isomorphicTernSecure.isReady,
-      status: isomorphicTernSecure.status,
-      isLoading: isomorphicTernSecure.isLoading,
-      hasShowSignIn: !!isomorphicTernSecure.showSignIn,
-      loadingState: isLoading,
-      hasError: !!error,
-      timestamp: new Date().toISOString()
-    });
-
     return () => {
-      console.log('[TernSecure Provider] Cleaning up instance:', {
-        timestamp: new Date().toISOString()
-      });
       IsomorphicTernSecure.clearInstance();
     };
   }, []);

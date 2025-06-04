@@ -11,10 +11,10 @@ const debugLog = (component?: string, action?: string, data?: any) => {
 type TernUIProps = SignInUIConfig | SignUpUIConfig;
 
 interface MountProps {
-  mount: (node: HTMLDivElement, props: TernUIProps) => void;
+  mount: (node: HTMLDivElement, props: any) => void;
   unmount: (node: HTMLDivElement) => void;
-  updateProps?: (params: { node: HTMLDivElement; props: TernUIProps }) => void;
-  props: TernUIProps;
+  updateProps?: (params: { node: HTMLDivElement; props: any }) => void;
+  props: any;
 }
 
 type HostRendererProps = PropsWithChildren<

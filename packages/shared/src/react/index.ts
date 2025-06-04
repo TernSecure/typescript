@@ -3,9 +3,16 @@ export * from './hooks'
 export {
     useAssertWrappedByTernSecureProvider,
     useTernSecureInstanceContext,
+    useTernSecureAuthContext,
+    useSessionContext,
+    useUserContext,
+    SessionContext,
+    UserContext,
+    TernSecureAuthContext,
     TernSecureInstanceContext
 } from './ternsecureProvider'
 
 export {
-        createContextAndHook
+    assertContextExists,
+    createContextAndHook
 } from './ternsecureCtx'

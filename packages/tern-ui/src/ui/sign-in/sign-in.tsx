@@ -1,5 +1,6 @@
 import { useTernSecure } from '@tern-secure/shared/react'
-import type { 
+import type {
+  TernSecureInstanceTree, 
   SignInPropsTree,
   AuthErrorTree,
 } from '@tern-secure/types';
@@ -14,6 +15,7 @@ import {
   CardContent,
   CardFooter 
 } from '../../components/elements'
+import { useAuthSignIn } from '../../ctx';
 
 // SignInProps now directly extends SignInPropsTree.
 // It will inherit ui, onError, onSuccess, and the new 'signIn' methods prop.
@@ -31,15 +33,17 @@ export function SignIn({
   redirectUrl = '/',
 }: SignInProps) {
   const instance = useTernSecure();
-  const { signIn } = instance;
+  const signIn  = useAuthSignIn();
   const appName = ui?.appName;
   const logo = ui?.logo; // Get logo from ui config
   const socialButtonsConfig = ui?.socialButtons; // Get social buttons config
 
-  const isEmailSignInEnabled = !!signIn?.withEmail;
+  const isEmailSignInEnabled = !!signIn.withEmailAndPassword;
   // Enable social sign-in if any provider is configured in `signIn` methods AND socialButtons config is present or explicitly enabled
-  const isSocialSignInGloballyEnabled = !!(signIn?.withGoogle || signIn?.withMicrosoft);
-  const isSocialSignInVisible = isSocialSignInGloballyEnabled && (socialButtonsConfig?.google !== false || socialButtonsConfig?.microsoft !== false);
+ // const isSocialSignInGloballyEnabled = !!(signIn.withSocialProvider);
+  //const isSocialSignInVisible = isSocialSignInGloballyEnabled && (socialButtonsConfig?.google !== false || socialButtonsConfig?.microsoft !== false);
+
+  console.log('[tern-ui SignIn]', signIn)
 
   const handleEmailSuccess = () => {
     if (onSuccess) {
@@ -75,29 +79,18 @@ export function SignIn({
         </CardDescription>
         </CardHeader>
       <CardContent className="space-y-4">
-      {isEmailSignInEnabled && signIn?.withEmail && (
+      {isEmailSignInEnabled ? (
         <EmailSignIn
           onError={handleError}
           onSuccess={handleEmailSuccess}
           signInWithEmail={async (email, password) => {
-            // Directly use the method from the 'signIn' prop
-            await signIn.withEmail(email, password);
+            await signIn.withEmailAndPassword({ email, password});
           }}
         />
-      )}
-
-      {isSocialSignInVisible && signIn && (
-        <SocialSignIn
-          authActions={{
-            signInWithGoogle: socialButtonsConfig?.google !== false ? signIn.withGoogle : undefined,
-            signInWithMicrosoft: socialButtonsConfig?.microsoft !== false ? signIn.withMicrosoft : undefined,
-          }}
-          onError={handleError}
-          onSuccess={handleSocialSuccess}
-          redirectUrl={redirectUrl}
-          isDisabled={false}
-          config={socialButtonsConfig} 
-        />
+      ):(
+        <p className="text-sm text-muted-foreground">
+          Email sign-in is not enabled.
+        </p>
       )}
       </CardContent>
       <CardFooter className="flex justify-center">

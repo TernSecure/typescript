@@ -21,7 +21,7 @@ interface IdTokenState {
 
 export function useIdTokenInternal() {
     const instance = useTernSecure()
-    const { auth: { user, isAuthenticated }, isReady: isLoaded } = instance
+    const { auth: { user }, isReady: isLoaded } = instance
 
   const [tokenState, setTokenState] = useState<IdTokenState>({
     tokenResult: null,
@@ -43,7 +43,7 @@ export function useIdTokenInternal() {
   }, [])
 
   const refreshToken = useCallback(async () => {
-    if (!isAuthenticated || !user) {
+    if (!user) {
       setTokenState({
         tokenResult: null,
         loading: false,
@@ -68,7 +68,7 @@ export function useIdTokenInternal() {
         error: error instanceof Error ? error : new Error('Failed to refresh token')
       })
     }
-  }, [getFormattedTokenResult, isAuthenticated, user])
+  }, [getFormattedTokenResult, user])
 
   useEffect(() => {
     if (isLoaded) {

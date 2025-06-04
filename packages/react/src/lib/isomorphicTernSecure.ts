@@ -7,7 +7,9 @@ import type {
   AuthErrorTree,
   TernSecureSessionTree,
   TernSecureInstanceTreeStatus,
-  TernSecureInstanceTreeOptions
+  TernSecureInstanceTreeOptions,
+  TernSecureAuthProvider,
+  SignInPropsTree,
 } from '@tern-secure/types';
 import type { 
   Browser, 
@@ -35,7 +37,7 @@ export function inBrowser(): boolean {
 
 
 interface PreMountState {
-  signInNodes: Map<HTMLDivElement, SignInUIConfig | undefined>;
+  signInNodes: Map<HTMLDivElement, SignInPropsTree | undefined>;
   signUpNodes: Map<HTMLDivElement, SignUpUIConfig | undefined>;
   verifyNodes: Set<HTMLDivElement>;
   methodCalls: Map<keyof TernSecureInstanceTree, Array<() => Promise<unknown>>>;
@@ -53,6 +55,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   private readonly options: IsomorphicTernSecureOptions;
   private readonly TernSecure: TernSecureProps;
   private ternui: Browser | HeadlessUIBrowser | null = null;
+  private _authProvider?: TernSecureAuthProvider;
   #status: TernSecureInstanceTreeStatus = 'loading';
   #customDomain?: string;
   private premountState: PreMountState = {
@@ -154,6 +157,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
       isReady: this.isReady,
       status: this.status,
       ternui: this.ternui,
+      ternAuth: this.ternAuth,
       loadTernUI: this.loadTernUI(),
       timestamp: new Date().toISOString(),
     });
@@ -163,9 +167,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   get auth(): TernSecureInstanceTree['auth'] {
     return this.ternui?.auth || {
       user: null,
-      session: null,
-      isAuthenticated: false,
-      requiresVerification: false,
+      session: null
     };
   }
 
@@ -179,12 +181,11 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   }
 
   // Core authentication methods - delegate to core instance
-  get signIn(): TernSecureInstanceTree['signIn'] {
-    return this.ternui?.signIn || {
-      withEmail: async () => { throw new Error('TernSecure instance not initialized'); },
-      withGoogle: async () => { throw new Error('TernSecure instance not initialized'); },
-      withMicrosoft: async () => { throw new Error('TernSecure instance not initialized'); },
-    };
+  get ternAuth(): TernSecureAuthProvider | undefined {
+    if (this.ternui) {
+      return this.ternui.ternAuth;
+    }
+    return undefined;
   }
 
   // User management methods - delegate to core instance
@@ -266,22 +267,9 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   }
 
   private beforeLoad = (ternui: Browser | HeadlessUIBrowser | undefined) => {
-    console.log('[IsomorphicTernSecure] beforeLoad called with TernUI:', {
-      ternui,
-      isReady: ternui?.isReady,
-      status: ternui?.status,
-      premountedSignInNodes: this.premountState.signInNodes.size,
-      premountedSignUpNodes: this.premountState.signUpNodes.size
-    });
-
     if (!ternui) {
       throw new Error('Failed to inject TernUI');
     }
-    console.log('[IsomorphicTernSecure] beforeLoad called', {
-      hasStaticRenderer: !!(ternui.constructor as any).mountComponentRenderer,
-      isReady: ternui.isReady,
-      status: ternui.status,
-    });
   };
 
   private injectTernUI = (ternui: Browser | HeadlessUIBrowser |  undefined) => {
@@ -301,6 +289,8 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
     this.subscribeToTernUIEvents();
 
+    ternui.setTernAuth(this._authProvider);
+
     this.premountState.signInNodes.forEach((config, node) => {
       console.log('[IsomorphicTernSecure] Processing premounted SignIn node', { node, config });
       ternui.showSignIn(node, config);
@@ -319,11 +309,6 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
       this.#eventBus.emit('statusChange', 'ready');
       console.log('[IsomorphicTernSecure] Set internal status to ready (ternui has no status)');
     }
-
-    console.log('[IsomorphicTernSecure] injectTernUI completed', {
-      isReady: this.isReady,
-      status: this.status
-    });
 
     return this.ternui;
     
@@ -379,7 +364,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
 
   // UI control methods
-  showSignIn = (node: HTMLDivElement, config?: SignInUIConfig): void => {
+  showSignIn = (node: HTMLDivElement, config?: SignInPropsTree): void => {
     if (this.ternui && this.isReady) {
       this.ternui.showSignIn(node, config);
     } else {
@@ -498,7 +483,16 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState.methodCalls.set(section, calls);
   }
 
-
+  public setAuthProvider(ternAuth: TernSecureAuthProvider): void {
+    if (!ternAuth) {
+      throw new Error('TernSecureAuthProvider instance is required');
+    }
+    this._authProvider = ternAuth;
+    if (this.ternui && typeof this.ternui.setTernAuth === 'function') {
+      this.ternui.setTernAuth(ternAuth);
+      console.log('[IsomorphicTernSecure] Auth provider set on core instance');
+    } 
+  }
 
 
   /**
@@ -534,6 +528,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState.errorListeners.forEach(callback => {
       if (this.ternui?.events) this.ternui.events.onError(callback);
     });
+    
 
     // Clear premount state
     this.premountState = {
@@ -545,6 +540,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
       errorListeners: new Set(),
     };
   }
+
 }
 
 

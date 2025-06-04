@@ -60,3 +60,63 @@ export interface Appearance {
   componentStyles?: ThemeComponentStyles;
   variables?: Record<string, string | number>;
 }
+
+
+
+/**
+ * Base UI configuration shared between SignIn and SignUp
+ */
+export interface BaseAuthUIConfig {
+  /** Visual appearance configuration */
+  appearance?: Appearance;
+  /** Application logo URL or SVG string */
+  logo?: string;
+  /** Application name for display */
+  appName?: string;
+  /** Render mode for cross-platform support */
+  renderMode?: 'modal' | 'page' | 'embedded';
+  /** Layout direction */
+  layout?: 'vertical' | 'horizontal';
+  /** Custom loading message */
+  loadingMessage?: string;
+  /** Loading spinner variant */
+  loadingSpinnerVariant?: 'circular' | 'linear' | 'dots';
+  /** Accessibility configuration */
+  a11y?: {
+    /** ARIA labels and descriptions */
+    labels?: Record<string, string>;
+    /** Element to receive initial focus */
+    initialFocus?: string;
+    /** Whether to trap focus within the auth UI */
+    trapFocus?: boolean;
+  };
+}
+
+/**
+ * Sign-in specific UI configuration
+ */
+export interface SignInUIConfig extends BaseAuthUIConfig {
+  /** Social sign-in buttons configuration */
+  socialButtons?: {
+    google?: boolean;
+    microsoft?: boolean;
+    github?: boolean;
+    facebook?: boolean;
+    twitter?: boolean;
+    apple?: boolean;
+    linkedin?: boolean;
+    layout?: 'vertical' | 'horizontal';
+    size?: 'small' | 'medium' | 'large';
+  };
+  /** "Remember me" checkbox configuration */
+  rememberMe?: {
+    enabled?: boolean;
+    defaultChecked?: boolean;
+  };
+  /** Sign-up link configuration */
+  signUpLink?: {
+    enabled?: boolean;
+    text?: string;
+    href?: string;
+  };
+}

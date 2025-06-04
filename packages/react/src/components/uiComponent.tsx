@@ -34,8 +34,8 @@ export const SignIn = withTernSecure(
 
     const rendererProps = useMemo(() => ({
       ...ui,
-      signIn: instance.signIn,
-    } as SignInUIConfig), [ui, instance.signIn]);
+      //signIn: instance.signIn,
+    } as SignInUIConfig), [ui]);
 
     const rendererRootProps = useMemo(() => ({
       ...(shouldShowFallback && fallback && { style: { display: 'none' } }),
@@ -102,8 +102,8 @@ export const SignUp = withTernSecure(
     const rendererProps = useMemo(() => ({
       ...config,
       redirectUrl,
-      signIn: instance.signIn,
-    } as SignUpUIConfig), [config, instance.signIn, redirectUrl]);
+      //signIn: instance.signIn,
+    } as SignUpUIConfig), [config, redirectUrl]);
 
     const rendererRootProps = useMemo(() => ({
       ...(shouldShowFallback && fallback && { style: { display: 'none' } }),
