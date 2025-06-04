@@ -24,8 +24,7 @@
     "next": "15.3.2"
   },
   "peerDependencies": {
-    "firebase-admin": "^12.0.0",
-    "firebase": "^11.0.0"
+    "firebase-admin": "^12.0.0"
   },
   "engines": {
     "node": ">=20"
