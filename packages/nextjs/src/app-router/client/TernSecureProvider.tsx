@@ -40,6 +40,7 @@ export function TernSecureProvider(props: React.PropsWithChildren<TernSecureNext
   const providerProps = allNextProviderPropsWithEnv(nextProps);
   return (
     <TernSecureReactProvider {...providerProps}>
+      <TernUIScript />
         {children}
     </TernSecureReactProvider>
   )

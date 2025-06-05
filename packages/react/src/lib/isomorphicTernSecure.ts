@@ -208,26 +208,17 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
       window.customDomain = this.#customDomain;
     }
 
-    console.log('[IsomorphicTernSecure] loadTernUI called:', {
-      mode: this._mode,
-      ternSecure: this.TernSecure,
-      isReady: this.isReady,
-      status: this.status,
-      customDomain: this.#customDomain,
-      timestamp: new Date().toISOString(),
-    });
-
     try {
       if(this.TernSecure) {
         let coreInstance: TernSecureProps;
-        console.log('[IsomorphicTernSecure] this.TernSecure: defined, checking readiness...');
+        //console.log('[IsomorphicTernSecure] this.TernSecure: defined, checking readiness...');
         //const TernSecureHasLoadMethod = typeof this.TernSecure.load === 'function';
         if (isConstructor<BrowserConstructor | HeadlessUIBrowserConstructor>(this.TernSecure)) {
           coreInstance = new this.TernSecure(this.#customDomain);
           this.beforeLoad(coreInstance);
           await coreInstance.load(this.options);
         } else {
-          console.log('[IsomorphicTernSecure] this.TernSecure: does not have load method.');
+          //console.log('[IsomorphicTernSecure] this.TernSecure: does not have load method.');
           coreInstance = this.TernSecure;
           if (!coreInstance.isReady) {
             this.beforeLoad(coreInstance);
@@ -236,9 +227,9 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
         }
         global.TernSecure = coreInstance;
       } else {
-        console.log('[IsomorphicTernSecure] Loading TernSecure from script is called...');
+        //console.log('[IsomorphicTernSecure] Loading TernSecure from script is called...');
         if(!global.TernSecure) {
-          console.log('[IsomorphicTernSecure] Loading TernSecure from script...');
+          //console.log('[IsomorphicTernSecure] Loading TernSecure from script...');
           await loadTernUIScript({
             ...this.options,
             customDomain: this.#customDomain,
@@ -276,14 +267,6 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     if (!ternui) {
       throw new Error('TernUI instance is not initialized');
     }
-
-    console.log('[IsomorphicTernSecure] injectTernUI called', {
-      hasStaticRenderer: !!(ternui.constructor as any).mountComponentRenderer,
-      isReady: ternui.isReady,
-      TernSecure: this.TernSecure,
-      premountedSignInNodes: this.premountState.signInNodes.size,
-      premountedSignUpNodes: this.premountState.signUpNodes.size
-    });
 
     this.ternui = ternui;
 

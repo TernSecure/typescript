@@ -1,8 +1,5 @@
 "use client"
 import { 
-  useTernSecure,
-  UserContext,
-  SessionContext,
   useUserContext
 } from '@tern-secure/shared/react'
 import type { 

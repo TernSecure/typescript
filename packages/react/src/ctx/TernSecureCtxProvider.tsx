@@ -11,7 +11,6 @@ import type {
 import type {
   SignedInSession,
   TernSecureUser,
-  TernSecureAuthProvider
 } from '@tern-secure/types'
 import { 
   TernSecureAuthContext,
@@ -37,24 +36,14 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     requiresVerification = false,
     onUserChanged
   } = props
-  
+
   const { isomorphicTernSecure: instance, status} = useLoadIsomorphicTernSecure(instanceOptions)
 
-  const { authState, setupAuthListener } = useAuthState(
+  const { authState, currentUser, setupAuthListener } = useAuthState(
     requiresVerification,
     onUserChanged,
   )
 
-  const {
-    userId,
-    isLoaded,
-    error,
-    token,
-    email,
-    isValid,
-    isVerified,
-    isAuthenticated,
-  } = authState;
 
     const authProvider = useMemo(() => {
     console.log('[TernSecureCtxProvider] Creating TernSecureAuthProvider instance...')
@@ -88,20 +77,20 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
       expirationTime: '',
       issuedAtTime: '',
       authTime: '',
-      claims: {}
+      claims: {},
+      signInProvider: '',
     } : null)
   , [authState, instance.auth.session])
 
 
   const ternsecureCtx = useMemo(() => ({
     value: instance,
-    status,
-    authState: authCtx,
+    status
   }), [instance, status])
 
   const userCtx = useMemo(() => ({
-    value: instance.auth.user
-  }), [instance.auth.user])
+    value: currentUser
+  }), [currentUser])
 
   const sessionCtx = useMemo(() => ({
     value: sessionData,
@@ -109,15 +98,19 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
 
   const ternAuthCtx = useMemo(() => ({
     value: authProvider
-  }), []);
+  }), [authProvider]);
 
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider authState:', authState);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider ternsecureCtx:', ternsecureCtx);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider sessionData:', sessionData);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider userCtx:', userCtx);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider sessionCtx:', sessionCtx);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider ternAuthCtx:', ternAuthCtx);
-  console.log('[TernSecureCtxProvider] TernSecureCtxProvider authContext:', authCtx);
+  const loadingComponent = useMemo(() => (
+    <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
+      <TernSecureAuthContext.Provider value={ternAuthCtx}>
+        <div className="tern-secure-loading">Loading authentication...</div>
+      </TernSecureAuthContext.Provider>
+    </IsomorphicTernSecureCtx.Provider>
+  ), [ternsecureCtx, ternAuthCtx])
+
+  if (!authCtx.isLoaded) {
+    return loadingComponent;
+  }
 
   return (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>

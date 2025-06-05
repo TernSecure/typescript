@@ -1,13 +1,9 @@
 import type {
     TernSecureInstanceTree as TernSecureInterface,
     TernSecureInstanceTreeOptions,
-    SignInUIConfig,
     SignUpUIConfig,
     SignInPropsTree,
     TernSecureInstanceTreeStatus,
-    SignInAttributesTree,
-    SignInFormValuesTree,
-    SignInResponseTree,
     TernSecureAuthProvider
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
@@ -192,7 +188,7 @@ export class TernSecure implements TernSecureInterface {
 
     public get auth(): TernSecureInterface['auth'] {
         return {
-            user: null,
+            user: this.ternAuth?.ternSecureUser() || null,
             session: null,
         };
     }

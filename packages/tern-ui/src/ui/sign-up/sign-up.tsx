@@ -1,8 +1,7 @@
 import { useTernSecure } from '@tern-secure/shared/react';
 import type { 
   SignUpPropsTree,
-  AuthErrorTree,
-  TernSecureUser,
+  AuthErrorTree
 } from '@tern-secure/types';
 import { cn } from '../../lib/utils';
 

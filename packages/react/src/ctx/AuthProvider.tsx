@@ -1,15 +1,9 @@
 import { createContextAndHook } from "@tern-secure/shared/react";
 import type { 
     TernSecureState, 
-    SignInResponse, 
-    TernSecureUser 
+    SignInResponse,  
 } from '@tern-secure/types';
-import { ternSecureAuth } from '../utils/client-init';
 
-
-export const getCurrentUser = (): TernSecureUser | null => {
-  return ternSecureAuth.currentUser;
-}
 
 export interface AuthProviderCtxValue extends TernSecureState {
  //signOut?: () => Promise<void>

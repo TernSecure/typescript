@@ -2,7 +2,8 @@ import type {
   TernSecureAuthProvider as TernSecureAuthProviderInterface, 
   SignInFormValuesTree, 
   SignInResponseTree,
-  TernSecureUser
+  TernSecureUser,
+  SignedInSession
 } from '@tern-secure/types';
 
 import {
@@ -10,11 +11,14 @@ import {
     resendEmailVerification
 } from '../client/actions'
 
+
 /**
  * Firebase implementation of the TernSecureAuthProvider interface
  */
 export class TernSecureAuthProvider implements TernSecureAuthProviderInterface {
     private static instance: TernSecureAuthProvider | null;
+    private currentUser: TernSecureUser | null = null;
+    private signedInSession: SignedInSession | null = null;
 
     public static getOrCreateInstance(): TernSecureAuthProvider {
         if (!TernSecureAuthProvider.instance) {
@@ -23,9 +27,9 @@ export class TernSecureAuthProvider implements TernSecureAuthProviderInterface {
         return TernSecureAuthProvider.instance;
     }
 
-    static clearInstance() {
-        TernSecureAuthProvider.instance = null;
-    }
+  static clearInstance() {
+    TernSecureAuthProvider.instance = null;
+  }
 
   async withEmailAndPassword(params: SignInFormValuesTree): Promise<SignInResponseTree> {
     try {
@@ -35,7 +39,7 @@ export class TernSecureAuthProvider implements TernSecureAuthProviderInterface {
       return {
         success: true,
         message: 'Sign in successful',
-        user: this.mapFirebaseUserToTernUser(userCredential.user)
+        user: userCredential.user
       };
     } catch (error: any) {
       return {
@@ -85,17 +89,20 @@ export class TernSecureAuthProvider implements TernSecureAuthProviderInterface {
     console.log('Signing out user');
   }
 
-  async getIdToken(forceRefresh?: boolean): Promise<string | null> {
-    throw new Error('Method not implemented.');
-  }
-
-  onAuthStateChanged(callback: (user: TernSecureUser | null) => void): () => void {
-    //const auth = ternSecureAuth;
-    //return firebaseOnAuthStateChanged(auth, (user) => {
-    //  callback(user ? this.mapFirebaseUserToTernUser(user) : null);
-    //});
-
-    throw new Error('Method not implemented.');
+  async currentSession(): Promise<SignedInSession | null> {
+    if (!this.currentUser) {
+      return null;
+    }
+    const res = await this.currentUser.getIdTokenResult();
+    return {
+      status: 'active',
+      token: res.token,
+      claims: res.claims,
+      issuedAtTime: res.issuedAtTime,
+      expirationTime: res.expirationTime,
+      authTime: res.authTime,
+      signInProvider: res.signInProvider || 'unknown'
+    };
   }
 
   private getProviderForName(provider: string) {
@@ -109,7 +116,15 @@ export class TernSecureAuthProvider implements TernSecureAuthProviderInterface {
     }
   }
 
-  private mapFirebaseUserToTernUser(user: TernSecureUser) : TernSecureUser {
-    return user
+  /**
+  * Maps user data to TernSecureUser format
+  * @returns Currently authenticated TernSecureUser or null
+  */
+ 
+  public ternSecureUser(): TernSecureUser | null {
+    if (!this.currentUser) {
+      return null;
+    }
+    return this.currentUser;
   }
 }

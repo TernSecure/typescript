@@ -1,3 +1,4 @@
+import { SignedInSession } from 'session';
 import type { TernSecureUser } from './all';
 import type { 
     SignInFormValuesTree, 
@@ -9,6 +10,12 @@ export type AuthProviderStatus = 'idle' | 'pending' | 'error' | 'success';
 export interface TernSecureAuthProvider {
   /** Current status of the auth provider */
   status?: AuthProviderStatus;
+
+  /** Current user*/
+  ternSecureUser(): TernSecureUser | null;
+
+  /** Current session */
+  currentSession: SignedInSession | null;
 
   /**
    * Authenticate a user with email and password
@@ -38,13 +45,4 @@ export interface TernSecureAuthProvider {
    */
   signOut(): Promise<void>;
   
-  /**
-   * Get ID token for the current user
-   */
-  getIdToken(forceRefresh?: boolean): Promise<string | null>;
-  
-  /**
-   * Subscribe to auth state changes
-   */
-  onAuthStateChanged(callback: (user: TernSecureUser | null) => void): () => void;
 }

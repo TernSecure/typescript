@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useTernSecure } from '@tern-secure/shared/react'
+import { 
+  useUserContext,
+  useSessionContext
+} from '@tern-secure/shared/react'
+import { useAuthProviderCtx } from '../ctx/AuthProvider'
+import { useAssertWrappedByTernSecureProvider } from './useAssertWrappedTernSecureProvider'
 
 interface SessionData {
   accessToken: string | null
@@ -13,11 +18,15 @@ interface SessionData {
 type SessionStatus = 'active' | 'expired' | 'refreshing' | 'inactive'
 
 export function useSession() {
-  const instance = useTernSecure()
-  const { user, session } = instance.auth
+  const ternSecureAuthCtx = useAuthProviderCtx()
+  const userContext = useUserContext()
+  const session = useSessionContext()
+  useAssertWrappedByTernSecureProvider('useSession')
+
+  const user = userContext
 
   const [sessionData, setSessionData] = useState<SessionData>({
-    accessToken: session?.token || null,
+    accessToken: ternSecureAuthCtx?.token || null, // Use session token if available
     expirationTime: session?.expirationTime || null, // Default to a future time for initial state
     error: null,
     isLoading: true
@@ -36,9 +45,9 @@ export function useSession() {
 
     try {
       setSessionData(prev => ({ ...prev, isLoading: true }))
-      if (!user) throw new Error('No authenticated user')
+      if (!ternSecureAuthCtx.isAuthenticated) throw new Error('No authenticated user')
 
-      const token = await instance.user.getIdToken()
+      const token = await user?.getIdToken()
       if (!token) throw new Error('Failed to get ID token')
 
       // Set expiration to 1 hour from now (Firebase default)
@@ -49,6 +58,7 @@ export function useSession() {
         expirationTime: expirationTime.toString(), // Store as string for consistency
         error: null,
         isLoading: false
+        
       })
     } catch (error) {
       console.error('Failed to refresh session:', error)
@@ -58,7 +68,7 @@ export function useSession() {
         isLoading: false
       }))
     }
-  }, [ user, instance.user])
+  }, [ user])
 
   useEffect(() => {
     refreshSession()

@@ -30,6 +30,8 @@ export function useAuthState(
     requiresVerification
   }))
 
+  const currentUser = useMemo(() => auth.currentUser, [auth.currentUser])
+
   const updateAuthState = useCallback(async (user: TernSecureUser | null) => {
     try {
       if (user) {
@@ -74,7 +76,7 @@ export function useAuthState(
       if (onUserChanged) {
         await onUserChanged(firebaseUser)
       }
-      await updateAuthState(firebaseUser)
+      updateAuthState(firebaseUser)
     })
 
     return unsubscribe
@@ -82,6 +84,7 @@ export function useAuthState(
 
   return {
     authState,
+    currentUser,
     setupAuthListener
   }
 }
