@@ -1,6 +1,5 @@
 import { useTernSecure } from '@tern-secure/shared/react'
-import type {
-  TernSecureInstanceTree, 
+import type { 
   SignInPropsTree,
   AuthErrorTree,
 } from '@tern-secure/types';

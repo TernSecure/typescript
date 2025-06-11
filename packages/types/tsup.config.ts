@@ -11,5 +11,9 @@ export default defineConfig(() => {
     format: ['cjs', 'esm'],
     legacyOutput: true,
     dts: true,
+    external: [
+      'firebase',
+      'firebase/*'
+    ]
   };
 });

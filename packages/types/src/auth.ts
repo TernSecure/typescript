@@ -1,15 +1,47 @@
 import { SignedInSession } from 'session';
-import type { TernSecureUser } from './all';
 import type { 
-    SignInFormValuesTree, 
-    SignInResponseTree
+  TernSecureUser,
+  TernSecureConfig
+} from './all';
+import type { 
+    SignInResource
 } from './signin';
+
+export interface TernSecureState {
+  userId: string | null
+  isLoaded: boolean
+  error: Error | null
+  isValid: boolean
+  isVerified: boolean
+  isAuthenticated: boolean
+  token: any | null
+  email: string | null
+  status: "loading" | "authenticated" | "unauthenticated" | "unverified"
+  requiresVerification?: boolean
+  user?: TernSecureUser | null
+}
+
 
 export type AuthProviderStatus = 'idle' | 'pending' | 'error' | 'success';
 
+export const DEFAULT_TERN_SECURE_STATE: TernSecureState = {
+  userId: null,
+  isLoaded: false,
+  error: null,
+  isValid: false,
+  isVerified: false,
+  isAuthenticated: false,
+  token: null,
+  email: null,
+  status: "loading",
+  requiresVerification: false,
+  user: null
+};
+
+
 export interface TernSecureAuthProvider {
-  /** Current status of the auth provider */
-  status?: AuthProviderStatus;
+  /** Current auth state */
+  internalAuthState: TernSecureState;
 
   /** Current user*/
   ternSecureUser(): TernSecureUser | null;
@@ -17,32 +49,12 @@ export interface TernSecureAuthProvider {
   /** Current session */
   currentSession: SignedInSession | null;
 
-  /**
-   * Authenticate a user with email and password
-   */
-  withEmailAndPassword(params: SignInFormValuesTree): Promise<SignInResponseTree>;
-  
-  /**
-   * Authenticate a user with a social provider
-   */
-  withSocialProvider(
-    provider: string, 
-    options?: {mode?: 'popup' | 'redirect'}
-): Promise<SignInResponseTree | void>;
-  
-  /**
-   * Complete multi-factor authentication
-   */
-  completeMfaSignIn(mfaToken: string, mfaContext?: any): Promise<SignInResponseTree>;
-  
-  /**
-   * Send a password reset email
-   */
-  sendPasswordResetEmail(email: string): Promise<void>;
-  
-  /**
-   * Sign out the current user
-   */
+  /** Sign in resource for authentication operations */
+  signIn: SignInResource;
+
+  /** The Firebase configuration used by this TernAuth instance. */
+  ternSecureConfig?: TernSecureConfig;
+
+  /** Sign out the current user */
   signOut(): Promise<void>;
-  
 }

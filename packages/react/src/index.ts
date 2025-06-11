@@ -16,12 +16,12 @@ export {
     handleInternalRoute
 } from './route-handler/internal-route'
 
-export  {
-    TernSecureAuth,
-    ternSecureAuth,
-    TernSecureFirestore,
-    TernSecureStorage
-} from './utils/client-init'
+//export  {
+//    TernSecureAuth,
+//    ternSecureAuth,
+//    TernSecureFirestore,
+//    TernSecureStorage
+//} from './utils/client-init'
 export {
     SignIn,
     SignUp,

@@ -58,11 +58,11 @@ export interface SignInPropsTree {
 }
 
 
-export interface SignInAttributesTree {
+export interface SignInResource {
   /**
    * The current status of the sign-in process.
    */
-  status: SignInStatus;
+  status?: SignInStatus;
   /**
    * Signs in a user with their email and password.
    * @param params - The sign-in form values.

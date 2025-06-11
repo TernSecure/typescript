@@ -27,6 +27,6 @@ export default defineConfig(() => {
     'firebase/firestore'
   ],
   injectStyle: true,
-  onSuccess: 'pnpm build:styles'
+  //onSuccess: 'pnpm build:styles'
   };
 });

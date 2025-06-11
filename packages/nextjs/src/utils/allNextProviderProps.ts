@@ -31,7 +31,7 @@ export const allNextProviderPropsWithEnv = (
     environment: process.env.NEXT_PUBLIC_TERN_ENVIRONMENT, // Added environment
   };
 
-  const firebaseConfig = {
+  const ternSecureConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
     appName: process.env.NEXT_PUBLIC_FIREBASE_APP_NAME || '',
@@ -62,7 +62,7 @@ export const allNextProviderPropsWithEnv = (
     environment: finalEnvironment,
 
     // Set the Firebase configuration properties
-    firebaseConfig,
+    ternSecureConfig,
     
     // Set properties explicitly taken from TernSecureNextProps (props version)
     // These are part of the TernSecureProviderProps interface.
@@ -73,7 +73,6 @@ export const allNextProviderPropsWithEnv = (
     //TernSecure: baseProps.Instance,
     initialState: baseProps.initialState,
     bypassApiKey: baseProps.bypassApiKey,
-    onUserChanged: baseProps.onUserChanged,
     initialSession: baseProps.initialSession,
     defaultAppearance: baseProps.defaultAppearance,
     platform: baseProps.platform,

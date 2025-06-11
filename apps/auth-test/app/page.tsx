@@ -1,27 +1,40 @@
 'use client'
 
 import { useAuth } from "@tern-secure/nextjs";
-import { redirect } from "next/navigation"
+import { useRouter, redirect } from "next/navigation"
 
 export default function Home() {
+  const router = useRouter();
   const { user, token } = useAuth();
-  console.log("User:", user);
-  //console.log("Token:", token);
+
+  console.log('Home user:', user);
 
   if (!user) {
-    redirect('/sign-in');
+    //redirect('/sign-in');
+    return null
   }
 
   const redirectToMoPage = () => {
-    redirect('/mo');
+    router.push('/mo');
+  };
+
+  const redirectToDashboard = () => {
+    router.push('/dashboard');
   };
 
   return (
     <div>
-      <h1>Welcome, {user.displayName || user.email}</h1>
+      <h1>Welcome, {user?.displayName || user?.email}</h1>
           <button onClick={redirectToMoPage}>
             Visit Mo Page
           </button>
+
+      <button
+        onClick={redirectToDashboard}
+        className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Dashboard
+      </button>
     </div>
   );
 }

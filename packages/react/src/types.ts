@@ -1,8 +1,10 @@
-import { FirebaseOptions } from 'firebase/app'
-import { User as FirebaseUser } from 'firebase/auth'
+//import { FirebaseOptions } from 'firebase/app'
+//import { User as FirebaseUser } from 'firebase/auth'
 import type { 
   TernSecureInstanceTree,
-  TernSecureInstanceTreeOptions
+  TernSecureInstanceTreeOptions,
+  TernSecureConfig,
+  TernSecureState,
  } from '@tern-secure/types'
 
 declare global {
@@ -17,7 +19,7 @@ declare global {
 /**
  * TernSecure User
  */
-export type TernSecureUser = FirebaseUser
+//export type TernSecureUser = FirebaseUser
 
 export type TernSecureUserData = {
   uid: string
@@ -31,7 +33,7 @@ export type TernSecureUserData = {
  * TernSecure Firebase configuration interface
  * Extends Firebase's base configuration options
  */
-export interface TernSecureConfig extends FirebaseOptions {
+{/*export interface TernSecureConfig {
   apiKey: string
   authDomain: string
   projectId: string
@@ -39,7 +41,7 @@ export interface TernSecureConfig extends FirebaseOptions {
   messagingSenderId: string
   appId: string
   measurementId?: string
-}
+}*/}
 
 export interface SignInResponse {
   success: boolean;
@@ -64,7 +66,7 @@ export function isSignInResponse(value: any): value is SignInResponse {
 export interface ConfigValidationResult {
   isValid: boolean
   errors: string[]
-  config: TernSecureConfig
+  //config: TernSecureConfig
 }
 
 /**
@@ -108,11 +110,10 @@ export interface HeadlessUIBrowserConstructor {
 
 export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
     children: React.ReactNode
-    initialState?: initialState
+    initialState?: TernSecureState
     requiresVerification?: boolean
     loadingComponent?: React.ReactNode
     bypassApiKey?: boolean
-    onUserChanged?: (user: TernSecureUser | null) => Promise<void>
 }
 
 export interface HeadlessUIBrowser extends TernSecureInstanceTree {
@@ -139,5 +140,5 @@ export type IsomorphicTernSecureOptions = TernSecureInstanceTreeOptions & {
   customDomain?: string;
   proxyUrl?: string;
   projectId?: string;
-  firebaseConfig?: TernSecureConfig;
+  ternSecureConfig?: TernSecureConfig;
 }

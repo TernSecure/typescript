@@ -1,4 +1,4 @@
-import { TernSecureAuth } from '../utils/client-init'
+{/*import { TernSecureAuth } from '../utils/client-init'
 import { 
   signInWithEmailAndPassword, 
   signInWithRedirect, 
@@ -172,4 +172,4 @@ export async function resendEmailVerification() {
         user: null
       }
     }
-}
+}*/}

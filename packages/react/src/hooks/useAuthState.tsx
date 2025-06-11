@@ -1,90 +1,43 @@
-import { useState, useCallback, useMemo } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
-import { ternSecureAuth } from '../utils/client-init'
-import type { 
-  TernSecureState, 
-  TernSecureUser 
-} from '@tern-secure/types'
+import { useState, useCallback } from 'react';
+import type { IsomorphicTernSecure } from '../lib/isomorphicTernSecure';
+import type { TernSecureState, DEFAULT_TERN_SECURE_STATE } from '@tern-secure/types';
+import type React from 'react';
 
-const defaultAuthState: TernSecureState = {
-  userId: null,
-  isLoaded: false,
-  error: null,
-  isValid: false,
-  isVerified: false,
-  isAuthenticated: false,
-  token: null,
-  email: null,
-  status: "loading",
-  requiresVerification: false
-}
-
+/**
+ * Custom hook that manages auth state and provides subscription callback.
+ * @param instance The IsomorphicTernSecure instance
+ * @returns Tuple containing [authState, setAuthState, subscribeToAuthState]
+ */
 export function useAuthState(
-  requiresVerification = false,
-  onUserChanged?: (user: TernSecureUser | null) => Promise<void>
-) {
-  const auth = useMemo(() => ternSecureAuth, []);
+  instance: IsomorphicTernSecure | null
+): [
+  TernSecureState | null, 
+  React.Dispatch<React.SetStateAction<TernSecureState | null>>,
+  () => () => void
+] {
+  const [authState, setAuthState] = useState<TernSecureState | null>(
+    instance?.ternAuth?.internalAuthState || null
+  );
 
-  const [authState, setAuthState] = useState<TernSecureState>(() => ({
-    ...defaultAuthState,
-    requiresVerification
-  }))
-
-  const currentUser = useMemo(() => auth.currentUser, [auth.currentUser])
-
-  const updateAuthState = useCallback(async (user: TernSecureUser | null) => {
-    try {
-      if (user) {
-        const token = await user.getIdToken()
-        const isValid = !!user.uid
-        const isVerified = user.emailVerified
-        const isAuthenticated = isValid && (!requiresVerification || isVerified)
-
-        setAuthState({
-          userId: user.uid,
-          isLoaded: true,
-          error: null,
-          isValid,
-          isVerified,
-          isAuthenticated,
-          token,
-          email: user.email,
-          status: isAuthenticated ? "authenticated" : isVerified ? "unverified" : "unauthenticated",
-          requiresVerification
-        })
-      } else {
-        setAuthState({
-          ...defaultAuthState,
-          isLoaded: true,
-          status: "unauthenticated",
-          requiresVerification
-        })
-      }
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoaded: true,
-        error: error as Error,
-        status: "unauthenticated"
-      }))
-      console.error("Error updating auth state:", error)
+  const subscribeToAuthState = useCallback(() => {
+    if (!instance?.ternAuth || !instance.events) {
+      return () => {}; // Return no-op cleanup function
     }
-  }, [requiresVerification])
 
-  const setupAuthListener = useCallback(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (onUserChanged) {
-        await onUserChanged(firebaseUser)
-      }
-      updateAuthState(firebaseUser)
-    })
+    // Set initial state
+    const currentInternalState = instance.ternAuth.internalAuthState;
+    setAuthState(currentInternalState);
 
-    return unsubscribe
-  }, [auth, onUserChanged, updateAuthState])
+    // Subscribe to changes
+    const unsubscribe = instance.events.onAuthStateChanged((newAuthState) => {
+      console.log('[useAuthState] Auth state changed:', newAuthState);
+      setAuthState(newAuthState);
+    });
 
-  return {
-    authState,
-    currentUser,
-    setupAuthListener
-  }
+    return () => {
+      unsubscribe?.();
+    };
+  }, [instance]);
+
+  return [authState, setAuthState, subscribeToAuthState];
 }

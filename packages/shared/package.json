@@ -47,16 +47,6 @@
         "types": "./dist/react/index.d.ts",
         "default": "./dist/react/index.js"
       }
-    },
-    "./nextjs": {
-      "import": {
-        "types": "./dist/nextjs/index.d.mts",
-        "default": "./dist/nextjs/index.mjs"
-      },
-      "require": {
-        "types": "./dist/nextjs/index.d.ts",
-        "default": "./dist/nextjs/index.js"
-      }
     }
   },
   "main": "./dist/index.js",
@@ -71,7 +61,6 @@
     "tslib": "2.4.1"
   },
   "peerDependencies": {
-    "firebase": "^11.0.0",
     "react": "^19",
     "react-dom": "^19"
   },

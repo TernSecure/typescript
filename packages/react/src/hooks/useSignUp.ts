@@ -29,7 +29,7 @@ export function useSignUp(): UseSignUpReturn {
     setIsLoading(true)
     setError(null)
     try {
-      return await instance.user.create(email, password)
+      return await instance.ternAuth.signInWithEmailAndPassword(email, password)
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to create account')
       setError(error)
@@ -42,7 +42,7 @@ export function useSignUp(): UseSignUpReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [instance.user])
+  }, [instance.ternAuth])
 
   return {
     email,

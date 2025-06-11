@@ -2,16 +2,24 @@
 
 import { useContext } from 'react';
 import type { 
-    TernSecureInstanceTree,
+  TernSecureAuthProvider,
+  TernSecureInstanceTree,
+  TernSecureState,
 } from '@tern-secure/types';
 import { createContextAndHook } from './ternsecureCtx';
+
+export type TernSecureAuthContextType = {
+  authProvider: TernSecureAuthProvider | null | undefined;
+  authState: TernSecureState;
+}
+
 
 // Create TernSecure instance context
 const [TernSecureInstanceContext, useTernSecureInstanceContext] = 
   createContextAndHook<TernSecureInstanceTree>('TernSecureInstanceContext');
 
 const [TernSecureAuthContext, useTernSecureAuthContext] =
-  createContextAndHook<TernSecureInstanceTree['ternAuth']>('TernSecureAuthContext');
+  createContextAndHook<TernSecureAuthContextType>('TernSecureAuthContext');
 
 const [SessionContext, useSessionContext] = 
 createContextAndHook<TernSecureInstanceTree['auth']['session']>('SessionContext');

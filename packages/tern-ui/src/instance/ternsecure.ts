@@ -8,7 +8,10 @@ import type {
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
-import { TernSecureBase } from './resources/base';
+import { 
+    TernSecureBase,
+    TernAuth
+} from './resources/internal';
 
 export type DomainOrProxyUrl =
   | {
@@ -62,8 +65,6 @@ export class TernSecure implements TernSecureInterface {
         this.customDomain = domain;
         console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
 
-        //this.#initTernAuth();
-
         this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
         //this.#setStatus('ready');
         console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
@@ -81,7 +82,6 @@ export class TernSecure implements TernSecureInterface {
 
     public load = async (options?: TernSecureInstanceTreeOptions): Promise<void> => {
         if (this.isReady) {
-            console.warn('TernSecure instance is already loaded.');
             return;
         };
 
@@ -92,14 +92,37 @@ export class TernSecure implements TernSecureInterface {
         }
 
         try {
-            //this.#ensureAuthProvider();
-
-            if (TernSecure.mountComponentRenderer && !this.#componentControls) {
-                this.#componentControls = TernSecure.mountComponentRenderer(
-                    this,
-                    this.#options,
-                );
+            if (!this.#options.ternSecureConfig) {
+                const errMsg = 'TernSecure: Firebase configuration is missing.';
+                console.error(errMsg);
+                this.error = new Error(errMsg);
+                this.#setStatus('error');
+                throw this.error;
             }
+
+            const initTernAuth = async () => {
+                console.log('[TernSecure] Creating TernSecureAuthProvider instance...')
+                return await  TernAuth.getOrCreateInstance(this.#options.ternSecureConfig!);
+            };
+
+            const initCompponentRenderer = () => {
+                if (TernSecure.mountComponentRenderer && !this.#componentControls) {
+                    this.#componentControls = TernSecure.mountComponentRenderer(
+                        this,
+                        this.#options,
+                    );
+                }
+            }
+
+            const loadTernAuth =  await initTernAuth();
+            if (!loadTernAuth) {
+                throw new Error('Failed to initialize TernAuth provider');
+            }
+
+            this.setTernAuth(loadTernAuth);
+
+            initCompponentRenderer();
+
             this.#setStatus('ready');
             this.#eventBus.emit('ready')
         } catch (error) {
@@ -189,9 +212,14 @@ export class TernSecure implements TernSecureInterface {
     public get auth(): TernSecureInterface['auth'] {
         return {
             user: this.ternAuth?.ternSecureUser() || null,
-            session: null,
+            session: this.ternAuth?.currentSession || null,
         };
     }
+
+    public authState() {
+        return this.ternAuth?.internalAuthState
+    }
+
 
     public setTernAuth(ternAuth: TernSecureAuthProvider): void {
         if (!ternAuth) {
@@ -201,30 +229,23 @@ export class TernSecure implements TernSecureInterface {
         
         this.ternAuth = ternAuth;
         console.log('[TernSecure] TernAuth provider set:', ternAuth);
-        this.#eventBus.emit('authProviderReady', ternAuth);
+        console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
+        this.#eventBus.emit('TernAuthReady', ternAuth);
     }
 
-    public get user(): TernSecureInterface['user'] {
-        return {
-            signOut: async () => {
-                throw new Error('Method not implemented.');
-            },
-            getIdToken: async () => {
-                throw new Error('Method not implemented.');
-            },
-            sendVerificationEmail: async () => {
-                throw new Error('Method not implemented.');
-            },
-            create: async (email: string, password: string) => {
-                throw new Error('Method not implemented.');
-            },
-        };
+    public emitAuthStateChange(authState: any): void {
+        this.#eventBus.emit('authStateChange', authState);
+        console.warn('[TernSecure] AuthState changed:', authState);
     }
 
     public get events(): TernSecureInterface['events'] {
         return {
             onAuthStateChanged: (callback) => {
-                throw new Error('Method not implemented.');
+                this.#eventBus.on('authStateChange', callback);
+                console.log('[TernSecure] onAuthStateChanged listener added');
+                return () => {
+                  this.#eventBus.off('authStateChange', callback);
+                }  
             },
             onError: (callback) => {
                 this.#eventBus.on('error', callback);
@@ -257,16 +278,28 @@ export class TernSecure implements TernSecureInterface {
         throw new Error('redirectToLogin not implemented');
     }
 
+    /**
+    * @deprecated
+    * This method is no longer used and will be removed in future versions.
+    */
     public static setAuthProviderFactory(factory: () => TernSecureAuthProvider): void {
         TernSecure.authProviderFactory = factory;
     }
 
+    /**
+    * @deprecated
+    * This method is no longer used and will be removed in future versions.
+    */
     public initializeTernAuth(): void {
         if (!this.ternAuth) {
             this.#initTernAuth();
         }
     }
 
+    /**
+    * @deprecated
+    * This method is no longer used and will be removed in future versions.
+    */
     #ensureAuthProvider(): void {
         if (!this.ternAuth && TernSecure.authProviderFactory) {
             try {
@@ -282,6 +315,12 @@ export class TernSecure implements TernSecureInterface {
         }
     }
 
+
+
+    /**
+    * @deprecated
+    * This method is no longer used and will be removed in future versions.
+    */
     #initTernAuth(): void {
         if (TernSecure.authProviderFactory) {
             try {
@@ -312,5 +351,18 @@ export class TernSecure implements TernSecureInterface {
         return {
             ...options,
         }
+    }
+
+    #setupAuthStateSync(): void {
+        this.events.onAuthStateChanged((authState) => {
+            console.log('[TernSecure] onAuthStateChanged:', authState.status);
+            if (authState.error) {
+                this.error = authState.error;
+            }
+            
+            if (authState.isAuthenticated && this.error) {
+                this.error = null;
+            }
+        });
     }
 }

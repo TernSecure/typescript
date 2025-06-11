@@ -4,7 +4,6 @@ export default defineConfig(() => {
   return {
     entry: [
       './src/*.{ts,tsx}',
-      './src/nextjs/index.ts',
       './src/react/index.ts',
     ],
     bundle: true,
@@ -15,8 +14,7 @@ export default defineConfig(() => {
     platform: 'browser',
     dts: true,
     external: [
-      'firebase',
-      '@tern-secure/next-types'
+      '@tern-secure/types'
     ]
   };
 });

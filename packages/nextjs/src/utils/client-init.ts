@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase/app';
+{/*import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, setPersistence, browserSessionPersistence, browserLocalPersistence} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -19,3 +19,4 @@ const storage = getStorage(clientApp);
 export const TernSecureAuth = () => ternSecureAuth;
 export const TernSecureFirestore = () => firestore;
 export const TernSecureStorage = () => storage;
+*/}

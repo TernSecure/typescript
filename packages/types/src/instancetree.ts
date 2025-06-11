@@ -3,8 +3,14 @@ import type {
   BaseAuthUIConfig,
   SignInUIConfig,
  } from './theme';
-import type { TernSecureUser } from './all';
-import type { TernSecureAuthProvider } from 'auth';
+import type { 
+  TernSecureConfig, 
+  TernSecureUser 
+} from './all';
+import type { 
+  TernSecureAuthProvider, 
+  TernSecureState 
+} from 'auth';
 import type { 
   AuthErrorTree,
   SignInPropsTree,
@@ -77,6 +83,7 @@ export type TernSecureInstanceTreeOptions = {
   onError?: (error: AuthErrorTree) => void;
   environment?: string | undefined;
   requireverification?: boolean;
+  ternSecureConfig?: TernSecureConfig
 }
 
 export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';
@@ -106,20 +113,8 @@ export interface TernSecureInstanceTree {
   };
 
   /** Core Authentication Methods */
-  ternAuth: TernSecureAuthProvider;
-
-  /** User Management Methods */
-  user: {
-    /** Sign out current user */
-    signOut: () => Promise<void>;
-    /** Get current user's ID token */
-    getIdToken: () => Promise<string | null>;
-    /** Send email verification */
-    sendVerificationEmail: () => Promise<void>;
-    /** Create new user account */
-    create: (email: string, password: string) => Promise<SignInResponseTree>;
-  };
-
+  ternAuth: TernSecureAuthProvider | undefined;
+  
   showSignIn: (targetNode: HTMLDivElement, config?: SignInPropsTree) => void;
   hideSignIn: (targetNode: HTMLDivElement) => void;
   showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
@@ -141,7 +136,7 @@ export interface TernSecureInstanceTree {
   /** Error and Event Handling */
   events: {
     /** Subscribe to auth state changes */
-    onAuthStateChanged: (callback: (user: TernSecureUser | null) => void) => () => void;
+    onAuthStateChanged: (callback: (authState: TernSecureState) => void) => () => void;
     /** Subscribe to error events */
     onError: (callback: (error: AuthErrorTree) => void) => () => void;
     /** Status */

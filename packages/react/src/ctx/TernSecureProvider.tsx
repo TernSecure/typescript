@@ -8,7 +8,6 @@ function TernSecureProviderBase(props: TernSecureProviderProps) {
         initialState, 
         requiresVerification = false,
         bypassApiKey,
-        onUserChanged,
         ...restProps
     } = props
 

@@ -104,12 +104,6 @@ importers:
 
   apps/auth-test:
     dependencies:
-      firebase:
-        specifier: ^11.0.0
-        version: 11.8.1
-      firebase-admin:
-        specifier: ^12.0.0
-        version: 12.7.0
       next:
         specifier: 15.3.2
         version: 15.3.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.89.1)
@@ -172,9 +166,6 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
-      firebase:
-        specifier: ^11.2.0
-        version: 11.8.1
       firebase-admin:
         specifier: ^12.7.0
         version: 12.7.0
@@ -252,12 +243,6 @@ importers:
       esbuild-plugin-postcss2:
         specifier: ^0.1.2
         version: 0.1.2(less@4.3.0)(postcss@8.5.4)(sass@1.89.1)(stylus@0.64.0)
-      firebase:
-        specifier: ^11.0.0
-        version: 11.8.1
-      firebase-admin:
-        specifier: ^12.0.0
-        version: 12.7.0
       next:
         specifier: ^15.0.0
         version: 15.3.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.89.1)
@@ -273,9 +258,6 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
-      firebase:
-        specifier: ^11.0.0
-        version: 11.8.1
       react:
         specifier: ^19
         version: 19.1.0
@@ -383,6 +365,9 @@ importers:
       eslint:
         specifier: ^9.28.0
         version: 9.28.0(jiti@2.4.2)
+      firebase:
+        specifier: ^11.0.0
+        version: 11.8.1
       postcss:
         specifier: ^8.5.4
         version: 8.5.4
@@ -399,11 +384,7 @@ importers:
         specifier: ^5.10.0
         version: 5.10.0
 
-  packages/types:
-    dependencies:
-      firebase:
-        specifier: ^11.2.0
-        version: 11.8.1
+  packages/types: {}
 
 packages:
 

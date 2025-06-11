@@ -1,5 +1,5 @@
-import { FirebaseOptions } from 'firebase/app'
-import { User as FirebaseUser } from 'firebase/auth'
+//import { FirebaseOptions } from 'firebase/app'
+//import { User as FirebaseUser } from 'firebase/auth'
 import { ERRORS } from './errors'
 import type { TernSecureProviderProps } from '@tern-secure/react'
 
@@ -7,7 +7,7 @@ import type { TernSecureProviderProps } from '@tern-secure/react'
 /**
  * TernSecure User
  */
-export type TernSecureUser = FirebaseUser
+//export type TernSecureUser = FirebaseUser
 
 export type TernSecureUserData = {
   uid: string
@@ -21,15 +21,15 @@ export type TernSecureUserData = {
  * TernSecure Firebase configuration interface
  * Extends Firebase's base configuration options
  */
-export interface TernSecureConfig extends FirebaseOptions {
-  apiKey: string
-  authDomain: string
-  projectId: string
-  storageBucket: string
-  messagingSenderId: string
-  appId: string
-  measurementId?: string // Optional for analytics
-}
+//export interface TernSecureConfig extends FirebaseOptions {
+//  apiKey: string
+//  authDomain: string
+//  projectId: string
+//  storageBucket: string
+//  messagingSenderId: string
+//  appId: string
+//  measurementId?: string // Optional for analytics
+//}
 
 /**
  * TernSecure initialization options
@@ -63,7 +63,7 @@ export interface FirebaseState {
 export interface ConfigValidationResult {
   isValid: boolean
   errors: string[]
-  config: TernSecureConfig
+  //config: TernSecureConfig
 }
 
 /**

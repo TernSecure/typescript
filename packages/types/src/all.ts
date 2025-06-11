@@ -1,12 +1,44 @@
-import { FirebaseOptions } from 'firebase/app'
-import { User as FirebaseUser } from 'firebase/auth'
+//import { User as FirebaseUser } from 'firebase/auth'
 
 
 
 /**
  * TernSecure User
  */
-export type TernSecureUser = FirebaseUser
+//export type TernSecureUser = FirebaseUser
+
+export interface TernSecureUser {
+  uid: string;
+  email: string | null;
+  emailVerified: boolean;
+  displayName: string | null;
+  photoURL: string | null;
+  phoneNumber: string | null;
+  isAnonymous: boolean;
+  tenantId: string | null;
+  metadata?: {
+    creationTime?: string;
+    lastSignInTime?: string;
+  };
+  providerData: Array<{
+    providerId: string;
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    phoneNumber: string | null;
+    photoURL: string | null;
+  }>;
+  getIdToken(forceRefresh?: boolean): Promise<string>;
+  getIdTokenResult(forceRefresh?: boolean): Promise<{
+    token: string;
+    claims: Record<string, any>;
+    issuedAtTime: string;
+    expirationTime: string;
+    authTime: string;
+    signInProvider: string | null;
+  }>;
+  delete(): Promise<void>;
+}
 
 export type TernSecureUserData = {
   uid: string
@@ -20,7 +52,7 @@ export type TernSecureUserData = {
  * TernSecure Firebase configuration interface
  * Extends Firebase's base configuration options
  */
-export interface TernSecureConfig extends FirebaseOptions {
+export interface TernSecureConfig {
   apiKey: string
   authDomain: string
   projectId: string
@@ -28,6 +60,7 @@ export interface TernSecureConfig extends FirebaseOptions {
   messagingSenderId: string
   appId: string
   measurementId?: string
+  appName?: string
 }
 
 /**
@@ -83,17 +116,4 @@ export interface AdminConfigValidationResult {
   isValid: boolean
   errors: string[]
   config: TernSecureAdminConfig
-}
-
-export interface TernSecureState {
-  userId: string | null
-  isLoaded: boolean
-  error: Error | null
-  isValid: boolean
-  isVerified: boolean
-  isAuthenticated: boolean
-  token: any | null
-  email: string | null
-  status: "loading" | "authenticated" | "unauthenticated" | "unverified"
-  requiresVerification?: boolean
 }

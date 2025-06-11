@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { ternSecureAuth } from '../utils/client-init'
-import { onAuthStateChanged, User } from "firebase/auth"
+//import { ternSecureAuth } from '../utils/client-init'
+//import { onAuthStateChanged, User } from "firebase/auth"
 import { TernSecureCtx, TernSecureCtxValue } from './TernSecureCtx'
 import type { TernSecureState, AuthError, SignInResponse } from "../types"
-import type { ERRORS } from '../errors'
+//import type { ERRORS } from '../errors'
 import { useRouter, usePathname } from 'next/navigation'
 import { isBaseAuthRoute, isInternalRoute, isAuthRoute} from '../app-router/route-handler/internal-route'
 import { hasRedirectLoop } from '../utils/construct'
@@ -19,7 +19,7 @@ import { hasRedirectLoop } from '../utils/construct'
 interface TernSecureClientProviderProps {
   children: React.ReactNode
   /** Callback when user state changes */
-  onUserChanged?: (user: User | null) => Promise<void>
+  //onUserChanged?: (user: User | null) => Promise<void>
   /** Login page path */
   loginPath?: string
   /** Signup page path */
@@ -43,7 +43,7 @@ export function TernSecureClientProvider({
   loadingComponent,
   requiresVerification,
 }: TernSecureClientProviderProps) {
-  const auth = useMemo(() => ternSecureAuth, []);
+  //const auth = useMemo(() => ternSecureAuth, []);
   const router = useRouter();
   const pathname = usePathname() // Get current pathname
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -129,7 +129,7 @@ export function TernSecureClientProvider({
   [router, loginPath, signUpPath, pathname, constructUrlWithRedirect]
 )
 
-  const handleSignOut = useCallback(async (error?: Error) => {
+{/*  const handleSignOut = useCallback(async (error?: Error) => {
     const currentPath = window.location.pathname
     await auth.signOut();
     setAuthState({
@@ -145,7 +145,7 @@ export function TernSecureClientProvider({
       requiresVerification,
     })
     redirectToLogin(currentPath)
-  }, [auth, redirectToLogin, requiresVerification])
+  }, [auth, redirectToLogin, requiresVerification])}
 
   const setEmail = useCallback((email: string) => {
     setAuthState((prev) => ({
@@ -196,7 +196,7 @@ export function TernSecureClientProvider({
     authState.requiresVerification,
   ])
 
-useEffect(() => {
+{/*useEffect(() => {
   let mounted = true
   let initialLoad = true
 
@@ -260,15 +260,23 @@ useEffect(() => {
     mounted = false
     unsubscribe()
   }
-  }, [auth, handleSignOut, redirectToLogin, requiresVerification, pathname, isRedirecting, shouldRedirect])
+  }, [
+    auth, 
+    handleSignOut, 
+    redirectToLogin, 
+    requiresVerification, 
+    pathname, 
+    isRedirecting, 
+    shouldRedirect
+  ])*/}
 
   const contextValue: TernSecureCtxValue = useMemo(() => ({
     ...authState,
-    signOut: handleSignOut,
-    setEmail,
-    getAuthError,
+    //signOut: handleSignOut,
+    //setEmail,
+    //getAuthError,
     redirectToLogin,
-  }), [authState, handleSignOut, setEmail, getAuthError, redirectToLogin]);
+  }), [authState, redirectToLogin]);
 
   if (!authState.isLoaded) {
     return (
