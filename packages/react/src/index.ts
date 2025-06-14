@@ -25,6 +25,7 @@ export {
 export {
     SignIn,
     SignUp,
+    UserButton
 } from './components/uiComponent'
 export {
     AuthBackground

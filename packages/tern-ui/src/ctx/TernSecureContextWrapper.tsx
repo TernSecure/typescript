@@ -19,9 +19,11 @@ export function TernSecureContextWrapper(props: TernSecureContextWrapperProps): 
     const ternSecureCtx = useMemo(() => ({value: ternSecure}), [])
     //const ternSecureUserCtx = useMemo(() => ({value: ternSecureUser}), [ternSecureUser]);
     const ternSecureAuthCtx = useMemo(() => {
-        const value = {authProvider: ternSecure.ternAuth,
-        authState: ternSecure.ternAuth?.internalAuthState}
-        return {value}
+        const value = {
+            authProvider: ternSecure.ternAuth,
+            authState: ternSecure.ternAuth?.internalAuthState
+        }
+        return { value }
     }, [ternSecure.ternAuth, ternSecure.ternAuth?.internalAuthState]);
     return (
         <TernSecureInstanceContext.Provider value={ternSecureCtx}>

@@ -10,8 +10,7 @@ export default function Home() {
   console.log('Home user:', user);
 
   if (!user) {
-    //redirect('/sign-in');
-    return null
+    redirect('/sign-in');
   }
 
   const redirectToMoPage = () => {

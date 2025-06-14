@@ -73,11 +73,8 @@ type Mode = 'browser' | 'server';
 export type TernSecureInstanceTreeOptions = {
   initialSession?: TernSecureSessionTree | null;
   defaultAppearance?: Appearance;
-  platform?: {
-    defaultLoginRedirectUrl?: string;
-    defaultLogoutRedirectUrl?: string;
-    oauthRedirectUrl?: string;
-  }
+  signInUrl?: string;
+  signUpUrl?: string;
   mode?: Mode;
   onAuthStateChanged?: (user: TernSecureUser | null) => void;
   onError?: (error: AuthErrorTree) => void;
@@ -119,6 +116,8 @@ export interface TernSecureInstanceTree {
   hideSignIn: (targetNode: HTMLDivElement) => void;
   showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
   hideSignUp: (targetNode: HTMLDivElement) => void;
+  showUserButton: (targetNode: HTMLDivElement) => void;
+  hideUserButton: (targetNode: HTMLDivElement) => void;
   //showVerify: (targetNode: HTMLDivElement) => void;
   //hideVerify: (targetNode: HTMLDivElement) => void;
   clearError: () => void;
@@ -131,7 +130,9 @@ export interface TernSecureInstanceTree {
   /** Construct URL with redirect parameters */
   constructUrlWithRedirect: (baseUrl: string) => string;
   /** Navigate to login page */
-  redirectToLogin: (redirectUrl?: string) => void;
+  redirectToSignIn: (redirectUrl?: string) => void;
+
+  redirectAfterSignIn:(redirectUrl?: string) => void;
 
   /** Error and Event Handling */
   events: {

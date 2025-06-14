@@ -40,6 +40,7 @@ export function inBrowser(): boolean {
 interface PreMountState {
   signInNodes: Map<HTMLDivElement, SignInPropsTree | undefined>;
   signUpNodes: Map<HTMLDivElement, SignUpUIConfig | undefined>;
+  userButttonNodes: Map<HTMLDivElement, SignInPropsTree | undefined>;
   verifyNodes: Set<HTMLDivElement>;
   methodCalls: Map<keyof TernSecureInstanceTree, Array<() => Promise<unknown>>>;
   authStateListeners: Set<(authState: TernSecureState) => void>;
@@ -62,6 +63,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   private premountState: PreMountState = {
     signInNodes: new Map(),
     signUpNodes: new Map(),
+    userButttonNodes: new Map(),
     verifyNodes: new Set(),
     methodCalls: new Map(),
     authStateListeners: new Set(),
@@ -373,6 +375,22 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     }
   };
 
+  showUserButton = (node: HTMLDivElement): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.showUserButton(node);
+    } else {
+      this.premountState.userButttonNodes.set(node, undefined);
+    }
+  }
+
+  hideUserButton = (node: HTMLDivElement): void => {
+    if (this.ternui && this.isReady) {
+      this.ternui.hideUserButton(node);
+    } else {
+      this.premountState.userButttonNodes.delete(node);
+    }
+  };
+
   clearError = (): void => {
     if (this.ternui?.clearError) {
       this.ternui.clearError();
@@ -407,11 +425,17 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     return this.ternui.constructUrlWithRedirect(baseUrl);
   };
 
-  redirectToLogin = (redirectUrl?: string): void => {
-    if (this.ternui?.redirectToLogin) {
-      this.ternui.redirectToLogin(redirectUrl);
+  redirectToSignIn = (redirectUrl?: string): void => {
+    if (this.ternui?.redirectToSignIn) {
+      this.ternui.redirectToSignIn(redirectUrl);
     }
   };
+
+  redirectAfterSignIn = (redirectUrl?: string): void => {
+    if (this.ternui?.redirectAfterSignIn) {
+      this.ternui.redirectAfterSignIn(redirectUrl);
+    }
+  }
 
   // Event handling - delegate to core instance with fallback to premount state
   get events(): TernSecureInstanceTree['events'] {
@@ -488,6 +512,9 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState.signUpNodes.forEach((config, node) => {
       this.showSignUp(node, config);
     });
+    this.premountState.userButttonNodes.forEach((config, node) => {
+      this.showUserButton(node);
+    });
 
     // Process queued method calls
     this.premountState.methodCalls.forEach((calls, section) => {
@@ -513,6 +540,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.premountState = {
       signInNodes: new Map(),
       signUpNodes: new Map(),
+      userButttonNodes: new Map(),
       verifyNodes: new Set(),
       methodCalls: new Map(),
       authStateListeners: new Set(),

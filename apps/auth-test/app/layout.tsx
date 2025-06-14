@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { TernSecureProvider } from "@tern-secure/nextjs";
+import { TernSecureProvider, UserButton } from "@tern-secure/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +29,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TernSecureProvider requireverification={false} customDomain="http://localhost:4000">
+        <UserButton />
         {children}
         </TernSecureProvider>
       </body>

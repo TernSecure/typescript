@@ -7,7 +7,8 @@ import {
   TernSecureConfig,
   TernSecureState,
   DEFAULT_TERN_SECURE_STATE,
-  SignInResource
+  SignInResource,
+  handleFirebaseAuthError
 } from '@tern-secure/types';
 
 import { 
@@ -30,9 +31,11 @@ import {
   onAuthStateChanged
 } from 'firebase/auth'
 
-import { TernSecureBase } from './internal';
-
-
+import { TernSecure, TernSecureBase } from './internal';
+import { 
+  storePreviousPath,
+  constructFullUrl
+} from '../../utils/construct';
 
 
 /**
@@ -111,17 +114,20 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     try {
       const { email, password } = params;
       const userCredential = await signInWithEmailAndPassword(this.auth,email, password);
+      const user = userCredential.user
       
       return {
         success: true,
-        message: 'Sign in successful',
-        user: userCredential.user
+        message: 'Authentication successful',
+        user: userCredential.user,
+        error: !user.emailVerified ? 'REQUIRES_VERIFICATION' : 'AUTHENTICATED'
       };
-    } catch (error: any) {
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error)
       return {
         success: false,
-        message: error.message || 'Authentication failed',
-        error,
+        message: authError.message,
+        error: authError.code,
         user: null
       };
     }
@@ -161,8 +167,12 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     console.log(`Sending password reset email to ${email}`);
   }
 
-  async signOut(): Promise<void> {
-    console.log('Signing out user');
+  signOut = async(): Promise<void> => {
+    await Promise.all([
+      this.auth.signOut(),
+      this.updateInternalAuthState(null)
+    ]);
+    TernSecureBase.ternsecure.redirectToSignIn();
   }
 
   currentSession =  async(): Promise<SignedInSession | null> => {
@@ -195,14 +205,11 @@ export class TernAuth implements TernSecureAuthProviderInterface {
   }
 
   private initAuthStateListener() : () => void {
-    console.log('[TernAuth] Initializing auth state listener.');
     return onAuthStateChanged(this.auth, async (user: TernSecureUser | null) => {
-      console.log('[TernAuth] Firebase onAuthStateChanged triggered. User:', user ? user.uid : 'null');
         this._currentUser = user;
         await this.updateInternalAuthState(user);
 
         if (typeof this._resolveInitialAuthState === 'function') {
-          console.log('[TernAuth] Resolving initial auth state promise via onAuthStateChanged.');
           this._resolveInitialAuthState();
           // Prevent further calls by effectively making it a no-op or removing it
           // @ts-ignore 

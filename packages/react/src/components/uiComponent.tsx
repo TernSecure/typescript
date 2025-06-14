@@ -128,3 +128,29 @@ export const SignUp = withTernSecure(
   { component: 'SignUp', renderWhileLoading: true }
 );
 
+
+export const UserButton = withTernSecure(
+  ({ instance, component}) => {
+    const mountingStatus = useWaitForComponentMount(component);
+    const shouldShowFallback = mountingStatus === 'rendering' || !instance.isReady;
+
+    return (
+      <>
+        {shouldShowFallback}
+        {instance.isReady && (
+          <TernSecureHostRenderer
+            component={component}
+            mount={instance.showUserButton}
+            unmount={instance.hideUserButton}
+            props={{}}
+            rootProps={{
+              ...(shouldShowFallback && { style: { display: 'none' } }),
+            }}
+          />
+        )}
+      </>
+    );
+  },
+  { component: 'UserButton', renderWhileLoading: true }
+);
+

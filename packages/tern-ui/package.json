@@ -8,11 +8,11 @@
     "dist",
     "dist/*.css"
   ],
-  "main": "dist/index.js",
-  "jsdelivr": "dist/index.browser.js",
-  "module": "dist/index.mjs",
-  "style": "dist/index.css",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/ternsecure.js",
+  "jsdelivr": "dist/ternsecure.browser.js",
+  "module": "dist/ternsecure.mjs",
+  "style": "dist/ternsecure.css",
+  "types": "dist/types/ternsecure.d.ts",
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm build:js && pnpm build:types",
@@ -31,6 +31,7 @@
   },
   "browserslist": "last 2 years",
   "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.10",
     "@swc/helpers": "^0.5.17",
     "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",

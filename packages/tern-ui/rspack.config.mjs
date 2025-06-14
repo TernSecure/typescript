@@ -22,8 +22,8 @@ const require = createRequire(import.meta.url);
 const packageJSON = require('./package.json');
 
 const APP_ENTRY_POINTS_CONFIG = {
-  index: './src/index.ts',
-  'index.browser': './src/index.browser.ts',
+  ternsecure: './src/index.ts',
+  'ternsecure.browser': './src/index.browser.ts',
 };
 
 /**
@@ -56,7 +56,7 @@ const sharedConfig = () => {
       //})
     ],
     output: {
-      chunkFilename: `[name]_index_[fullhash:6]_${packageJSON.version}.js`
+      chunkFilename: `[name]_ternsecure_[fullhash:6]_${packageJSON.version}.js`
     },
     externals: undefined,
     optimization: {
@@ -255,7 +255,7 @@ const prodConfig = () => {
   );
 
   const BrowserConfig = merge(
-    entry('index.browser'),
+    entry('ternsecure.browser'),
     sharedConfig(),
     sharedProdConfig(),
     prodBundler(),
@@ -265,7 +265,7 @@ const prodConfig = () => {
   );
 
   const EsmConfig = merge(baseProdConfig, {
-    ...entry('index'),
+    ...entry('ternsecure'),
     experiments: {
       outputModule: true,
     },
@@ -284,7 +284,7 @@ const prodConfig = () => {
   });
 
   const CjsConfig = merge(baseProdConfig, {
-    ...entry('index'),
+    ...entry('ternsecure'),
     output: {
       filename: '[name].js',
       libraryTarget: 'commonjs',
@@ -368,7 +368,7 @@ const devConfig = ({ env }) => {
   };
 
   const configToMerge = merge(
-    entry('index.browser'),
+    entry('ternsecure.browser'),
     sharedConfig(),
     sharedDevConfig(),
     {

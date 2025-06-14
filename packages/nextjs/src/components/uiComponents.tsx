@@ -6,6 +6,10 @@ import  {
 } from '@tern-secure/react'
 import type { ComponentProps } from 'react';
 
+export {
+  UserButton
+} from '@tern-secure/react';
+
 export const SignIn = (props: ComponentProps<typeof BaseSignIn>) => {
   return <BaseSignIn {...props} />;
 };

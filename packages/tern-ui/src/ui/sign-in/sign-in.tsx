@@ -1,4 +1,3 @@
-import { useTernSecure } from '@tern-secure/shared/react'
 import type { 
   SignInPropsTree,
   AuthErrorTree,
@@ -31,7 +30,7 @@ export function SignIn({
   className, 
   redirectUrl = '/',
 }: SignInProps) {
-  const instance = useTernSecure();
+
   const signIn  = useAuthSignIn();
   const appName = ui?.appName;
   const logo = ui?.logo; // Get logo from ui config
@@ -44,16 +43,9 @@ export function SignIn({
 
   console.log('[tern-ui SignIn]', signIn)
 
-  const handleEmailSuccess = () => {
-    if (onSuccess) {
-      onSuccess(null); 
-    }
-  };
-
-  const handleSocialSuccess = () => {
-    if (onSuccess) {
-      onSuccess(null); 
-    }
+  const handleSignInWithEmail = async (email: string, password: string) => {
+    const response = await signIn.withEmailAndPassword({ email, password });
+    return response;
   };
 
   const handleError = (error: AuthErrorTree) => {
@@ -81,10 +73,7 @@ export function SignIn({
       {isEmailSignInEnabled ? (
         <EmailSignIn
           onError={handleError}
-          onSuccess={handleEmailSuccess}
-          signInWithEmail={async (email, password) => {
-            await signIn.withEmailAndPassword({ email, password});
-          }}
+          signInWithEmail={handleSignInWithEmail}
         />
       ):(
         <p className="text-sm text-muted-foreground">

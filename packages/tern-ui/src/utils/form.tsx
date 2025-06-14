@@ -6,16 +6,24 @@ import { Button } from '../components/elements/button'
 import { cn } from '../lib/utils'
 
 interface FormErrorsProps {
-  errors: any[]
+  errors: Record<string, string> | string[] | string | null
 }
 
 export function FormErrors({ errors }: FormErrorsProps) {
-  if (!errors || errors.length === 0) return null
+  if (!errors) return null
+
+  const errorMessages = Array.isArray(errors)
+    ? errors
+    : typeof errors === 'string'
+      ? [errors]
+      : Object.values(errors)
+
+  if (errorMessages.length === 0) return null
 
   return (
     <Alert variant="destructive" className="animate-in fade-in-50">
       <AlertDescription>
-        {errors.map((error, i) => (
+        {errorMessages.map((error, i) => (
           <div key={i}>{error}</div>
         ))}
       </AlertDescription>

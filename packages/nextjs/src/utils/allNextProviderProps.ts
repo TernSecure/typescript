@@ -11,8 +11,8 @@ export const allNextProviderPropsWithEnv = (
   nextProps: Omit<TernSecureNextProps, 'children'>
 ): NextProviderProcessedProps => {
   const {
-    loginPath,
-    signUpPath,
+    signInUrl,
+    signUpUrl,
     apiKey: propsApiKey,
     projectId: propsProjectId,
     customDomain: propsCustomDomain,
@@ -28,7 +28,9 @@ export const allNextProviderPropsWithEnv = (
     projectId: process.env.NEXT_PUBLIC_TERN_PROJECT_ID,
     customDomain: process.env.NEXT_PUBLIC_TERN_CUSTOM_DOMAIN,
     proxyUrl: process.env.NEXT_PUBLIC_TERN_PROXY_URL,
-    environment: process.env.NEXT_PUBLIC_TERN_ENVIRONMENT, // Added environment
+    environment: process.env.NEXT_PUBLIC_TERN_ENVIRONMENT,
+    signInUrl: process.env.NEXT_PUBLIC_SIGN_IN_URL,
+    signUpUrl: process.env.NEXT_PUBLIC_SIGN_UP_URL
   };
 
   const ternSecureConfig = {
@@ -48,6 +50,8 @@ export const allNextProviderPropsWithEnv = (
   const finalCustomDomain = propsCustomDomain ?? envConfig.customDomain;
   const finalProxyUrl = propsProxyUrl ?? envConfig.proxyUrl;
   const finalEnvironment = propsEnvironment ?? envConfig.environment;
+  const finalSignInUrl = signInUrl ?? envConfig.signInUrl;
+  const finalSignUpUrl = signUpUrl ?? envConfig.signUpUrl;
 
   // Construct the result, ensuring it conforms to NextProviderProcessedProps
   // (Omit<TernSecureProviderProps, 'children'>)
@@ -75,7 +79,8 @@ export const allNextProviderPropsWithEnv = (
     bypassApiKey: baseProps.bypassApiKey,
     initialSession: baseProps.initialSession,
     defaultAppearance: baseProps.defaultAppearance,
-    platform: baseProps.platform,
+    signInUrl: finalSignInUrl,
+    signUpUrl: finalSignUpUrl,
     mode: baseProps.mode,
     onAuthStateChanged: baseProps.onAuthStateChanged,
     onError: baseProps.onError,

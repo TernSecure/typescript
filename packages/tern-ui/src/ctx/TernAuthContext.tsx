@@ -5,7 +5,8 @@ import {
  } from "@tern-secure/shared/react"
 
 import type {
-    SignInResource
+    SignInResource,
+    TernSecureUser
 } from "@tern-secure/types"
 
 export function useAuthSignIn(): SignInResource {
@@ -20,4 +21,10 @@ export function useAuthSignIn(): SignInResource {
     }
     
     return ctx.authProvider.signIn
+}
+
+export function useUser(): TernSecureUser | null {
+    const ctx = useTernSecureAuthContext();
+    assertContextExists(ctx, TernSecureAuthContext)
+    return ctx.authState.user || null;
 }

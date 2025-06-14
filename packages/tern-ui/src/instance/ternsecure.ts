@@ -12,6 +12,16 @@ import {
     TernSecureBase,
     TernAuth
 } from './resources/internal';
+import {
+    constructFullUrl,
+    hasRedirectLoop,
+    storePreviousPath,
+    urlWithRedirect
+} from '../utils/construct'
+
+export function inBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
 
 export type DomainOrProxyUrl =
   | {
@@ -157,9 +167,6 @@ export class TernSecure implements TernSecureInterface {
     }
 
     public hideSignIn(node: HTMLDivElement): void {
-        if (!node) {
-            throw new Error('hideSignIn requires a valid HTMLDivElement as the first parameter');
-        }
         this.assertComponentControlsReady(this.#componentControls);
         this.#componentControls.ensureMounted().then(controls =>
             controls.unmountComponent({ 
@@ -200,6 +207,28 @@ export class TernSecure implements TernSecureInterface {
             }),
         );
     }
+
+    public showUserButton(node: HTMLDivElement): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.mountComponent({
+                name: 'UserButton',
+                node,
+                props: {},
+                appearanceKey: 'default',
+            }),
+        );
+    }
+
+    public hideUserButton(node: HTMLDivElement): void {
+        this.assertComponentControlsReady(this.#componentControls);
+        this.#componentControls.ensureMounted().then(controls =>
+            controls.unmountComponent({ 
+                node,
+            }),
+        );
+    }
+
     public clearError(): void {
         this.error = null;
     }
@@ -262,20 +291,56 @@ export class TernSecure implements TernSecureInterface {
         };
     }
 
-    public async getRedirectResult(): Promise<any> {
+    public getRedirectResult = async (): Promise<any> => {
         throw new Error('getRedirectResult not implemented');
     }
     
-    public shouldRedirect(currentPath: string): boolean | string {
+    public shouldRedirect = (currentPath: string): boolean | string => {
         throw new Error('shouldRedirect not implemented');
     }
     
-    public constructUrlWithRedirect(baseUrl: string): string {
-        throw new Error('constructUrlWithRedirect not implemented');
-    }
     
-    public redirectToLogin(redirectUrl?: string): void {
-        throw new Error('redirectToLogin not implemented');
+    public constructUrlWithRedirect = (): string => {
+        const signInUrl = this.#options.signInUrl || '/sign-in';
+        const signInPathParam = '/sign-in';
+        const signUpUrl = this.#options.signUpUrl || '/sign-up';
+        const signUpPathParam = '/sign-up';
+        const currentPath = window.location.pathname;
+        const baseUrl = window.location.origin
+        
+        if (typeof window === "undefined" || !window.location) {
+            return signInUrl
+        }
+        
+        const url = new URL(signInUrl, baseUrl)
+        
+        if (!currentPath.includes(signInPathParam) && !currentPath.includes(signUpPathParam)) {
+            url.searchParams.set("redirect", currentPath)
+        }
+        return url.toString()
+    };
+    
+    public redirectToSignIn = (): void => {
+        if (inBrowser()){
+            const redirectUrl = this.constructUrlWithRedirect()
+            window.location.href = redirectUrl;
+        }
+    };
+
+    redirectAfterSignIn = (): void => {
+        if (inBrowser()) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPath = urlParams.get('redirect') || '/';
+            const currentPath = window.location.pathname;
+
+            if (hasRedirectLoop(currentPath, redirectPath)) {
+                console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
+                window.location.href = '/';
+            } else {
+                storePreviousPath(currentPath);
+                window.location.href = constructFullUrl(redirectPath);
+            }
+        }
     }
 
     /**

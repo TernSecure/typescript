@@ -146,8 +146,6 @@ export interface SignInProps extends RedirectConfig {
 export type TernSecureNextProps = TernSecureProviderProps & {
   apiKey?: string
   requiresVerification?: boolean
-  loginPath?: string
-  signUpPath?: string
   loadingComponent?: React.ReactNode
 }
 

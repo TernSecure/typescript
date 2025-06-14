@@ -1,5 +1,9 @@
+import React, { useState } from 'react'
 import { FormErrors, FormButton } from '../../utils/form'
 import { useAppForm } from '../../components/elements'
+import { useTernSecure } from '@tern-secure/shared/react'
+import type { SignInResponseTree } from '@tern-secure/types'
+
 
 interface SignInFormValues {
   email: string
@@ -10,7 +14,7 @@ interface EmailSignInProps {
   onError?: (error: Error) => void
   onSuccess?: () => void
   isDisabled?: boolean
-  signInWithEmail?: (email: string, password: string) => Promise<void>
+  signInWithEmail?: (email: string, password: string) => Promise<SignInResponseTree>
 }
 
 export function EmailSignIn({
@@ -19,21 +23,41 @@ export function EmailSignIn({
   isDisabled,
   signInWithEmail,
 }: EmailSignInProps) {
+  const ternSecure = useTernSecure();
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const form = useAppForm({
     defaultValues: {
       email: '',
       password: '',
     } as SignInFormValues,
-    onSubmit: async ({ value }) => {
+    validators: {
+      onSubmitAsync: async ({ value }) => {
       try {
         if (signInWithEmail) {
-          await signInWithEmail(value.email, value.password)
+          const res = await signInWithEmail(value.email, value.password)
+          if (!res.success) {
+            const error: SignInResponseTree = {
+              success: false,
+              error: res.error,
+              message: res.message,
+              user: null,
+            }
+            setAuthError(error.message || 'Sign in failed')
+            return 
+          }
+
+          if (res.user) {
+            ternSecure.redirectAfterSignIn()
+          }
+
           onSuccess?.()
         }
       } catch (error) {
         onError?.(error as Error)
         throw error
       }
+    },
     },
   })
 
@@ -46,6 +70,7 @@ export function EmailSignIn({
       }}
       className="space-y-4"
     >
+      <FormErrors errors={authError} />
       <form.AppField
         name="email"
         children={(field) =>
@@ -69,8 +94,6 @@ export function EmailSignIn({
           />
         }
       />
-
-      <FormErrors errors={form.state.errors} />
 
       <FormButton
         canSubmit={form.state.canSubmit}
