@@ -4,11 +4,11 @@ import {
     AvatarFallback,
 } from '../../components/elements';
 import { Button } from '../../components/elements/button'
-import { useUser } from '../../ctx'
+import { useAuthUser } from '../../ctx'
 import { useTernSecure } from '@tern-secure/shared/react'
 
 export function UserButton() {
-    const user = useUser();
+    const user = useAuthUser();
     const ternSecure = useTernSecure();
 
     const handleSignOut = () => {

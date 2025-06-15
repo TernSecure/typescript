@@ -18,7 +18,7 @@ export const preloadComponent = async (component: unknown) => {
 export const TernSecureComponents = {
     SignIn,
     SignUp,
-    UserButton,
+    UserButton
 };
 
 export type TernSecureComponentName = keyof typeof TernSecureComponents;

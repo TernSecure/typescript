@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback } from 'react'
-import type { SignInResponseTree, SignInUIConfig } from '@tern-secure/types'
+import type { 
+  SignInResponseTree, 
+  SignInUIConfig 
+} from '@tern-secure/types'
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
 

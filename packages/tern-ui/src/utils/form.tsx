@@ -1,7 +1,7 @@
 'use client'
 
 import { Alert, AlertDescription } from '../components/elements/alert'
-import { Loader2 } from 'lucide-react'
+import { LoaderCircle } from '../components/icons'
 import { Button } from '../components/elements/button'
 import { cn } from '../lib/utils'
 
@@ -54,7 +54,7 @@ export function FormButton({
     >
       {isSubmitting ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           {submittingText}
         </>
       ) : (

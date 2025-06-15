@@ -1,10 +1,5 @@
 "use client"
-import { 
-  useTernSecureAuthContext,
-  assertContextExists,
-  TernSecureAuthContext
-} from '@tern-secure/shared/react'
-import { deriveAuthState, DEFAULT_TERN_SECURE_STATE } from '@tern-secure/shared/derivedAuthState'
+
 import { useAssertWrappedByTernSecureProvider } from './useAssertWrappedTernSecureProvider'
 import { TernSecureState } from '@tern-secure/types'
 import { useAuthProviderCtx } from '../ctx/AuthProvider'

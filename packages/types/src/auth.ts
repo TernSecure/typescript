@@ -5,7 +5,8 @@ import type {
 } from './all';
 import type { 
     SignInResource
-} from './signin';
+} from './signIn';
+import { SignUpResource } from 'signUp';
 
 export interface TernSecureState {
   userId: string | null
@@ -51,6 +52,9 @@ export interface TernSecureAuthProvider {
 
   /** Sign in resource for authentication operations */
   signIn: SignInResource;
+
+  /** SignUp resource for authentication operations */
+  signUp: SignUpResource;
 
   /** The Firebase configuration used by this TernAuth instance. */
   ternSecureConfig?: TernSecureConfig;

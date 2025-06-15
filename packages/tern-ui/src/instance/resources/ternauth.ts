@@ -8,6 +8,8 @@ import {
   TernSecureState,
   DEFAULT_TERN_SECURE_STATE,
   SignInResource,
+  SignUpResource,
+  ResendEmailVerification,
   handleFirebaseAuthError
 } from '@tern-secure/types';
 
@@ -31,7 +33,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth'
 
-import { TernSecure, TernSecureBase } from './internal';
+import { TernSecureBase, SignUp } from './internal';
 import { 
   storePreviousPath,
   constructFullUrl
@@ -53,7 +55,8 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     private _initAuthStateResolvedPromise: Promise<void>;
     private _resolveInitialAuthState!: () => void;
 
-    public readonly signIn: SignInResource;
+    signIn: SignInResource;
+    signUp: SignUpResource = new SignUp();
 
     private constructor(config: TernSecureConfig) {
       const appName = config.appName || '[DEFAULT]';
@@ -79,6 +82,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         withSocialProvider: this.withSocialProvider.bind(this),
         completeMfaSignIn: this.completeMfaSignIn.bind(this),
         sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
+        resendEmailVerification: this.resendEmailVerification.bind(this)
       };
 
       this.authStateUnsubscribe = this.initAuthStateListener();
@@ -167,6 +171,36 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     console.log(`Sending password reset email to ${email}`);
   }
 
+  private async resendEmailVerification(): Promise<ResendEmailVerification> {
+    const user = this._currentUser;
+    if (!user) {
+      throw new Error("No user is currently signed in");
+    }
+
+    await user.reload();
+
+    if (user.emailVerified) {
+      return {
+        success: true,
+        message: 'Email is already verified. You can sign in.',
+        isVerified: true,
+      };
+    };
+
+    const actionCodeSettings = {
+      url: TernSecureBase.ternsecure.constructUrlWithRedirect(),
+      handleCodeInApp: true,
+    };
+
+    await sendEmailVerification(user, actionCodeSettings)
+    return {
+      success: true,
+      message: 'Verification email sent. Please check your inbox.',
+      isVerified: false,
+    };
+
+  }
+
   signOut = async(): Promise<void> => {
     await Promise.all([
       this.auth.signOut(),
@@ -218,17 +252,21 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       });
   }
 
-  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = false): Promise<void> {
+  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = true): Promise<void> {
     const previousState = { ...this._authState };
     try {
       if (user) {
+        const isValid = !!user.uid;
+        const isVerified = user.emailVerified;
+        const isAuthenticated = isValid && (!requiresVerification || isVerified);
+
         this._authState = {
           userId: user.uid,
           isLoaded: true,
           error: null,
-          isValid: !!user.uid,
-          isVerified: user.emailVerified,
-          isAuthenticated: !!user.uid && (!requiresVerification || user.emailVerified),
+          isValid,
+          isVerified,
+          isAuthenticated,
           token: user.getIdToken() || null,
           email: user.email || null,
           status: this.determineAuthStatus(user, requiresVerification),
@@ -256,6 +294,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         status: "unauthenticated",
         user: null
       };
+      this.signOut();
       TernSecureBase.ternsecure.emitAuthStateChange(this._authState);
     }
   }
@@ -293,5 +332,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       return "unverified";
     }
     return "authenticated";
+  }
+
+  #redirectToSignIn() {
+    TernSecureBase.ternsecure.redirectToSignIn();
   }
 }

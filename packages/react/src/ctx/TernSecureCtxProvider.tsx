@@ -4,12 +4,10 @@ import React, { useEffect, useState, useCallback, useMemo } from "react"
 import { IsomorphicTernSecureCtx } from "./IsomorphicTernSecureCtx"
 import { IsomorphicTernSecure } from "../lib/isomorphicTernSecure"
 import type { 
-  initialState,
   IsomorphicTernSecureOptions,
 } from '../types'
 import {
   DEFAULT_TERN_SECURE_STATE,
-  TernSecureAuthProvider,
   type TernSecureState
 } from '@tern-secure/types'
 import { 

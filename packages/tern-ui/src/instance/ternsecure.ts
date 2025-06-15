@@ -1,8 +1,8 @@
 import type {
     TernSecureInstanceTree as TernSecureInterface,
     TernSecureInstanceTreeOptions,
-    SignUpUIConfig,
     SignInPropsTree,
+    SignUpPropsTree,
     TernSecureInstanceTreeStatus,
     TernSecureAuthProvider
 } from '@tern-secure/types';
@@ -174,22 +174,14 @@ export class TernSecure implements TernSecureInterface {
             }),
         );
     }
-    public showSignUp(node: HTMLDivElement, config?: SignUpUIConfig): void {
-        if (!node) {
-            throw new Error('showSignUp requires a valid HTMLDivElement as the first parameter');
-        }
-
+    public showSignUp(node: HTMLDivElement, config?: SignUpPropsTree): void {
         this.assertComponentControlsReady(this.#componentControls);
-        const componentProps: SignInPropsTree = {
-            ui: config,
-            //signIn: this.signIn,
-        }
         this.#componentControls.ensureMounted().then(controls =>
             controls.mountComponent({
                 name: 'SignUp',
                 node,
-                props: componentProps,
-                appearanceKey: config?.appearance?.colors?.primary || 'default',
+                props: config,
+                appearanceKey: config?.ui?.appearance?.colors?.primary || 'default',
             }),
         );
         this.currentView = 'signUp';
@@ -322,10 +314,27 @@ export class TernSecure implements TernSecureInterface {
     
     public redirectToSignIn = (): void => {
         if (inBrowser()){
+            const signInUrl = this.#options.signInUrl || '/sign-in';
+            const redirectUrl = this.constructUrlWithRedirect()
+
+            if (redirectUrl === window.location.href) {
+                return
+            } else {
+                window.location.href = redirectUrl;
+            }
+        }
+
+        return
+    };
+
+    public redirectToSignUp = (): void => {
+        if (inBrowser()) {
+            const SignUpUrl = this.#options.signUpUrl || '/sign-up';
             const redirectUrl = this.constructUrlWithRedirect()
             window.location.href = redirectUrl;
         }
-    };
+        return 
+    }
 
     redirectAfterSignIn = (): void => {
         if (inBrowser()) {
@@ -341,7 +350,13 @@ export class TernSecure implements TernSecureInterface {
                 window.location.href = constructFullUrl(redirectPath);
             }
         }
+
+        return
     }
+
+    redirectAfterSignUp =  (): void => {
+        throw new Error('redirectAfterSignUp is not implemented yet');
+    };
 
     /**
     * @deprecated

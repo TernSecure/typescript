@@ -1,16 +1,11 @@
 import type { 
   TernSecureInstanceTree, 
-  TernSecureUser, 
-  SignInResponseTree, 
-  SignInUIConfig,
-  SignUpUIConfig,
   AuthErrorTree,
-  TernSecureSessionTree,
   TernSecureInstanceTreeStatus,
-  TernSecureInstanceTreeOptions,
   TernSecureAuthProvider,
   SignInPropsTree,
   TernSecureState,
+  SignUpPropsTree,
 } from '@tern-secure/types';
 import type { 
   Browser, 
@@ -39,7 +34,7 @@ export function inBrowser(): boolean {
 
 interface PreMountState {
   signInNodes: Map<HTMLDivElement, SignInPropsTree | undefined>;
-  signUpNodes: Map<HTMLDivElement, SignUpUIConfig | undefined>;
+  signUpNodes: Map<HTMLDivElement, SignUpPropsTree| undefined>;
   userButttonNodes: Map<HTMLDivElement, SignInPropsTree | undefined>;
   verifyNodes: Set<HTMLDivElement>;
   methodCalls: Map<keyof TernSecureInstanceTree, Array<() => Promise<unknown>>>;
@@ -359,7 +354,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     }
   };
 
-  showSignUp = (node: HTMLDivElement, config?: SignUpUIConfig): void => {
+  showSignUp = (node: HTMLDivElement, config?: SignUpPropsTree): void => {
     if (this.ternui && this.isReady) {
       this.ternui.showSignUp(node, config);
     } else {
@@ -431,11 +426,23 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     }
   };
 
+  redirectToSignUp = (redirectUrl?: string): void => {
+    if (this.ternui?.redirectToSignUp) {
+      this.ternui.redirectToSignUp(redirectUrl);
+    }
+  };
+
   redirectAfterSignIn = (redirectUrl?: string): void => {
     if (this.ternui?.redirectAfterSignIn) {
       this.ternui.redirectAfterSignIn(redirectUrl);
     }
   }
+
+  redirectAfterSignUp = (redirectUrl?: string): void => {
+    if (this.ternui?.redirectAfterSignUp) {
+      this.ternui.redirectAfterSignUp(redirectUrl);
+    }
+  };
 
   // Event handling - delegate to core instance with fallback to premount state
   get events(): TernSecureInstanceTree['events'] {

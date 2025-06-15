@@ -6,38 +6,40 @@
  * TernSecure User
  */
 //export type TernSecureUser = FirebaseUser
+export interface IdTokenResult {
+  authTime: string;
+  expirationTime: string;
+  issuedAtTime: string;
+  signInProvider: string | null;
+  signInSecondFactor: string | null;
+  token: string;
+  claims: Record<string, any>;
+}
 
-export interface TernSecureUser {
-  uid: string;
-  email: string | null;
-  emailVerified: boolean;
+export interface UserInfo {
   displayName: string | null;
-  photoURL: string | null;
+  email: string | null;
   phoneNumber: string | null;
+  photoURL: string | null;
+  providerId: string; 
+  uid: string;
+}
+
+export interface TernSecureUser extends UserInfo {
+  emailVerified: boolean;
   isAnonymous: boolean;
-  tenantId: string | null;
-  metadata?: {
+  metadata: {
     creationTime?: string;
     lastSignInTime?: string;
   };
-  providerData: Array<{
-    providerId: string;
-    uid: string;
-    displayName: string | null;
-    email: string | null;
-    phoneNumber: string | null;
-    photoURL: string | null;
-  }>;
-  getIdToken(forceRefresh?: boolean): Promise<string>;
-  getIdTokenResult(forceRefresh?: boolean): Promise<{
-    token: string;
-    claims: Record<string, any>;
-    issuedAtTime: string;
-    expirationTime: string;
-    authTime: string;
-    signInProvider: string | null;
-  }>;
+  providerData: UserInfo[];
+  refreshToken: string;
+  tenantId: string | null;
   delete(): Promise<void>;
+  getIdToken(forceRefresh?: boolean): Promise<string>;
+  getIdTokenResult(forceRefresh?: boolean): Promise<IdTokenResult>;
+  reload(): Promise<void>;
+  toJSON(): object;
 }
 
 export type TernSecureUserData = {

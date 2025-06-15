@@ -104,6 +104,27 @@ const sharedConfig = () => {
 }
 
 /** @type { () => (import('@rspack/core').RuleSetRule) }  */
+const svgLoader = () => {
+  return {
+    test: /\.svg$/,
+    resolve: {
+      fullySpecified: false,
+    },
+    use: {
+      loader: '@svgr/webpack',
+      options: {
+        svgo: true,
+        svgoConfig: {
+          floatPrecision: 3,
+          transformPrecision: 1,
+          plugins: ['preset-default', 'removeDimensions', 'removeStyleElement'],
+        },
+      },
+    },
+  };
+};
+
+/** @type { () => (import('@rspack/core').RuleSetRule) }  */
 const cssLoader = () => {
   return {
     test: /\.css$/,
@@ -193,6 +214,7 @@ const prodBundler = () => {
   return {
     module: {
       rules: [
+        svgLoader(),
         cssLoader(),
         ...typescriptLoader()
       ]
@@ -320,6 +342,7 @@ const devConfig = ({ env }) => {
     return {
       module: {
         rules: [
+          svgLoader(),
           cssLoader(),
           ...typescriptDevLoader()
         ]

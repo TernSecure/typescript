@@ -6,6 +6,19 @@ export interface AuthErrorResponse {
   code: ErrorCode
 }
 
+export interface AuthErrorTree extends Error {
+  code?: any | string;
+  message: string;
+  response?: any | string;
+}
+
+export interface SignInResponseTree {
+  success: boolean;
+  message?: string;
+  error?: any | undefined;
+  user?: any;
+}
+
 export const ERRORS = {
   SERVER_SIDE_INITIALIZATION: "TernSecure must be initialized on the client side",
   REQUIRES_VERIFICATION: "AUTH_REQUIRES_VERIFICATION",

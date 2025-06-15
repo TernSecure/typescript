@@ -6,7 +6,6 @@ import {
 
 import type {
     TernSecureState,
-    TernSecureUser,
 } from "@tern-secure/types"
 
 

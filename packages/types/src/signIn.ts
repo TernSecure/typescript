@@ -2,6 +2,10 @@ import type { TernSecureUser } from './all';
 import type {
     SignInUIConfig
 } from './theme'
+import type { 
+  AuthErrorTree,
+  SignInResponseTree
+} from './errors';
 
 export type SignInStatus =
   | 'idle'
@@ -14,12 +18,6 @@ export type SignInStatus =
 
 
 
-export interface AuthErrorTree extends Error {
-  code?: any | string;
-  message: string;
-  response?: SignInResponseTree;
-}
-
 export type SignInFormValuesTree = {
   email: string;
   password: string;
@@ -28,11 +26,9 @@ export type SignInFormValuesTree = {
 
 export type SignInInitialValueTree = Partial<SignInFormValuesTree>;
 
-export interface SignInResponseTree {
-  success: boolean;
-  message?: string;
-  error?: any | undefined;
-  user?: any;
+
+export interface ResendEmailVerification extends SignInResponseTree {
+  isVerified?: boolean;
 }
 
 export function isSignInResponseTree(value: any): value is SignInResponseTree {
@@ -88,4 +84,9 @@ export interface SignInResource {
    * @returns A promise that resolves when the email is sent.
    */
   sendPasswordResetEmail: (email: string) => Promise<void>;
+  /**
+   * Resends the email verification link to the user's email address.
+   * @returns A promise that resolves with the sign-in response.
+   */
+  resendEmailVerification: () => Promise<ResendEmailVerification>;
 }

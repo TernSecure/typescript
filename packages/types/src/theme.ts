@@ -120,3 +120,23 @@ export interface SignInUIConfig extends BaseAuthUIConfig {
     href?: string;
   };
 }
+
+/**
+ * Sign-up specific UI configuration
+ */
+export interface SignUpUIConfig extends BaseAuthUIConfig {
+  /** Password requirements display configuration */
+  passwordRequirements?: {
+    show?: boolean;
+    rules?: Array<{
+      rule: string;
+      description: string;
+    }>;
+  };
+  /** Terms and conditions configuration */
+  terms?: {
+    enabled?: boolean;
+    text?: string;
+    link?: string;
+  };
+}

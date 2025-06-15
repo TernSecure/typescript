@@ -1,7 +1,5 @@
 import type { 
   Appearance,
-  BaseAuthUIConfig,
-  SignInUIConfig,
  } from './theme';
 import type { 
   TernSecureConfig, 
@@ -12,61 +10,20 @@ import type {
   TernSecureState 
 } from 'auth';
 import type { 
-  AuthErrorTree,
   SignInPropsTree,
-  SignInResponseTree,
-} from './signin'
-
+} from './signIn'
+import type {
+  SignUpPropsTree
+} from './signUp';
 import type { 
   TernSecureSessionTree, 
   SignedInSession 
 } from './session';
+import type {
+  AuthErrorTree
+} from './errors';
 
 
-export type SignUpFormValuesTree = {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-  displayName?: string;
-};
-
-export type SignUpInitialValueTree = Partial<SignUpFormValuesTree>;
-
-
-/**
- * Sign-up specific UI configuration
- */
-export interface SignUpUIConfig extends BaseAuthUIConfig {
-  /** Password requirements display configuration */
-  passwordRequirements?: {
-    show?: boolean;
-    rules?: Array<{
-      rule: string;
-      description: string;
-    }>;
-  };
-  /** Terms and conditions configuration */
-  terms?: {
-    enabled?: boolean;
-    text?: string;
-    link?: string;
-  };
-}
-
-
-/**
- * Props for SignUp component focusing on UI concerns
- */
-export interface SignUpPropsTree {
-  /** Initial form values */
-  initialValue?: SignUpInitialValueTree;
-  /** UI configuration */
-  ui?: SignUpUIConfig;
-  /** Callbacks */
-  onSubmit?: (values: SignUpFormValuesTree) => Promise<void>;
-  onError?: (error: AuthErrorTree) => void;
-  onSuccess?: (user: TernSecureUser | null) => void;
-}
 
 type Mode = 'browser' | 'server';
 
@@ -114,12 +71,10 @@ export interface TernSecureInstanceTree {
   
   showSignIn: (targetNode: HTMLDivElement, config?: SignInPropsTree) => void;
   hideSignIn: (targetNode: HTMLDivElement) => void;
-  showSignUp: (targetNode: HTMLDivElement, config?: SignUpUIConfig) => void;
+  showSignUp: (targetNode: HTMLDivElement, config?: SignUpPropsTree) => void;
   hideSignUp: (targetNode: HTMLDivElement) => void;
   showUserButton: (targetNode: HTMLDivElement) => void;
   hideUserButton: (targetNode: HTMLDivElement) => void;
-  //showVerify: (targetNode: HTMLDivElement) => void;
-  //hideVerify: (targetNode: HTMLDivElement) => void;
   clearError: () => void;
   setLoading: (isLoading: boolean) => void;
 
@@ -129,10 +84,14 @@ export interface TernSecureInstanceTree {
   shouldRedirect: (currentPath: string) => boolean | string;
   /** Construct URL with redirect parameters */
   constructUrlWithRedirect: (baseUrl: string) => string;
-  /** Navigate to login page */
+  /** Navigate to SignIn page */
   redirectToSignIn: (redirectUrl?: string) => void;
+  /** Navigate to SignUp page */
+  redirectToSignUp: (redirectUrl?: string) => void;
 
   redirectAfterSignIn:(redirectUrl?: string) => void;
+  
+  redirectAfterSignUp:(redirectUrl?: string) => void;
 
   /** Error and Event Handling */
   events: {

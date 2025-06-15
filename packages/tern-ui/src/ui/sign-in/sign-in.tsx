@@ -26,7 +26,6 @@ export function SignIn({
   ui, 
   onError, 
   onSuccess, 
-  initialValue, 
   className, 
   redirectUrl = '/',
 }: SignInProps) {
@@ -40,8 +39,6 @@ export function SignIn({
   // Enable social sign-in if any provider is configured in `signIn` methods AND socialButtons config is present or explicitly enabled
  // const isSocialSignInGloballyEnabled = !!(signIn.withSocialProvider);
   //const isSocialSignInVisible = isSocialSignInGloballyEnabled && (socialButtonsConfig?.google !== false || socialButtonsConfig?.microsoft !== false);
-
-  console.log('[tern-ui SignIn]', signIn)
 
   const handleSignInWithEmail = async (email: string, password: string) => {
     const response = await signIn.withEmailAndPassword({ email, password });
