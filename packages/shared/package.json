@@ -1,6 +1,11 @@
 {
   "name": "@tern-secure/shared",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/shared"
+  },
   "publishConfig": {
     "access": "public"
   },

@@ -20,7 +20,7 @@ importers:
       '@google-cloud/storage':
         specifier: ^7.16.0
         version: 7.16.0
-      '@tern-secure/next-backend':
+      '@tern-secure/backend':
         specifier: workspace:*
         version: link:packages/backend
       '@types/node':

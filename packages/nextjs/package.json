@@ -6,11 +6,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TernSecure/nextjs.git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
     "directory": "packages/nextjs"
   },
   "bugs": {
-    "url": "https://github.com/TernSecure/nextjs/issues"
+    "url": "https://github.com/TernSecure/typescript/issues"
   },
   "homepage": "https://github.com/TernSecure/nextjs#readme",
   "scripts": {
@@ -18,9 +18,6 @@
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",  
     "dev": "tsup --watch",
     "lint": "eslint src/",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "changeset publish",
     "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "keywords": [

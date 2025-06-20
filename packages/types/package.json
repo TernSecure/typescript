@@ -1,7 +1,12 @@
 {
   "name": "@tern-secure/types",
   "version": "0.0.0",
-  "private": true,
+  "description": "Type definitions for TernSecure packages",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/types"
+  },
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
@@ -16,5 +21,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

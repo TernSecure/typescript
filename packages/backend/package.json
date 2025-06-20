@@ -1,7 +1,14 @@
 {
-  "name": "@tern-secure/next-backend", 
+  "name": "@tern-secure/backend", 
   "version": "0.0.0",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/backend"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts", 

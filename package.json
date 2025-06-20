@@ -17,7 +17,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.28.0",
     "@google-cloud/storage": "^7.16.0",
-    "@tern-secure/next-backend": "workspace:*",
+    "@tern-secure/backend": "workspace:*",
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
