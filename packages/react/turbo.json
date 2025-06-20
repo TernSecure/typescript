@@ -1,0 +1,21 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "*.d.ts",
+        "src/**",
+        "tsconfig.json",
+        "tsconfig.*.json",
+        "tsup.config.ts",
+        "!CHANGELOG.md",
+        "!dist/**",
+        "!examples/**",
+        "!node_modules/**"
+      ],
+      "outputLogs": "new-only",
+      "outputs": []
+    }
+  }
+}
