@@ -7,49 +7,61 @@ import type {
 } from '@tern-secure/types'
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
+import { useAuthSignIn } from '../../ctx';
 
 interface SocialSignInProps {
   onError?: (error: Error, response?: SignInResponseTree | null) => void
   onSuccess?: () => void
-  redirectUrl?: string
   isDisabled?: boolean
-  authActions?: {
-    signInWithGoogle?: () => Promise<void>
-    signInWithMicrosoft?: () => Promise<void>
-  }
   config?: SignInUIConfig['socialButtons']
+  mode?: 'popup' | 'redirect'
 }
+
+const BUTTON_SIZE_CLASSES = {
+  small: 'py-1 px-3 text-xs',
+  large: 'py-3 px-5 text-lg',
+  default: 'py-2 px-4 text-sm'
+} as const;
+
+const BASE_BUTTON_CLASSES = 'w-full inline-flex justify-center items-center border border-gray-300 rounded-md shadow-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50';
 
 export function SocialSignIn({
   onError,
   onSuccess,
-  redirectUrl = '/',
   isDisabled,
-  authActions,
   config,
+  mode = 'popup'
 }: SocialSignInProps) {
+  const signIn  = useAuthSignIn();
+
   const handleSocialSignIn = useCallback(async (provider: 'google' | 'microsoft') => {
     try {
-      if (provider === 'google' && authActions?.signInWithGoogle) {
-        await authActions.signInWithGoogle()
-      } else if (provider === 'microsoft' && authActions?.signInWithMicrosoft) {
-        await authActions.signInWithMicrosoft()
+
+      const result = await signIn.withSocialProvider(provider, { mode });
+      if (mode === 'popup' && result) {
+        if (!result.success) {
+          onError?.(new Error(result.message), result)
+        } else {
+          onSuccess?.()
+        }
       }
-      onSuccess?.()
     } catch (error) {
       onError?.(error as Error)
     }
-  }, [authActions, onError, onSuccess])
+  }, [signIn, onError, onSuccess, mode])
 
-  const showGoogle = authActions?.signInWithGoogle && config?.google !== false
-  const showMicrosoft = authActions?.signInWithMicrosoft && config?.microsoft !== false
+  const showGoogle = config?.google !== false
+  const showMicrosoft = config?.microsoft !== false
 
-  const layout = config?.layout || 'horizontal'
   const buttonSizeClass = config?.size === 'small' ? 'py-1 px-3 text-xs' : config?.size === 'large' ? 'py-3 px-5 text-lg' : 'py-2 px-4 text-sm'
+  const layout = config?.layout || 'horizontal';
+  //const buttonSizeClass = config?.size ? BUTTON_SIZE_CLASSES[config.size] || BUTTON_SIZE_CLASSES.default : BUTTON_SIZE_CLASSES.default;
 
   if (!showGoogle && !showMicrosoft) {
     return null
   }
+
+  const gridColumns = (layout === 'vertical' || (!showGoogle || !showMicrosoft)) ? "grid-cols-1" : "sm:grid-cols-2";
 
   return (
     <div>
@@ -60,10 +72,7 @@ export function SocialSignIn({
         </div>
       </div>
 
-      <div className={cn(
-        "mt-6 grid gap-4",
-        (layout === 'vertical' || (!showGoogle || !showMicrosoft)) ? "grid-cols-1" : "sm:grid-cols-2"
-      )}>
+      <div className={cn("mt-6 grid gap-4", gridColumns)}>
         {showGoogle && (
           <Button
             type="button"

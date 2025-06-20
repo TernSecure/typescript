@@ -22,7 +22,8 @@ import {
   Auth,
   getAuth, 
   signInWithEmailAndPassword, 
-  signInWithRedirect, 
+  signInWithRedirect,
+  signInWithPopup, 
   getRedirectResult, 
   GoogleAuthProvider, 
   OAuthProvider, 
@@ -30,7 +31,8 @@ import {
   sendEmailVerification, 
   setPersistence,
   browserLocalPersistence,
-  onAuthStateChanged
+  onAuthStateChanged,
+  UserCredential
 } from 'firebase/auth'
 
 import { TernSecureBase, SignUp } from './internal';
@@ -39,6 +41,18 @@ import {
   constructFullUrl
 } from '../../utils/construct';
 
+
+interface ProviderConfig {
+  provider: GoogleAuthProvider | OAuthProvider;
+  customParameters: Record<string, string>;
+}
+
+type FirebaseAuthResult = UserCredential | void;
+
+type AuthMethodFunction = (
+  auth: Auth, 
+  provider: GoogleAuthProvider | OAuthProvider
+) => Promise<FirebaseAuthResult>;
 
 /**
  * Firebase implementation of the TernSecureAuthProvider interface
@@ -113,6 +127,13 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     }
   }
   
+  private static readonly AUTH_MESSAGES = {
+    REDIRECT_INITIATED: 'Redirect initiated',
+    POPUP_SUCCESS: 'Sign in successful',
+    REDIRECT_SUCCESS: 'Sign in completed via redirect',
+    REDIRECT_PENDING: 'No redirect operation in progress'
+  } as const;
+  
 
   private async withEmailAndPassword(params: SignInFormValuesTree): Promise<SignInResponseTree> {
     try {
@@ -137,19 +158,27 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     }
   }
 
-  private async withSocialProvider(provider: string, options?: { mode?: 'popup' | 'redirect' }): Promise<SignInResponseTree | void> {
+  private async withSocialProvider(
+    provider: string, 
+    options?: { 
+      mode?: 'popup' | 'redirect' 
+    }
+  ): Promise<SignInResponseTree | void> {
     try {
-      const authProvider = this.getProviderForName(provider);
-      
       if (options?.mode === 'redirect') {
-        //await signInWithRedirect(auth, authProvider);
-        return; // This will redirect, so no response here
+        const redirectResult = await this.authRedirectResult();
+        
+        if (redirectResult) {
+          return redirectResult;
+        }
+
+        await this._signInWithRedirect(provider);
+        return;
       } else {
-        //const userCredential = await signInWithPopup(auth, authProvider);
+        await this._signInWithPopUp(provider);
         return {
           success: true,
           message: 'Sign in successful',
-          //user: this.mapFirebaseUserToTernUser(userCredential.user)
         };
       }
     } catch (error: any) {
@@ -226,15 +255,33 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     };
     return s;
   }
-
+  
   private getProviderForName(provider: string) {
-    switch (provider.toLowerCase()) {
+    const config = this.getProviderConfig(provider);
+    return config.provider;
+  }
+  
+  private getProviderConfig(providerName: string): ProviderConfig {
+    switch (providerName.toLowerCase()) {
       case 'google':
-        //return new GoogleAuthProvider();
-      case 'microsoft':
-        //return new OAuthProvider('microsoft.com');
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
+        const googleProvider = new GoogleAuthProvider();
+        return {
+          provider: googleProvider,
+          customParameters: {
+            login_hint: 'user@example.com',
+            prompt: 'select_account'
+          }
+        };
+        case 'microsoft':
+          const microsoftProvider = new OAuthProvider('microsoft.com');
+          return {
+            provider: microsoftProvider,
+            customParameters: {
+              prompt: 'consent'
+            }
+          };
+          default:
+            throw new Error(`Unsupported provider: ${providerName}`);
     }
   }
 
@@ -336,5 +383,102 @@ export class TernAuth implements TernSecureAuthProviderInterface {
 
   #redirectToSignIn() {
     TernSecureBase.ternsecure.redirectToSignIn();
+  }
+
+  private async _signInWithRedirect(providerName: string): Promise<SignInResponseTree> {
+    return this.executeAuthMethod(signInWithRedirect, providerName);
+  }
+  
+  private async _signInWithPopUp(providerName: string): Promise<SignInResponseTree> {
+    return this.executeAuthMethod(signInWithPopup, providerName);
+  }
+  
+  private async executeAuthMethod(
+    authMethod: AuthMethodFunction,
+    providerName: string
+  ): Promise<SignInResponseTree> {
+    const config = this.getProviderConfig(providerName);
+    config.provider.setCustomParameters(config.customParameters);
+    
+    try {
+      await authMethod(this.auth, config.provider);
+      return { success: true, message: 'Authentication initiated' };
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error);
+      return {
+        success: false,
+        message: authError.message,
+        error: authError.code,
+        user: null
+      };
+    }
+  }
+
+  private async authRedirectResult(): Promise<SignInResponseTree | null> {
+    try {
+      const result = await getRedirectResult(this.auth);
+
+      if (result) {
+        const user = result.user;
+        return {
+          success: true,
+          user,
+        }
+      }
+      return null;
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error);
+      return {
+        success: false,
+        message: authError.message,
+        error: authError.code,
+        user: null
+      };
+    }
+  }
+  
+  private async executePopupAuthMethod(providerName: string): Promise<SignInResponseTree> {
+    const config = this.getProviderConfig(providerName);
+    config.provider.setCustomParameters(config.customParameters);
+    
+    try {
+      const result = await signInWithPopup(this.auth, config.provider);
+      return {
+        success: true,
+        message: TernAuth.AUTH_MESSAGES.POPUP_SUCCESS,
+        user: result.user,
+        error: null
+      };
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error);
+      return {
+        success: false,
+        message: authError.message,
+        error: authError.code,
+        user: null
+      };
+    }
+  }
+  
+  
+  private async executeRedirectAuthMethod(providerName: string): Promise<void> {
+    const config = this.getProviderConfig(providerName);
+    config.provider.setCustomParameters(config.customParameters);
+    
+    try {
+      await signInWithRedirect(this.auth, config.provider);
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error);
+      console.error("TernAuth: Redirect sign-in error:", authError);
+      throw error;
+      }
+    }
+    
+  private async __signInWithRedirect(providerName: string): Promise<void> {
+    await this.executeRedirectAuthMethod(providerName);
+  }
+  
+  private async __signInWithPopUp(providerName: string): Promise<SignInResponseTree> {
+    return this.executePopupAuthMethod(providerName);
   }
 }

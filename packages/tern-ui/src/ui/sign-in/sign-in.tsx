@@ -26,18 +26,19 @@ export function SignIn({
   onError, 
   onSuccess, 
   className, 
-  forceRedirectUrl,
 }: SignInProps) {
 
   const signIn  = useAuthSignIn();
   const appName = ui?.appName;
-  const logo = ui?.logo; // Get logo from ui config
-  const socialButtonsConfig = ui?.socialButtons; // Get social buttons config
+  const logo = ui?.logo;
+  const socialButtonsConfig = ui?.socialButtons; 
 
   const isEmailSignInEnabled = !!signIn.withEmailAndPassword;
-  // Enable social sign-in if any provider is configured in `signIn` methods AND socialButtons config is present or explicitly enabled
- // const isSocialSignInGloballyEnabled = !!(signIn.withSocialProvider);
-  //const isSocialSignInVisible = isSocialSignInGloballyEnabled && (socialButtonsConfig?.google !== false || socialButtonsConfig?.microsoft !== false);
+  const isSocialSignInGloballyEnabled = !!(signIn.withSocialProvider);
+  const isSocialSignInVisible = isSocialSignInGloballyEnabled && (
+    socialButtonsConfig?.google !== false || 
+    socialButtonsConfig?.microsoft !== false
+  );
 
   const handleSignInWithEmail = async (email: string, password: string) => {
     const response = await signIn.withEmailAndPassword({ email, password });
@@ -50,17 +51,23 @@ export function SignIn({
     }
   };
 
+
   return (
     <div className="relative flex items-center justify-center">
     <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
       <CardHeader className="space-y-1 text-center">
       {logo && (
         <div className="flex justify-center mb-6">
-          {/* Assuming logo is a URL. If it can be an SVG string, more complex rendering is needed */}
-          <img src={logo} alt={appName ? `${appName} Logo` : 'Application Logo'} className="h-16 w-auto" />
+          <img
+           src={logo} 
+           alt={appName ? `${appName} Logo` : 'Application Logo'} 
+           className="h-16 w-auto" 
+           />
         </div>
       )}
-      <CardTitle className={cn("font-bold")}> Sign in to {appName || 'your account'} </CardTitle>
+      <CardTitle className={cn("font-bold")}> 
+        Sign in to {appName || 'your account'} 
+        </CardTitle>
         <CardDescription className={cn("text-muted-foreground")}>
           Please sign in to continue
         </CardDescription>
@@ -75,6 +82,13 @@ export function SignIn({
         <p className="text-sm text-muted-foreground">
           Email sign-in is not enabled.
         </p>
+      )}
+      { isSocialSignInVisible && (
+        <SocialSignIn
+          onError={handleError}
+          config={socialButtonsConfig}
+          mode={'redirect'}
+        />
       )}
       </CardContent>
       <CardFooter className="flex justify-center">
