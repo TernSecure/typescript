@@ -6,6 +6,9 @@ import type {
   SignInPropsTree,
   TernSecureState,
   SignUpPropsTree,
+  SignInRedirectOptions,
+  SignUpRedirectOptions,
+  RedirectOptions,
 } from '@tern-secure/types';
 import type { 
   Browser, 
@@ -420,27 +423,27 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     return this.ternui.constructUrlWithRedirect(baseUrl);
   };
 
-  redirectToSignIn = (redirectUrl?: string): void => {
+  redirectToSignIn = async (options?: SignInRedirectOptions) => {
     if (this.ternui?.redirectToSignIn) {
-      this.ternui.redirectToSignIn(redirectUrl);
+      this.ternui.redirectToSignIn();
     }
   };
 
-  redirectToSignUp = (redirectUrl?: string): void => {
+  redirectToSignUp = async (options?: SignUpRedirectOptions) => {
     if (this.ternui?.redirectToSignUp) {
-      this.ternui.redirectToSignUp(redirectUrl);
+      this.ternui.redirectToSignUp();
     }
   };
 
   redirectAfterSignIn = (redirectUrl?: string): void => {
     if (this.ternui?.redirectAfterSignIn) {
-      this.ternui.redirectAfterSignIn(redirectUrl);
+      this.ternui.redirectAfterSignIn();
     }
   }
 
   redirectAfterSignUp = (redirectUrl?: string): void => {
     if (this.ternui?.redirectAfterSignUp) {
-      this.ternui.redirectAfterSignUp(redirectUrl);
+      this.ternui.redirectAfterSignUp();
     }
   };
 

@@ -31,7 +31,7 @@ export function EmailSignIn({
 }: EmailSignInProps) {
   const ternSecure = useTernSecure();
   const authState = useAuthState();
-  const requiresVerification: boolean = true;
+  const requiresVerification: boolean = false;
 
   const [formError, setFormError] = useState<SignInResponseTree | null>(null);
 
@@ -64,12 +64,12 @@ export function EmailSignIn({
                 message: 'Email verification required',
                 error: 'REQUIRES_VERIFICATION',
                 user: res.user,
-            })
+              })
 
             return
           }
         }
-        //ternSecure.redirectAfterSignIn();
+        ternSecure.redirectAfterSignIn();
         onSuccess?.()
         }
       } catch (error) {

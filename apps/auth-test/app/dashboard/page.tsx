@@ -7,11 +7,8 @@ export default function Dashboard() {
  const router = useRouter();
  const { user } = useAuth();
 
- console.log('Dashboard user:', user);
+ //console.log('Dashboard user:', user);
 
-    if (!user) {
-      redirect('/sign-in');
-    }
 
     const redirectToHome = () => {
       router.push('/');
@@ -24,7 +21,7 @@ export default function Dashboard() {
     return (
       <div>
         <h1>Dashboard</h1>
-        <p>Welcome, {user.displayName || user.email}!</p>
+        <p>Welcome, {user?.displayName || user?.email}!</p>
         <button 
           onClick={redirectToMoPage}
           className="bg-blue-500 text-white px-4 py-2 rounded"

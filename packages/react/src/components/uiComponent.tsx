@@ -3,7 +3,8 @@ import type {
   SignInPropsTree, 
   TernSecureInstanceTree, 
   SignInUIConfig, 
-  SignUpUIConfig
+  SignUpUIConfig,
+  SignUpPropsTree
 } from '@tern-secure/types';
 import { TernSecureHostRenderer } from './TernSecureHostRenderer';
 import { withTernSecure, FallbackProp } from './withTernSecure';
@@ -13,14 +14,15 @@ const debugLog = (component: string, action: string, data?: any) => {
   console.log(`[TernSecure:${component}] ${action}`, data || '');
 };
 
-// Base props without instance since withTernSecure will provide it
-export interface SignInProps {
-  ui?: SignInUIConfig;
-  redirectUrl?: string;
-}
 
 // Internal component props including instance from withTernSecure
-type SignInComponentProps = SignInProps & FallbackProp & {
+type SignInComponentProps = SignInPropsTree & FallbackProp & {
+  component?: string;
+  instance: TernSecureInstanceTree;
+};
+
+
+type SignUpComponentProps = SignUpPropsTree & FallbackProp & {
   component?: string;
   instance: TernSecureInstanceTree;
 };
@@ -60,18 +62,9 @@ export const SignIn = withTernSecure(
   { component: 'SignIn', renderWhileLoading: true }
 );
 
-export interface SignUpProps {
-  config?: SignUpUIConfig;
-  redirectUrl?: string;
-}
-
-type SignUpComponentProps = SignUpProps & FallbackProp & {
-  component?: string;
-  instance: TernSecureInstanceTree;
-};
 
 export const SignUp = withTernSecure(
-  ({ instance, component, fallback, config, redirectUrl = '/' }: SignUpComponentProps) => {
+  ({ instance, component, fallback, ui, forceRedirectUrl }: SignUpComponentProps) => {
     const mountingStatus = useWaitForComponentMount(component);
     const shouldShowFallback = mountingStatus === 'rendering' || !instance.isReady;
 
@@ -80,9 +73,9 @@ export const SignUp = withTernSecure(
         isReady: instance.isReady,
         mountingStatus,
         hasSignUpMethod: !!instance.showSignUp,
-        hasConfig: !!config,
+        hasConfig: !!ui,
       });
-    }, [instance.isReady, mountingStatus, instance.showSignUp, config]);
+    }, [instance.isReady, mountingStatus, instance.showSignUp, ui]);
 
 {/*    const mount = useCallback((el: HTMLDivElement) => {
       debugLog('SignUp', 'Mounting', { config });
@@ -100,10 +93,10 @@ export const SignUp = withTernSecure(
     }, [instance]); */}
 
     const rendererProps = useMemo(() => ({
-      ...config,
-      redirectUrl,
+      ...ui,
+      forceRedirectUrl,
       //signIn: instance.signIn,
-    } as SignUpUIConfig), [config, redirectUrl]);
+    } as SignUpUIConfig), [ui, forceRedirectUrl]);
 
     const rendererRootProps = useMemo(() => ({
       ...(shouldShowFallback && fallback && { style: { display: 'none' } }),

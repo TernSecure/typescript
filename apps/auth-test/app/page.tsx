@@ -7,11 +7,8 @@ export default function Home() {
   const router = useRouter();
   const { user, token } = useAuth();
 
-  console.log('Home user:', user);
+  //console.log('Home user:', user);
 
-  if (!user) {
-    redirect('/sign-in');
-  }
 
   const redirectToMoPage = () => {
     router.push('/mo');

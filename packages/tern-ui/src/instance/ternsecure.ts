@@ -4,7 +4,10 @@ import type {
     SignInPropsTree,
     SignUpPropsTree,
     TernSecureInstanceTreeStatus,
-    TernSecureAuthProvider
+    TernSecureAuthProvider,
+    SignInRedirectOptions,
+    SignUpRedirectOptions,
+    RedirectOptions,
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
@@ -16,8 +19,10 @@ import {
     constructFullUrl,
     hasRedirectLoop,
     storePreviousPath,
-    urlWithRedirect
+    urlWithRedirect,
+    buildURL
 } from '../utils/construct'
+
 
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -290,47 +295,172 @@ export class TernSecure implements TernSecureInterface {
     public shouldRedirect = (currentPath: string): boolean | string => {
         throw new Error('shouldRedirect not implemented');
     }
-    
-    
-    public constructUrlWithRedirect = (): string => {
-        const signInUrl = this.#options.signInUrl || '/sign-in';
-        const signInPathParam = '/sign-in';
-        const signUpUrl = this.#options.signUpUrl || '/sign-up';
-        const signUpPathParam = '/sign-up';
-        const currentPath = window.location.pathname;
-        const baseUrl = window.location.origin
-        
-        if (typeof window === "undefined" || !window.location) {
-            return signInUrl
-        }
-        
-        const url = new URL(signInUrl, baseUrl)
-        
-        if (!currentPath.includes(signInPathParam) && !currentPath.includes(signUpPathParam)) {
-            url.searchParams.set("redirect", currentPath)
-        }
-        return url.toString()
-    };
-    
-    public redirectToSignIn = (): void => {
-        if (inBrowser()){
-            const signInUrl = this.#options.signInUrl || '/sign-in';
-            const redirectUrl = this.constructUrlWithRedirect()
 
-            if (redirectUrl === window.location.href) {
-                return
-            } else {
-                window.location.href = redirectUrl;
+    #buildUrl = (
+        key: 'signInUrl' | 'signUpUrl', 
+        options: RedirectOptions // This is SignInRedirectOptions | SignUpRedirectOptions
+    ): string => {
+        if (!key || !this.isReady) {
+            return '';
+        }
+
+        const baseUrlConfig = key === 'signInUrl' ? this.#options.signInUrl : this.#options.signUpUrl;
+        const defaultPagePath = key === 'signInUrl' ? '/sign-in' : '/sign-up';
+        const base = baseUrlConfig || defaultPagePath; // This is the URL of the sign-in/up page
+
+        let effectiveRedirectUrl: string | null | undefined = undefined;
+
+        // Priority 1: Get redirect URL from options (signInForceRedirectUrl or signUpForceRedirectUrl)
+        if (key === 'signInUrl' && 'signInForceRedirectUrl' in options) {
+            effectiveRedirectUrl = options.signInForceRedirectUrl;
+        } else if (key === 'signUpUrl' && 'signUpForceRedirectUrl' in options) {
+            effectiveRedirectUrl = options.signUpForceRedirectUrl;
+        }
+        
+        // Priority 2: If no force redirect from options, check 'redirect' param in current URL (only in browser)
+        if (!effectiveRedirectUrl && inBrowser()) {
+            const currentUrlParams = new URLSearchParams(window.location.search);
+            const existingRedirectParam = currentUrlParams.get('redirect');
+            if (existingRedirectParam) {
+                effectiveRedirectUrl = existingRedirectParam;
             }
         }
 
+        // Priority 3: If still no redirect URL, fallback to current page's full path (only in browser)
+        // This ensures that if the call originates from a page, it attempts to redirect back there by default.
+        if (!effectiveRedirectUrl && inBrowser()) {
+            effectiveRedirectUrl = window.location.pathname + window.location.search + window.location.hash;
+        }
+        
+        if (effectiveRedirectUrl && inBrowser()) {
+            let signInPagePath: string | undefined;
+            try {
+                signInPagePath = this.#options.signInUrl ? new URL(this.#options.signInUrl, window.location.origin).pathname : defaultPagePath;
+            } catch {
+                signInPagePath = defaultPagePath;
+            }
+
+            let signUpPagePath: string | undefined;
+            try {
+                signUpPagePath = this.#options.signUpUrl ? new URL(this.#options.signUpUrl, window.location.origin).pathname : (key === 'signUpUrl' ? defaultPagePath : '/sign-in'); // Corrected default for sign-up
+            } catch {
+                signUpPagePath = (key === 'signUpUrl' ? defaultPagePath : '/sign-in'); // Corrected default for sign-up
+            }
+            
+            const redirectTargetObj = new URL(effectiveRedirectUrl, window.location.origin);
+
+            if (redirectTargetObj.pathname === signInPagePath || redirectTargetObj.pathname === signUpPagePath) {
+                // If the intended redirect path is the sign-in or sign-up page itself,
+                // change the redirect target to the application root ('/').
+                effectiveRedirectUrl = '/';
+            }
+        }
+        
+
+        const paramsForBuildUrl: Parameters<typeof buildURL>[0] = {
+            base,
+            searchParams: new URLSearchParams(),
+        };
+        
+        if (effectiveRedirectUrl) { // Check if a redirect URL was determined
+            if (inBrowser()) {
+                const absoluteRedirectUrl = new URL(effectiveRedirectUrl, window.location.origin).href;
+                paramsForBuildUrl.searchParams!.set('redirect', absoluteRedirectUrl);
+            } else {
+                // If not in browser, use the effectiveRedirectUrl as is.
+                // This assumes it's either absolute or a path the server can interpret.
+                paramsForBuildUrl.searchParams!.set('redirect', effectiveRedirectUrl);
+            }
+        }
+        
+
+        const constructedUrl = buildURL(paramsForBuildUrl, { stringify: true, skipOrigin: false });
+
+        if (typeof constructedUrl !== 'string') {
+            console.error('[TernSecure] Error: buildURL did not return a string as expected. Falling back to base URL.');
+            if (inBrowser()) {
+                try {
+                    return new URL(base, window.location.origin).href;
+                } catch {
+                    return base; // Fallback if base is also invalid
+                }
+            }
+            return base; // Non-browser fallback
+        }
+
+        return constructedUrl;
+    }
+    
+    public constructSignInUrl = (options?: SignInRedirectOptions): string => {
+        return this.#buildUrl('signInUrl', {...options})
+    };
+    
+    public constructSignUpUrl = (options?: SignUpRedirectOptions): string => {
+        return this.#buildUrl('signUpUrl', {...options})
+    };
+
+
+    
+    public constructUrlWithRedirect = (to: string): string => {
+        const baseUrl = window.location.origin
+        
+        const url = new URL(to, baseUrl)
+        
+        if (url.origin === window.location.origin) {
+            return url.href;
+        }
+
+        return url.toString()
+    };
+
+    #constructAfterSignInUrl = (): string => {
+        if (!inBrowser()) {
+            return '/';
+        }
+
+        let redirectPath: string | null | undefined = undefined;
+        const defaultRedirectPath = '/';
+
+        // Priority 1: Check for signInForceRedirectUrl from instance options
+        if (this.#options.signInForceRedirectUrl) {
+            redirectPath = this.#options.signInForceRedirectUrl;
+        }
+
+        // Priority 2: If no force redirect, check 'redirect' param in current URL
+        if (!redirectPath) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPathFromParams = urlParams.get('redirect');
+            if (redirectPathFromParams) {
+                redirectPath = redirectPathFromParams;
+            }
+        }
+
+        // Priority 3: Fallback to default path
+        if (!redirectPath) {
+            redirectPath = defaultRedirectPath;
+        }
+
+        const currentPath = window.location.pathname;
+
+        if (hasRedirectLoop(currentPath, redirectPath)) {
+            console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
+            return defaultRedirectPath;
+        }
+        
+        return this.constructUrlWithRedirect(redirectPath);
+    }
+    
+    public redirectToSignIn = async (options?: SignInRedirectOptions): Promise<unknown> => {
+        if (inBrowser()) {
+            const url = this.constructSignInUrl(options);
+            window.location.href = url;
+        }
         return
     };
 
-    public redirectToSignUp = (): void => {
+    public redirectToSignUp = async (options?: SignUpRedirectOptions): Promise<unknown> => {
         if (inBrowser()) {
-            const SignUpUrl = this.#options.signUpUrl || '/sign-up';
-            const redirectUrl = this.constructUrlWithRedirect()
+            const redirectUrl = this.constructSignUpUrl()
             window.location.href = redirectUrl;
         }
         return 
@@ -338,20 +468,9 @@ export class TernSecure implements TernSecureInterface {
 
     redirectAfterSignIn = (): void => {
         if (inBrowser()) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectPath = urlParams.get('redirect') || '/';
-            const currentPath = window.location.pathname;
-
-            if (hasRedirectLoop(currentPath, redirectPath)) {
-                console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
-                window.location.href = '/';
-            } else {
-                storePreviousPath(currentPath);
-                window.location.href = constructFullUrl(redirectPath);
-            }
+            const destinationUrl = this.#constructAfterSignInUrl();
+            window.location.href = destinationUrl;
         }
-
-        return
     }
 
     redirectAfterSignUp =  (): void => {

@@ -19,7 +19,6 @@ import { useAuthSignIn } from '../../ctx';
 // It will inherit ui, onError, onSuccess, and the new 'signIn' methods prop.
 interface SignInProps extends Omit<SignInPropsTree, 'signIn'> {
   className?: string;
-  redirectUrl?: string;
 }
 
 export function SignIn({
@@ -27,7 +26,7 @@ export function SignIn({
   onError, 
   onSuccess, 
   className, 
-  redirectUrl = '/',
+  forceRedirectUrl,
 }: SignInProps) {
 
   const signIn  = useAuthSignIn();

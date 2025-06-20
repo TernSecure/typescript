@@ -11,7 +11,6 @@ export default defineConfig(() => {
     clean: true,
     sourcemap: true,
     format: ['cjs', 'esm'],
-    platform: 'browser',
     dts: true,
     external: [
       '@tern-secure/types'

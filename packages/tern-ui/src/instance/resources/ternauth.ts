@@ -188,7 +188,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     };
 
     const actionCodeSettings = {
-      url: TernSecureBase.ternsecure.constructUrlWithRedirect(),
+      url: TernSecureBase.ternsecure.constructSignInUrl(),
       handleCodeInApp: true,
     };
 
@@ -252,7 +252,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       });
   }
 
-  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = true): Promise<void> {
+  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = false): Promise<void> {
     const previousState = { ...this._authState };
     try {
       if (user) {

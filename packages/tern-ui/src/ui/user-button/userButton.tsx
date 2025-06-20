@@ -16,7 +16,7 @@ export function UserButton() {
     }
 
     const handleSignIn = () => {
-        ternSecure.redirectAfterSignIn();
+        ternSecure.redirectToSignIn();
     }
     
     let avatarFallbackContent: string;

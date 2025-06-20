@@ -13,6 +13,8 @@ export const allNextProviderPropsWithEnv = (
   const {
     signInUrl,
     signUpUrl,
+    signInForceRedirectUrl: propsSignInForceRedirectUrl,
+    signUpForceRedirectUrl: propsSignUpForceRedirectUrl,
     apiKey: propsApiKey,
     projectId: propsProjectId,
     customDomain: propsCustomDomain,
@@ -30,7 +32,9 @@ export const allNextProviderPropsWithEnv = (
     proxyUrl: process.env.NEXT_PUBLIC_TERN_PROXY_URL,
     environment: process.env.NEXT_PUBLIC_TERN_ENVIRONMENT,
     signInUrl: process.env.NEXT_PUBLIC_SIGN_IN_URL,
-    signUpUrl: process.env.NEXT_PUBLIC_SIGN_UP_URL
+    signUpUrl: process.env.NEXT_PUBLIC_SIGN_UP_URL,
+    signInForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_IN_FORCE_REDIRECT_URL,
+    signUpForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_UP_FORCE_REDIRECT_URL,
   };
 
   const ternSecureConfig = {
@@ -52,6 +56,8 @@ export const allNextProviderPropsWithEnv = (
   const finalEnvironment = propsEnvironment ?? envConfig.environment;
   const finalSignInUrl = signInUrl ?? envConfig.signInUrl;
   const finalSignUpUrl = signUpUrl ?? envConfig.signUpUrl;
+  const finalSignInForceRedirectUrl = propsSignInForceRedirectUrl ?? envConfig.signInForceRedirectUrl;
+  const finalSignUpForceRedirectUrl = propsSignUpForceRedirectUrl ?? envConfig.signUpForceRedirectUrl
 
   // Construct the result, ensuring it conforms to NextProviderProcessedProps
   // (Omit<TernSecureProviderProps, 'children'>)
@@ -81,6 +87,8 @@ export const allNextProviderPropsWithEnv = (
     defaultAppearance: baseProps.defaultAppearance,
     signInUrl: finalSignInUrl,
     signUpUrl: finalSignUpUrl,
+    signInForceRedirectUrl: finalSignInForceRedirectUrl,
+    signUpForceRedirectUrl: finalSignUpForceRedirectUrl,
     mode: baseProps.mode,
     onAuthStateChanged: baseProps.onAuthStateChanged,
     onError: baseProps.onError,

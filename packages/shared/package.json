@@ -15,7 +15,12 @@
   "license": "ISC",
   "description": "Shared types and utilities for TernSecure projects",
   "files": [
-    "dist"
+    "dist",
+    "derivedAuthState",
+    "eventBus",
+    "loadScript",
+    "loadTernUIScript",
+    "retry"
   ],
   "exports": {
     ".": {

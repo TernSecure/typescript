@@ -1,9 +1,4 @@
-import type { TernSecureUser } from './all';
-import type {
-    SignInUIConfig
-} from './theme'
 import type { 
-  AuthErrorTree,
   SignInResponseTree
 } from './errors';
 
@@ -24,6 +19,7 @@ export type SignInFormValuesTree = {
   phoneNumber?: string;
 };
 
+
 export type SignInInitialValueTree = Partial<SignInFormValuesTree>;
 
 
@@ -39,19 +35,6 @@ export function isSignInResponseTree(value: any): value is SignInResponseTree {
   );
 }
 
-/**
- * Props for SignIn component focusing on UI concerns
- */
-export interface SignInPropsTree {
-  /** Initial form values */
-  initialValue?: SignInInitialValueTree;
-  /** UI configuration */
-  ui?: SignInUIConfig;
-  /** Callbacks */
-  onError?: (error: AuthErrorTree) => void;
-  onSuccess?: (user: TernSecureUser | null) => void;
-  //authProvider?: TernSecureAuthProvider; 
-}
 
 
 export interface SignInResource {

@@ -1,34 +1,7 @@
-import type { TernSecureUser } from './all';
-import type {
-    SignUpUIConfig
-} from './theme'
 import type { 
-    AuthErrorTree,
     SignInResponseTree
 } from './errors';
 
-export type SignUpFormValuesTree = {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-  displayName?: string;
-};
-
-export type SignUpInitialValueTree = Partial<SignUpFormValuesTree>;
-
-/**
- * Props for SignUp component focusing on UI concerns
- */
-export interface SignUpPropsTree {
-  /** Initial form values */
-  initialValue?: SignUpInitialValueTree;
-  /** UI configuration */
-  ui?: SignUpUIConfig;
-  /** Callbacks */
-  onSubmit?: (values: SignUpFormValuesTree) => Promise<void>;
-  onError?: (error: AuthErrorTree) => void;
-  onSuccess?: (user: TernSecureUser | null) => void;
-}
 
 export interface SignUpResource {
     status?: SignUpStatus | null;

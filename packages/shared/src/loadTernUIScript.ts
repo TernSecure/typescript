@@ -56,7 +56,7 @@ export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
 
     const ternsecureCDN = options?.customDomain || 
                           (options?.proxyUrl && new URL(options.proxyUrl).host) || 'cdn.tern-secure.com';
-    return `http://${ternsecureCDN}/ternsecure.browser.js`;
+    return `${ternsecureCDN}/ternsecure.browser.js`;
     //return `https://${ternsecureCDN}/npm/@ternsecure/tern-ui@${version}/dist/ternsecure.browser.js`;
 
 }

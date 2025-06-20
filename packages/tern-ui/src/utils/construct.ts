@@ -9,6 +9,114 @@ export type constructUrlWithRedirectProps = {
   signUpPathParam?: string;
 }
 
+interface URLParams extends Partial<URL> {
+    base?: string;
+    hashPath?: string;
+    hashSearch?: string;
+    hashSearchParams?: URLSearchParams | Record<string, string> | Array<URLSearchParams | Record<string, string>>;
+};
+
+interface BuildURLOptions { 
+    skipOrigin?: boolean;
+    stringify?: boolean; 
+}
+
+/**
+ * Builds a URL from given parameters, handling search and hash parameters
+ * @param params - The parameters to construct the URL
+ * @param options - Options for building the URL
+ * @returns The constructed URL as a string or URL object
+ */
+export function buildURL(params: URLParams, options: BuildURLOptions = {}): URL | string {
+    const { base, hashPath, hashSearch, searchParams, hashSearchParams } = params;
+    const { stringify = true, skipOrigin = false } = options;
+
+    const baseFallback = typeof window !== 'undefined' && window.location ? window.location.href : 'http://react-native-fake-base-url';
+
+    // Helper function to append parameters to a URLSearchParams object
+    const appendToUrlSearchParams = (
+        target: URLSearchParams,
+        source: URLSearchParams | Record<string, string> | undefined | null
+    ) => {
+        if (!source) {
+            return;
+        }
+        if (source instanceof URLSearchParams) {
+            source.forEach((value, key) => {
+                target.set(key, value);
+            });
+        } else if (typeof source === 'object') {
+            Object.entries(source).forEach(([key, value]) => {
+                target.set(key, String(value));
+            });
+        }
+    };
+
+    try {
+        const url = new URL(base || '', baseFallback);
+
+        // Handle search parameters
+        // params.searchParams comes from Partial<URL>, so it's URLSearchParams | undefined
+        if (searchParams) {
+             searchParams.forEach((value, key) => {
+                url.searchParams.set(key, value);
+            });
+        }
+        
+        // Handle hash-related parameters
+        if (hashPath || hashSearch || hashSearchParams) {
+            let finalHashPath = hashPath || '';
+            const queryForHash = new URLSearchParams(hashSearch || '');
+
+            if (hashSearchParams) {
+                if (Array.isArray(hashSearchParams)) {
+                    hashSearchParams.forEach(item => appendToUrlSearchParams(queryForHash, item));
+                } else {
+                    appendToUrlSearchParams(queryForHash, hashSearchParams);
+                }
+            }
+
+            const hashQueryString = queryForHash.toString();
+            let combinedHashString = '';
+
+            if (finalHashPath) {
+                combinedHashString = finalHashPath;
+                if (hashQueryString) {
+                    if (combinedHashString.includes('?')) {
+                        combinedHashString += '&' + hashQueryString;
+                    } else {
+                        combinedHashString += '?' + hashQueryString;
+                    }
+                }
+            } else { // No hashPath
+                if (hashQueryString) {
+                    // If only query, it forms the hash content directly.
+                    // e.g. "param=value" or "?param=value" are both valid after '#'
+                    combinedHashString = hashQueryString;
+                }
+            }
+            
+            if (combinedHashString) {
+                url.hash = combinedHashString;
+            }
+        }
+        
+        if (stringify) {
+          return skipOrigin ? url.href.replace(url.origin, '') : url.href;
+        }
+        return url;
+    } catch (error) {
+        console.error('[TernSecure] Error building URL:', error);
+        const fallbackUrlString = base || '/';
+        if (stringify) {
+            return fallbackUrlString;
+        } else {
+            // Attempt to create a URL object for the fallback
+            return new URL(fallbackUrlString, baseFallback);
+        }
+    }
+}
+
 /**
  * Constructs a full URL with the current origin
  * @param path - The path to construct the URL for

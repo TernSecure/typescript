@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback, useMemo } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { IsomorphicTernSecureCtx } from "./IsomorphicTernSecureCtx"
 import { IsomorphicTernSecure } from "../lib/isomorphicTernSecure"
 import type { 
@@ -67,9 +67,9 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
 
 
   //console.log('[TernSecureCtxProvider] userCtx:', userCtx);
-  console.log('[TernSecureCtxProvider] authState from instance:', instance.ternAuth?.internalAuthState);
-  console.log('[TernSecureCtxProvider] ternsecureCtx:', ternsecureCtx);
-  console.log('[TernSecureCtxProvider] ternAuthCtx:', ternAuthCtx);
+  //console.log('[TernSecureCtxProvider] authState from instance:', instance.ternAuth?.internalAuthState);
+  //console.log('[TernSecureCtxProvider] ternsecureCtx:', ternsecureCtx);
+  //console.log('[TernSecureCtxProvider] ternAuthCtx:', ternAuthCtx);
 
   return (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
