@@ -3,9 +3,7 @@
 import { createContext, useContext } from 'react'
 //import { ternSecureAuth } from '../utils/client-init';
 import type { 
-  TernSecureState, 
-  SignInResponse, 
-  TernSecureUser 
+  TernSecureState,
 } from '@tern-secure/types';
 
 
