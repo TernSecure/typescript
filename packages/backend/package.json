@@ -20,7 +20,7 @@
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
     "dev": "tsup --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@tern-secure/types": "workspace:*",

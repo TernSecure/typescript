@@ -35,7 +35,7 @@
     "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/styles/globals.css --minify",
     "dev": "tsup --watch",
     "dev:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@tern-secure/shared": "workspace:*",

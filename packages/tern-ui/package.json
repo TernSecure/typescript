@@ -32,7 +32,7 @@
     "dev:watch": "rspack serve --config rspack.config.mjs --env devOrigin=http://localhost:4000",
     "dev:test": "rspack serve --config rspack.config.mjs --env devOrigin=http://localhost:4000 --env test",
     "dev:types": "tsc -p tsconfig.add.json --watch",
-    "lint": "eslint src/",
+    "lint": "eslint src",
     "watch": "rspack build --config rspack.config.mjs --env production --watch"
   },
   "browserslist": "last 2 years",
