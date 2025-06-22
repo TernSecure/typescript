@@ -1,6 +1,6 @@
 {
-  "name": "@tern-secure/backend", 
-  "version": "0.0.0",
+  "name": "@tern-secure/backend",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TernSecure/typescript.git",
@@ -11,7 +11,7 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts", 
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     }
