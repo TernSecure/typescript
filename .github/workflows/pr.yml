@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -25,15 +25,21 @@ jobs:
         run: |
           git fetch origin main:main
           git fetch origin changeset-release/main:changeset-release/main || true
-        
+      
+      - name: Install PNPM
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
-          cache: 'npm'
+          cache: 'pnpm'
           
-      - name: Install dependencies
-        run: npm ci
+      - name: Install PNPM dependencies
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+        run: pnpm install
+        shell: bash
         
       - name: Build
         run: pnpm turbo build
