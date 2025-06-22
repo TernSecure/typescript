@@ -1,6 +1,6 @@
 {
   "name": "@tern-secure/types",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Type definitions for TernSecure packages",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json", 
+    "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
     "dev": "tsup --watch",
     "lint": "eslint src"
   },
