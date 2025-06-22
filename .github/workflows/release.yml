@@ -45,9 +45,9 @@ jobs:
 
       - name: NPM Authentication
         run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-          echo "@tern-secure:registry=https://registry.npmjs.org/" >> ~/.npmrc
-          echo "//registry.npmjs.org/:always-auth=true" >> ~/.npmrc
+          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+          npm config set @tern-secure:registry https://registry.npmjs.org/
+          npm whoami
           
       - name: Create Release Pull Request or Publish
         id: changesets
