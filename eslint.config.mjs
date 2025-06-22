@@ -38,7 +38,15 @@ export default [
       "@typescript-eslint/no-explicit-any": "off",  // Disable no-explicit-any rule
       "react/react-in-jsx-scope": "off", // Next.js doesn't require React import
       "react/prop-types": "off", // We're using TypeScript for prop validation
-      "no-undef": "off" // TypeScript handles this
+      "no-undef": "off", // TypeScript handles this
+      "@typescript-eslint/ban-ts-comment": [
+        `warn`,
+        {
+          "ts-ignore": "allow-with-description",
+          "ts-expect-error": "allow-with-description",
+          "ts-check": "allow-with-description"
+        }
+      ]
     }
   }
 ];

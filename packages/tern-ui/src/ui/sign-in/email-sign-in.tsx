@@ -92,29 +92,27 @@ export function EmailSignIn({
     >
 
       <FormErrors errors={formError?.message || formError?.error || form.state.errors} />
-      <form.AppField
-        name="email"
-        children={(field) =>
+      <form.AppField name="email">
+        {(field) => (
           <field.EmailField
-            label='Email'
-            placeholder='Enter your email'
+            label="Email"
+            placeholder="Enter your email"
             disabled={form.state.isSubmitting || isDisabled}
             required
           />
-        }
-      />
+        )}
+      </form.AppField>
 
-      <form.AppField
-        name="password"
-        children={(field) =>
+      <form.AppField name="password">
+        {(field) => (
           <field.PasswordField
-            label='Password'
-            placeholder='Enter your password'
+            label="Password"
+            placeholder="Enter your password"
             disabled={form.state.isSubmitting || isDisabled}
             required
           />
-        }
-      />
+        )}
+      </form.AppField>
 
       <FormButton
         canSubmit={form.state.canSubmit}
