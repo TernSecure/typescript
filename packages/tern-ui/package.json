@@ -21,7 +21,7 @@
   "types": "dist/types/ternsecure.d.ts",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm build:js && pnpm build:types && pnpm upload:gcs",
+    "build": "pnpm build:js && pnpm build:types",
     "build:js": "pnpm clean && rspack build --config rspack.config.mjs --env production",
     "build:types": "tsc -p tsconfig.add.json",
     "upload:gcs": "node ../../scripts/gcs.mjs",
