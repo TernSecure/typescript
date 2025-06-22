@@ -1,6 +1,12 @@
 {
   "name": "@tern-secure/ui",
   "version": "0.0.0",
+  "description": "UI library for TernSecure applications",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/ui"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -26,7 +32,7 @@
     "dev:watch": "rspack serve --config rspack.config.mjs --env devOrigin=http://localhost:4000",
     "dev:test": "rspack serve --config rspack.config.mjs --env devOrigin=http://localhost:4000 --env test",
     "dev:types": "tsc -p tsconfig.add.json --watch",
-    "lint": "eslint src/",
+    "lint": "eslint src",
     "watch": "rspack build --config rspack.config.mjs --env production --watch"
   },
   "browserslist": "last 2 years",

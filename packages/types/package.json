@@ -1,7 +1,12 @@
 {
   "name": "@tern-secure/types",
   "version": "0.0.0",
-  "private": true,
+  "description": "Type definitions for TernSecure packages",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/types"
+  },
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
@@ -12,9 +17,12 @@
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json", 
     "dev": "tsup --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src"
   },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

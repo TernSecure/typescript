@@ -1,7 +1,14 @@
 {
-  "name": "@tern-secure/next-backend", 
+  "name": "@tern-secure/backend", 
   "version": "0.0.0",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/backend"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts", 
@@ -13,7 +20,7 @@
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup && tsc -p tsconfig.add.json",
     "dev": "tsup --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@tern-secure/types": "workspace:*",

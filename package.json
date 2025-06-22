@@ -10,14 +10,14 @@
     "check-types": "turbo run check-types",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build --filter=@tern-secure/nextjs^... && changeset publish"
+    "release": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.28.0",
     "@google-cloud/storage": "^7.16.0",
-    "@tern-secure/next-backend": "workspace:*",
+    "@tern-secure/backend": "workspace:*",
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
@@ -34,6 +34,7 @@
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-turbo": "2.5.0",
     "eslint-plugin-unused-imports": "4.1.4",
+    "globals": "^15.14.0",
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.15",
     "prettier-plugin-tailwindcss": "^0.6.12",

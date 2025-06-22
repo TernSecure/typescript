@@ -53,10 +53,11 @@ export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
         return `http://${localHost}:${localPort}/ternsecure.browser.js`;
         //return `http://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
     }
+    return `http://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
 
-    const ternsecureCDN = options?.customDomain || 
-                          (options?.proxyUrl && new URL(options.proxyUrl).host) || 'cdn.tern-secure.com';
-    return `${ternsecureCDN}/ternsecure.browser.js`;
+    //const ternsecureCDN = options?.customDomain || 
+                          //(options?.proxyUrl && new URL(options.proxyUrl).host) || 'cdn.tern-secure.com';
+    //return `${ternsecureCDN}/ternsecure.browser.js`;
     //return `https://${ternsecureCDN}/npm/@ternsecure/tern-ui@${version}/dist/ternsecure.browser.js`;
 
 }

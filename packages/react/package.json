@@ -1,10 +1,17 @@
 {
   "name": "@tern-secure/react",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TernSecure/typescript.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/TernSecure/typescript/issues"
+  },
   "sideEffects": [
     "**/*.css"
   ],
-  "private": true,
   "files": [
     "dist"
   ],
@@ -28,7 +35,7 @@
     "build:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/styles/globals.css --minify",
     "dev": "tsup --watch",
     "dev:styles": "tailwindcss -i ./src/styles/globals.css -o ./dist/index.css --watch",
-    "lint": "eslint src/"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@tern-secure/shared": "workspace:*",
@@ -50,5 +57,8 @@
     "next": "^15.0.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.6"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

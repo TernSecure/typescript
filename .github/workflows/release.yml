@@ -22,19 +22,26 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v4
           
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
           scope: '@tern-secure'
-          
-      - name: Install dependencies
-        run: npm ci
+          cache: 'pnpm'
+
+      - name: Install PNPM Dependencies
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+        run: pnpm install
+        shell: bash
 
       - name: Build
-        run: npm run build
+        run: pnpm turbo build
 
       - name: NPM Authentication
         run: |
@@ -46,8 +53,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: npm run version
-          publish: npm run release
+          version: pnpm version-packages
+          publish: pnpm release
           commit: "chore: version packages"
           title: "chore: version packages"
           createGithubReleases: true
