@@ -14,8 +14,8 @@ const config: Options = {
         'firebase',
         'firebase-admin',
         '@tern-secure/types',
-        '@tern-secure/next-backend',
-        '@tern-secure/frontend'
+        '@tern-secure/backend',
+        '@tern-secure/ui'
     ]
 };
 
