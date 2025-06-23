@@ -33,6 +33,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@tern-secure'
           cache: 'pnpm'
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ secrets.TURBO_TOKEN }}
 
       - name: Install PNPM Dependencies
         env:
@@ -41,7 +43,7 @@ jobs:
         shell: bash
 
       - name: Build
-        run: pnpm turbo build
+        run: pnpm turbo build --force
 
       - name: NPM Authentication
         run: |
