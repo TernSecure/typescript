@@ -1,5 +1,15 @@
 # @tern-secure/nextjs
 
+## 5.0.1
+
+### Patch Changes
+
+- 367a100: fix: Update ternUIgetScriptUrl to use TernSecureDev flag and switch CDN to HTTPS.
+- Updated dependencies [367a100]
+  - @tern-secure/shared@1.1.0
+  - @tern-secure/react@1.0.1
+  - @tern-secure/types@1.0.1
+
 ## 5.0.0
 
 ### Major Changes
