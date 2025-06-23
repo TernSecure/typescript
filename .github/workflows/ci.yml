@@ -38,8 +38,11 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: 'pnpm'
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ secrets.TURBO_TOKEN }}
+          #turbo-team: ${{ vars.TURBO_TEAM }}
+          #turbo-token: ${{ secrets.TURBO_TOKEN }}
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           
       - name: Install PNPM dependencies
         env:
