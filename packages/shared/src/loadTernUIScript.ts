@@ -44,16 +44,16 @@ export const loadTernUIScript = async (options?: LoadTernUISCriptOptions) => {
   }
 
 export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isTernSecureDev = options?.isLocalDev || process.env.TERN_SECURE_DEV === 'true';
     const version = options?.version || process.env.TERN_UI_VERSION || 'latest';
 
-    if ( isDevelopment) {
+    if ( isTernSecureDev) {
         const localHost = process.env.TERN_UI_HOST || 'localhost';
         const localPort = options?.localPort || process.env.TERN_UI_PORT || '4000';
         return `http://${localHost}:${localPort}/ternsecure.browser.js`;
         //return `http://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
     }
-    return `http://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
+    return `https://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
 
     //const ternsecureCDN = options?.customDomain || 
                           //(options?.proxyUrl && new URL(options.proxyUrl).host) || 'cdn.tern-secure.com';
