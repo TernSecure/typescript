@@ -1,6 +1,6 @@
 {
   "name": "@tern-secure/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TernSecure/typescript.git",

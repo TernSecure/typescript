@@ -1,5 +1,11 @@
 # @tern-secure/types
 
+## 1.0.1
+
+### Patch Changes
+
+- 367a100: fix: Update ternUIgetScriptUrl to use TernSecureDev flag and switch CDN to HTTPS.
+
 ## 1.0.0
 
 ### Major Changes
