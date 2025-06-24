@@ -3,15 +3,17 @@
 import { useCallback } from 'react'
 import type { 
   SignInResponseTree, 
-  SignInUIConfig 
+  SignInUIConfig,
+  TernSecureUser
 } from '@tern-secure/types'
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
 import { useAuthSignIn } from '../../ctx';
+import { useSignInContext } from './SignIn'
 
 interface SocialSignInProps {
   onError?: (error: Error, response?: SignInResponseTree | null) => void
-  onSuccess?: () => void
+  onSuccess?: (user: TernSecureUser | null) => void
   isDisabled?: boolean
   config?: SignInUIConfig['socialButtons']
   mode?: 'popup' | 'redirect'
@@ -33,8 +35,10 @@ export function SocialSignIn({
   mode = 'popup'
 }: SocialSignInProps) {
   const signIn  = useAuthSignIn();
+  const { isLoading, handleSignInStart } = useSignInContext();
 
   const handleSocialSignIn = useCallback(async (provider: 'google' | 'microsoft') => {
+    handleSignInStart();
     try {
 
       const result = await signIn.withSocialProvider(provider, { mode });
@@ -42,13 +46,13 @@ export function SocialSignIn({
         if (!result.success) {
           onError?.(new Error(result.message), result)
         } else {
-          onSuccess?.()
+          onSuccess?.(result.user)
         }
       }
     } catch (error) {
       onError?.(error as Error)
     }
-  }, [signIn, onError, onSuccess, mode])
+  }, [signIn, onError, onSuccess, mode, handleSignInStart])
 
   const showGoogle = config?.google !== false
   const showMicrosoft = config?.microsoft !== false

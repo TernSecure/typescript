@@ -418,12 +418,12 @@ const build = env => {
    // dev: devConfig()
   //}, null, 2));
 
-  if (isProd) {
-    console.log('Config for production build:', JSON.stringify(config, null, 2));
-  }
-  else {
-    console.log('Config for development build:', JSON.stringify(config, null, 2));
-  }
+  //if (isProd) {
+  //  console.log('Config for production build:', JSON.stringify(config, null, 2));
+  //}
+  //else {
+  //  console.log('Config for development build:', JSON.stringify(config, null, 2));
+  //}
 
 
   return config;

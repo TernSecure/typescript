@@ -16,7 +16,6 @@ import {
 import { 
   initializeApp, 
   getApps,
-  FirebaseApp 
 } from 'firebase/app';
 import {
   Auth,
@@ -27,7 +26,6 @@ import {
   getRedirectResult, 
   GoogleAuthProvider, 
   OAuthProvider, 
-  createUserWithEmailAndPassword, 
   sendEmailVerification, 
   setPersistence,
   browserLocalPersistence,
@@ -36,10 +34,6 @@ import {
 } from 'firebase/auth'
 
 import { TernSecureBase, SignUp } from './internal';
-import { 
-  storePreviousPath,
-  constructFullUrl
-} from '../../utils/construct';
 
 
 interface ProviderConfig {
@@ -96,7 +90,8 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         withSocialProvider: this.withSocialProvider.bind(this),
         completeMfaSignIn: this.completeMfaSignIn.bind(this),
         sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
-        resendEmailVerification: this.resendEmailVerification.bind(this)
+        resendEmailVerification: this.resendEmailVerification.bind(this),
+        checkRedirectResult: this.authRedirectResult.bind(this),
       };
 
       this.authStateUnsubscribe = this.initAuthStateListener();
@@ -104,14 +99,14 @@ export class TernAuth implements TernSecureAuthProviderInterface {
 
   public static async getOrCreateInstance(config: TernSecureConfig): Promise<TernAuth> {
     if (!TernAuth.instance) {
-      console.log('[TernAuth] Creating new instance...');
+      //console.log('[TernAuth] Creating new instance...');
       TernAuth.instance = new TernAuth(config);
 
-      console.log('[TernAuth] Awaiting initial auth state resolution...');
+      //console.log('[TernAuth] Awaiting initial auth state resolution...');
       await TernAuth.instance._initAuthStateResolvedPromise;
-      console.log('[TernAuth] Initial auth state resolved.');
+      //console.log('[TernAuth] Initial auth state resolved.');
     } else {
-      console.log('[TernAuth] Returning existing instance, ensuring initial auth state was resolved...');
+      //console.log('[TernAuth] Returning existing instance, ensuring initial auth state was resolved...');
       await TernAuth.instance._initAuthStateResolvedPromise;
     }
     return TernAuth.instance;
@@ -169,6 +164,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         const redirectResult = await this.authRedirectResult();
         
         if (redirectResult) {
+          if (redirectResult.success) {
+            TernSecureBase.ternsecure.redirectAfterSignIn();
+          }
           return redirectResult;
         }
 
@@ -480,5 +478,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
   
   private async __signInWithPopUp(providerName: string): Promise<SignInResponseTree> {
     return this.executePopupAuthMethod(providerName);
+  }
+
+  public async checkRedirectResult(): Promise<SignInResponseTree | null> {
+    return this.authRedirectResult();
   }
 }

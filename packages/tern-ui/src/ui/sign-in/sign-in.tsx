@@ -1,6 +1,8 @@
+import React, { useCallback } from 'react';
 import type { 
   SignInPropsTree,
   AuthErrorTree,
+  TernSecureUser
 } from '@tern-secure/types';
 import { SocialSignIn } from './social-sign-in';
 import { EmailSignIn } from './email-sign-in';
@@ -14,14 +16,15 @@ import {
   CardFooter 
 } from '../../components/elements'
 import { useAuthSignIn } from '../../ctx';
+import { useTernSecure } from '@tern-secure/shared/react'
+import { SignInProvider, useSignInContext } from './SignIn'
 
-// SignInProps now directly extends SignInPropsTree.
-// It will inherit ui, onError, onSuccess, and the new 'signIn' methods prop.
+
 interface SignInProps extends Omit<SignInPropsTree, 'signIn'> {
   className?: string;
 }
 
-export function SignIn({
+function SignInContent({
   ui, 
   onError, 
   onSuccess, 
@@ -29,6 +32,13 @@ export function SignIn({
 }: SignInProps) {
 
   const signIn  = useAuthSignIn();
+  const ternSecure = useTernSecure();
+  const {
+    isLoading,
+    handleSignInStart,
+    handleSignInSuccess,
+    handleSignInError,
+  } = useSignInContext();
   const appName = ui?.appName;
   const logo = ui?.logo;
   const socialButtonsConfig = ui?.socialButtons; 
@@ -39,18 +49,84 @@ export function SignIn({
     socialButtonsConfig?.google !== false || 
     socialButtonsConfig?.microsoft !== false
   );
+  
+  const checkAndHandleRedirectResult = useCallback(async () => {
+    try {
+      if (signIn.checkRedirectResult && typeof signIn.checkRedirectResult === 'function') {
+        handleSignInStart();
+        const redirectResult = await signIn.checkRedirectResult();
+        
+        if (redirectResult) {
+          if (redirectResult.success && redirectResult.user) {
+            handleSignInSuccess(redirectResult.user);
+            ternSecure.redirectAfterSignIn();
+            onSuccess?.(redirectResult.user);
+          } else if (!redirectResult.success) {
+            const authError = new Error(redirectResult.message || 'Social sign-in failed') as AuthErrorTree;
+            authError.name = 'SocialSignInError';
+            authError.code = redirectResult.error;
+            authError.response = redirectResult;
+            handleSignInError(authError);
+          }
+        }
+      }
+    } catch (error) {
+      const authError = new Error(
+        error instanceof Error ? error.message : 'Failed to check redirect result'
+      ) as AuthErrorTree;
+      authError.name = 'RedirectResultError';
+      authError.code = 'REDIRECT_CHECK_FAILED';
+      authError.response = error;
+      handleSignInError(authError);
+    }
+  }, [signIn, handleSignInStart, handleSignInSuccess, handleSignInError, ternSecure, onSuccess]);
+  
+
 
   const handleSignInWithEmail = async (email: string, password: string) => {
-    const response = await signIn.withEmailAndPassword({ email, password });
-    return response;
+    handleSignInStart();
+    try {
+      const response = await signIn.withEmailAndPassword({ email, password });
+      if (response.success) {
+        handleSignInSuccess();
+        ternSecure.redirectAfterSignIn();
+        onSuccess?.(response.user);
+      } else {
+        const authError = new Error(response.message || 'Sign in failed') as AuthErrorTree;
+        authError.name = 'SignInError';
+        authError.code = response.error;
+        authError.response = response;
+        handleSignInError(authError);
+      }
+      return response;
+    } catch (error) {
+      const authError = new Error(
+        error instanceof Error ? error.message : 'Sign in failed'
+      ) as AuthErrorTree;
+      authError.name = 'SignInError';
+      authError.code = 'SIGN_IN_FAILED';
+      authError.response = error;
+      handleSignInError(authError);
+      throw error;
+    }
   };
 
   const handleError = (error: AuthErrorTree) => {
+    handleSignInError(error);
     if (onError) {
       onError(error);
     }
   };
+  
+  const handleSuccess = (user: TernSecureUser | null) => {
+    handleSignInSuccess();
+    onSuccess?.(user);
+  };
 
+  React.useEffect(() => {
+    checkAndHandleRedirectResult();
+  }, [checkAndHandleRedirectResult]);
+  
 
   return (
     <div className="relative flex items-center justify-center">
@@ -76,6 +152,7 @@ export function SignIn({
       {isEmailSignInEnabled ? (
         <EmailSignIn
           onError={handleError}
+          onSuccess={handleSuccess}
           signInWithEmail={handleSignInWithEmail}
         />
       ):(
@@ -86,6 +163,7 @@ export function SignIn({
       { isSocialSignInVisible && (
         <SocialSignIn
           onError={handleError}
+          onSuccess={handleSuccess}
           config={socialButtonsConfig}
           mode={'redirect'}
         />
@@ -102,5 +180,16 @@ export function SignIn({
     </Card>
   </div>
   );
+}
+
+export function SignIn(props: SignInProps) {
+  return (
+    <SignInProvider
+      onSuccess={props.onSuccess}
+      onError={props.onError}
+    >
+      <SignInContent {...props} />
+    </SignInProvider>
+  )
 }
 

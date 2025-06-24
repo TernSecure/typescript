@@ -4,6 +4,7 @@ import { useAppForm } from '../../components/elements'
 import { useTernSecure } from '@tern-secure/shared/react'
 import type { SignInResponseTree, TernSecureUser } from '@tern-secure/types'
 import { useAuthState } from '../../ctx'
+import { useSignInContext } from './SignIn'
 
 
 interface SignInFormValues {
@@ -13,7 +14,7 @@ interface SignInFormValues {
 
 interface EmailSignInProps {
   onError?: (error: Error) => void
-  onSuccess?: () => void
+  onSuccess?: (user: TernSecureUser | null) => void
   isDisabled?: boolean
   signInWithEmail?: (email: string, password: string) => Promise<SignInResponseTree>
 }
@@ -31,6 +32,7 @@ export function EmailSignIn({
 }: EmailSignInProps) {
   const ternSecure = useTernSecure();
   const authState = useAuthState();
+  const { isLoading, clearError } = useSignInContext();
   const requiresVerification: boolean = false;
 
   const [formError, setFormError] = useState<SignInResponseTree | null>(null);
@@ -69,8 +71,8 @@ export function EmailSignIn({
             return
           }
         }
-        ternSecure.redirectAfterSignIn();
-        onSuccess?.()
+        //ternSecure.redirectAfterSignIn();
+        onSuccess?.(res.user)
         }
       } catch (error) {
         onError?.(error as Error)

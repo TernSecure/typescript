@@ -76,13 +76,13 @@ export class TernSecure implements TernSecureInterface {
             throw new Error('TernSecure requires a domain or proxy URL to be initialized.');
         }
 
-        console.log('[TernSecure constructor] Initializing... Received domain:', domain);
+        //console.log('[TernSecure constructor] Initializing... Received domain:', domain);
         this.customDomain = domain;
-        console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
+        //console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
 
         this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
         //this.#setStatus('ready');
-        console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
+        //console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
 
         TernSecureBase.ternsecure = this
     }
@@ -116,7 +116,7 @@ export class TernSecure implements TernSecureInterface {
             }
 
             const initTernAuth = async () => {
-                console.log('[TernSecure] Creating TernSecureAuthProvider instance...')
+                //console.log('[TernSecure] Creating TernSecureAuthProvider instance...')
                 return await  TernAuth.getOrCreateInstance(this.#options.ternSecureConfig!);
             };
 
@@ -254,21 +254,21 @@ export class TernSecure implements TernSecureInterface {
         }
         
         this.ternAuth = ternAuth;
-        console.log('[TernSecure] TernAuth provider set:', ternAuth);
-        console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
+        //console.log('[TernSecure] TernAuth provider set:', ternAuth);
+        //console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
         this.#eventBus.emit('TernAuthReady', ternAuth);
     }
 
     public emitAuthStateChange(authState: any): void {
         this.#eventBus.emit('authStateChange', authState);
-        console.warn('[TernSecure] AuthState changed:', authState);
+        //console.warn('[TernSecure] AuthState changed:', authState);
     }
 
     public get events(): TernSecureInterface['events'] {
         return {
             onAuthStateChanged: (callback) => {
                 this.#eventBus.on('authStateChange', callback);
-                console.log('[TernSecure] onAuthStateChanged listener added');
+                //console.log('[TernSecure] onAuthStateChanged listener added');
                 return () => {
                   this.#eventBus.off('authStateChange', callback);
                 }  
@@ -443,7 +443,7 @@ export class TernSecure implements TernSecureInterface {
         const currentPath = window.location.pathname;
 
         if (hasRedirectLoop(currentPath, redirectPath)) {
-            console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
+            //console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
             return defaultRedirectPath;
         }
         
@@ -525,7 +525,7 @@ export class TernSecure implements TernSecureInterface {
             try {
                 const authProvider = TernSecure.authProviderFactory();
                 this.setTernAuth(authProvider);
-                console.log('[TernSecure] Auth provider initialized via factory')
+                //console.log('[TernSecure] Auth provider initialized via factory')
             } catch (error) {
                 console.error('[TernSecure] Error initializing auth provider:', error);
             }
@@ -554,7 +554,7 @@ export class TernSecure implements TernSecureInterface {
 
     #setupAuthStateSync(): void {
         this.events.onAuthStateChanged((authState) => {
-            console.log('[TernSecure] onAuthStateChanged:', authState.status);
+            //console.log('[TernSecure] onAuthStateChanged:', authState.status);
             if (authState.error) {
                 this.error = authState.error;
             }
