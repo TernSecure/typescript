@@ -21,6 +21,7 @@ export const allNextProviderPropsWithEnv = (
     proxyUrl: propsProxyUrl,
     environment: propsEnvironment,
     requiresVerification: propsRequiresVerification,
+    isTernSecureDev: propsIsTernSecureDev,
     loadingComponent: propsLoadingComponent,
     ...baseProps 
   } = nextProps;
@@ -77,6 +78,7 @@ export const allNextProviderPropsWithEnv = (
     // Set properties explicitly taken from TernSecureNextProps (props version)
     // These are part of the TernSecureProviderProps interface.
     requiresVerification: propsRequiresVerification,
+    isTernSecureDev: propsIsTernSecureDev,
     loadingComponent: propsLoadingComponent,
     ...(propsRequiresVerification !== undefined && { requireverification: propsRequiresVerification }),
 

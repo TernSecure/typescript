@@ -9,7 +9,8 @@ import type {
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
 import { useAuthSignIn } from '../../ctx';
-import { useSignInContext } from './SignIn'
+import { useSignInContext } from '../../ctx/components/SignIn'
+
 
 interface SocialSignInProps {
   onError?: (error: Error, response?: SignInResponseTree | null) => void

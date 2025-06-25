@@ -42,6 +42,7 @@ export type TernSecureInstanceTreeOptions = {
   onError?: (error: AuthErrorTree) => void;
   environment?: string | undefined;
   requireverification?: boolean;
+  isTernSecureDev?: boolean;
   ternSecureConfig?: TernSecureConfig
 } & SignInRedirectUrl & SignUpRedirectUrl;
 

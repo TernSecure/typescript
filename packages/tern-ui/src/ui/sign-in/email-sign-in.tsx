@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { FormErrors, FormButton } from '../../utils/form'
-import { useAppForm } from '../../components/elements'
+import { useAppForm, Button } from '../../components/elements'
 import { useTernSecure } from '@tern-secure/shared/react'
 import type { SignInResponseTree, TernSecureUser } from '@tern-secure/types'
 import { useAuthState } from '../../ctx'
-import { useSignInContext } from './SignIn'
+import { cn } from './../../lib/utils'
+import { useSignInContext } from '../../ctx/components/SignIn'
+
 
 
 interface SignInFormValues {
@@ -17,6 +19,7 @@ interface EmailSignInProps {
   onSuccess?: (user: TernSecureUser | null) => void
   isDisabled?: boolean
   signInWithEmail?: (email: string, password: string) => Promise<SignInResponseTree>
+  onForgotPassword?: () => void
 }
 
 const successAuth = async(user: TernSecureUser) => {
@@ -29,11 +32,11 @@ export function EmailSignIn({
   onSuccess,
   isDisabled,
   signInWithEmail,
+  onForgotPassword
 }: EmailSignInProps) {
   const ternSecure = useTernSecure();
   const authState = useAuthState();
   const { isLoading, clearError } = useSignInContext();
-  const requiresVerification: boolean = false;
 
   const [formError, setFormError] = useState<SignInResponseTree | null>(null);
 
@@ -60,19 +63,10 @@ export function EmailSignIn({
           }
 
           if (res.user) {
-            if (requiresVerification && !res.user.isVerified) {
-              setFormError({
-                success: false,
-                message: 'Email verification required',
-                error: 'REQUIRES_VERIFICATION',
-                user: res.user,
-              })
-
-            return
-          }
+            onSuccess?.(res.user)
         }
         //ternSecure.redirectAfterSignIn();
-        onSuccess?.(res.user)
+        //onSuccess?.(res.user)
         }
       } catch (error) {
         onError?.(error as Error)
@@ -115,6 +109,21 @@ export function EmailSignIn({
           />
         )}
       </form.AppField>
+      {onForgotPassword && (
+        <button
+          type="button"
+          onClick={onForgotPassword}
+          disabled={form.state.isSubmitting || isDisabled}
+          className={cn(
+            "w-full text-right text-sm text-blue-600 hover:text-blue-500",
+            "bg-transparent border-none cursor-pointer",
+            "mt-[-0.5rem] mb-2 hover:underline",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
+          Forgot your password?
+        </button>
+      )}
 
       <FormButton
         canSubmit={form.state.canSubmit}

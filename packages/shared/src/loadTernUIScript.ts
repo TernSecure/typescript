@@ -7,7 +7,6 @@ export type LoadTernUISCriptOptions = TernSecureInstanceTreeOptions & {
   customDomain?: string;
   proxyUrl?: string;
   version?: string;
-  isLocalDev?: boolean;
   scriptHost?: string;
   localPort?: string;
   nonce?: string;
@@ -44,7 +43,7 @@ export const loadTernUIScript = async (options?: LoadTernUISCriptOptions) => {
   }
 
 export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
-    const isTernSecureDev = options?.isLocalDev || process.env.TERN_SECURE_DEV === 'true';
+    const isTernSecureDev = options?.isTernSecureDev
     const version = options?.version || process.env.TERN_UI_VERSION || 'latest';
 
     if ( isTernSecureDev) {
