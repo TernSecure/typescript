@@ -93,6 +93,10 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     return this.ternui?.error || null;
   }
 
+  get requiresVerification(): boolean {
+    return this.ternui?.requiresVerification || true;
+  }
+
   static getOrCreateInstance(options: IsomorphicTernSecureOptions) {
     if (
       !inBrowser() || 

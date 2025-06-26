@@ -64,6 +64,7 @@ export interface TernSecureInstanceTree {
   currentView: 'signIn' | 'signUp' | 'verify' | null;
   isLoading: boolean;
   error: Error | null;
+  requiresVerification: boolean;
   /** Authentication State */
   auth: {
     /** Current authenticated user */

@@ -65,6 +65,10 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     return loadingComponent;
   }
 
+  if (!instance.requiresVerification) {
+    instance.redirectToSignIn()
+  }
+
 
   //console.log('[TernSecureCtxProvider] userCtx:', userCtx);
   //console.log('[TernSecureCtxProvider] authState from instance:', instance.ternAuth?.internalAuthState);

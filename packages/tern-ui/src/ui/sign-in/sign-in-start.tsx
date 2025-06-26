@@ -1,4 +1,3 @@
-import React from 'react';
 import { SocialSignIn } from './social-sign-in';
 import { EmailSignIn } from './email-sign-in';
 import { useAuthSignIn } from '../../ctx';
@@ -37,7 +36,7 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
       const response = await signIn.withEmailAndPassword({ email, password });
       if (response.success) {
         const user = response.user;
-        const requiresVerification = ternSecure
+        const requiresVerification = ternSecure.requiresVerification
 
         if (requiresVerification && !user.emailVerified) {
           // Navigate to verification route and dispatch event with user data
@@ -50,9 +49,9 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
           return response;
         }
         
-        handleSignInSuccess(user);
+        //handleSignInSuccess(user);
         if (user?.emailVerified) {
-          ternSecure.redirectAfterSignIn();
+          handleSignInSuccess(user);
         }
       } else {
         const authError = new Error(response.message || 'Sign in failed') as AuthErrorTree;
