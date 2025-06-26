@@ -95,6 +95,10 @@ export class TernSecure implements TernSecureInterface {
         return this.#status;
     }
 
+    get requiresVerification(): boolean {
+        return this.#options.requiresVerification ?? true; //default always to true
+    }
+
     public load = async (options?: TernSecureInstanceTreeOptions): Promise<void> => {
         if (this.isReady) {
             return;

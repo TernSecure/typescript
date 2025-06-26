@@ -1,31 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  Input,
-  Label,
-  Button
-} from '../../components/elements';
+import { Input } from '../../components/elements/input';
+import { Label } from '../../components/elements/label';
+import { Button } from '../../components/elements/button';
 import { useAuthSignIn } from '../../ctx';
+import { useSignInContext } from '../../ctx/components/SignIn';
 import type { AuthErrorTree } from '@tern-secure/types';
 
-interface PasswordResetFormProps {
-  defaultEmail?: string;
-  onNavigateToSuccess: (email: string, message?: string) => void;
-  onCancel: () => void;
-  onError?: (error: AuthErrorTree) => void;
-  isLoading?: boolean;
-}
-
-export function PasswordResetForm({
-  defaultEmail = '',
-  onNavigateToSuccess,
-  onCancel,
-  onError,
-  isLoading = false
-}: PasswordResetFormProps) {
+export function PasswordResetStep() {
   const signIn = useAuthSignIn();
-  const [email, setEmail] = useState(defaultEmail);
+  const { isLoading, handleSignInError } = useSignInContext();
+  
+  const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const createAuthError = (
     message: string, 
@@ -38,6 +26,14 @@ export function PasswordResetForm({
     error.code = code;
     error.response = response;
     return error;
+  };
+
+  const handleBackToSignIn = () => {
+    // Navigate back to main sign-in route
+    const currentParams = new URLSearchParams(window.location.search);
+    const newUrl = `/sign-in${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
+    window.history.pushState(null, '', newUrl);
+    window.dispatchEvent(new CustomEvent('navigate-to-signin'));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,30 +57,51 @@ export function PasswordResetForm({
 
     try {
       await signIn.sendPasswordResetEmail?.(trimmedEmail);
-      
-      // Navigate to success state
-      onNavigateToSuccess(
-        trimmedEmail,
-        'Password reset link sent to your email'
-      );
+      setIsSuccess(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
       setError(errorMessage);
       
-      // Also propagate error to parent
       const authError = createAuthError(
         errorMessage,
         'PASSWORD_RESET_FAILED',
         'PasswordResetError',
         error
       );
-      onError?.(authError);
+      handleSignInError(authError);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const isDisabled = isLoading || isSubmitting;
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col gap-6 text-center py-4">
+        <div className="w-12 h-12 mx-auto bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">
+          ✓
+        </div>
+        
+        <p className="text-gray-500 text-sm leading-relaxed m-0">
+          Password reset link sent! Check your email for instructions.
+        </p>
+
+        {email && (
+          <div className="bg-gray-50 px-4 py-3 rounded-md font-mono text-sm text-gray-700 break-all">
+            {email}
+          </div>
+        )}
+
+        <Button
+          onClick={handleBackToSignIn}
+          className="w-full"
+        >
+          Back to sign in
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -118,7 +135,7 @@ export function PasswordResetForm({
         <Button
           type="button"
           variant="outline"
-          onClick={onCancel}
+          onClick={handleBackToSignIn}
           disabled={isDisabled}
         >
           Cancel

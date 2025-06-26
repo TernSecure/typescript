@@ -5,9 +5,9 @@ import { useRouter, redirect } from "next/navigation"
 
 export default function Home() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  //console.log('Home user:', user);
+  console.log('isAuthenticated:', isAuthenticated);
 
 
   const redirectToMoPage = () => {

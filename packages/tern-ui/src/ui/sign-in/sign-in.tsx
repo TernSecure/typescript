@@ -1,13 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { 
   AuthErrorTree,
   TernSecureUser
 } from '@tern-secure/types';
-import { SocialSignIn } from './social-sign-in';
-import { EmailSignIn } from './email-sign-in';
-import { PasswordResetForm } from './password-reset-form'
-import { VerificationPrompt } from './verification-prompt'
-import { VerificationSent } from './verification-sent'
+import { SignInStart } from './sign-in-start';
+import { PasswordResetStep } from './password-reset-step'
+import { VerificationStep } from '../verify'
 import { 
   Card,
   CardTitle,
@@ -22,7 +20,24 @@ import { useTernSecure } from '@tern-secure/shared/react'
 import { SignInProvider, useSignInContext } from '../../ctx/components/SignIn'
 import type { SignInProps } from '../../types'
 
+// UI-specific flow state - simplified
+type AuthFlowStep = 
+  | 'signin' 
+  | 'verification' 
+  | 'verification-complete'
+  | 'password-reset'
+  | 'mfa-required'
 
+interface AuthFlowState {
+  step: AuthFlowStep
+  email?: string
+  user?: TernSecureUser | null
+  requiresVerification?: boolean
+}
+
+const DEFAULT_FLOW_STATE: AuthFlowState = {
+  step: 'signin'
+}
 
 function SignInContent({
   ui, 
@@ -34,24 +49,46 @@ function SignInContent({
   const ternSecure = useTernSecure();
   const {
     isLoading,
-    flowState,
     handleSignInStart,
     handleSignInSuccess,
     handleSignInError,
-    navigateToStep,
-    handlePasswordReset,
-    handleVerificationRequest,
-    handleVerificationCheck
   } = useSignInContext();
   
+  // UI flow state managed locally in the component
+  const [flowState, setFlowState] = useState<AuthFlowState>(DEFAULT_FLOW_STATE)
+
   const { appName, logo, socialButtons: socialButtonsConfig } = ui || {};
 
-  const isEmailSignInEnabled = !!signIn.withEmailAndPassword;
-  const isSocialSignInGloballyEnabled = !!signIn.withSocialProvider;
-  const isSocialSignInVisible = isSocialSignInGloballyEnabled && (
-    socialButtonsConfig?.google !== false || 
-    socialButtonsConfig?.microsoft !== false
-  );
+  // URL-based navigation helpers
+  const navigateToPath = useCallback((path: string, replaceHistory = false) => {
+    const currentParams = new URLSearchParams(window.location.search);
+    const newUrl = `${path}${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
+    
+    if (replaceHistory) {
+      window.history.replaceState(null, '', newUrl);
+    } else {
+      window.history.pushState(null, '', newUrl);
+    }
+    
+    // Trigger a re-render by updating a state
+    setFlowState((prev: AuthFlowState) => ({ ...prev, step: path.split('/').pop() as AuthFlowStep }));
+  }, [])
+
+  const navigateToSignIn = useCallback(() => {
+    navigateToPath('/sign-in', true);
+  }, [navigateToPath])
+
+  const navigateToVerification = useCallback((userData?: { user?: TernSecureUser, email?: string }) => {
+    navigateToPath('/sign-in/verification');
+    if (userData) {
+      setFlowState((prev: AuthFlowState) => ({ ...prev, ...userData }));
+    }
+  }, [navigateToPath])
+
+  const navigateToPasswordReset = useCallback(() => {
+    navigateToPath('/sign-in/password-reset');
+  }, [navigateToPath])
+
   
   const checkAndHandleRedirectResult = useCallback(async () => {
     try {
@@ -84,83 +121,72 @@ function SignInContent({
     }
   }, [signIn, handleSignInStart, handleSignInSuccess, handleSignInError, ternSecure, onSuccess]);
 
-  const handleSignInWithEmail = useCallback(async (email: string, password: string) => {
-    handleSignInStart();
-    try {
-      const response = await signIn.withEmailAndPassword({ email, password });
-      if (response.success) {
-        handleSignInSuccess(response.user);
-        if (response.user?.emailVerified) {
-          ternSecure.redirectAfterSignIn();
-          onSuccess?.(response.user);
-        }
-      } else {
-        const authError = new Error(response.message || 'Sign in failed') as AuthErrorTree;
-        authError.name = 'SignInError';
-        authError.code = response.error;
-        authError.response = response;
-        handleSignInError(authError);
-      }
-      return response;
-    } catch (error) {
-      const authError = new Error(
-        error instanceof Error ? error.message : 'Sign in failed'
-      ) as AuthErrorTree;
-      authError.name = 'SignInError';
-      authError.code = 'SIGN_IN_FAILED';
-      authError.response = error;
-      handleSignInError(authError);
-      throw error;
-    }
-  }, [signIn, handleSignInStart, handleSignInSuccess, handleSignInError, ternSecure, onSuccess]);
-
-  const handleError = useCallback((error: AuthErrorTree) => {
-    handleSignInError(error);
-    onError?.(error);
-  }, [handleSignInError, onError]);
-  
-  const handleSuccess = useCallback((user: TernSecureUser | null) => {
-    handleSignInSuccess(user);
-  }, [handleSignInSuccess]);
 
   React.useEffect(() => {
     checkAndHandleRedirectResult();
   }, [checkAndHandleRedirectResult]);
 
-  const renderStepContent = () => {
-    switch (flowState.step) {
+  // Listen for navigation events from self-contained components
+  React.useEffect(() => {
+    const handleNavigateToSignIn = () => {
+      navigateToSignIn();
+    };
+
+    const handleNavigateToVerification = (event: CustomEvent) => {
+      const { user, email } = event.detail;
+      navigateToVerification({ user, email });
+    };
+
+    const handleNavigateToPasswordReset = () => {
+      navigateToPasswordReset();
+    };
+
+    window.addEventListener('navigate-to-signin', handleNavigateToSignIn);
+    window.addEventListener('navigate-to-verification', handleNavigateToVerification as EventListener);
+    window.addEventListener('navigate-to-password-reset', handleNavigateToPasswordReset);
+    
+    return () => {
+      window.removeEventListener('navigate-to-signin', handleNavigateToSignIn);
+      window.removeEventListener('navigate-to-verification', handleNavigateToVerification as EventListener);
+      window.removeEventListener('navigate-to-password-reset', handleNavigateToPasswordReset);
+    };
+  }, [navigateToSignIn, navigateToVerification, navigateToPasswordReset]);
+
+  // Listen for browser back/forward navigation
+  React.useEffect(() => {
+    const handlePopState = () => {
+      // Update component state based on current URL
+      const currentPath = window.location.pathname;
+      const lastSegment = currentPath.split('/').pop() || 'signin';
+      setFlowState((prev: AuthFlowState) => ({ ...prev, step: lastSegment as AuthFlowStep }));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+
+  // Route-based content rendering
+  const renderStepContent = useCallback(() => {
+    // Get current path to determine which component to render
+    const currentPath = window.location.pathname;
+    const pathSegments = currentPath.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
+
+    // Handle route-based rendering
+    switch (lastSegment) {
       case 'password-reset':
-        return (
-          <PasswordResetForm
-            onSubmit={handlePasswordReset}
-            onCancel={() => navigateToStep('signin')}
-            isLoading={isLoading}
-          />
-        );
+        return <PasswordResetStep />;
         
-      case 'verification-required':
-        return (
-          <VerificationPrompt
-            email={flowState.email}
-            onResendVerification={handleVerificationRequest}
-            onCheckVerification={handleVerificationCheck}
-            onBackToSignIn={() => navigateToStep('signin')}
-            isLoading={isLoading}
-          />
-        );
-        
-      case 'verification-sent':
-        return (
-          <VerificationSent
-            email={flowState.email}
-            onCheckVerification={handleVerificationCheck}
-            onResendVerification={handleVerificationRequest}
-            onBackToSignIn={() => navigateToStep('signin')}
-            isLoading={isLoading}
-          />
-        );
+      case 'verification':
+      case 'verify':
+        return <VerificationStep />;
         
       case 'verification-complete':
+      case 'verify-complete':
         return (
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
             <h3 style={{ color: '#10b981', marginBottom: '1rem' }}>Email Verified!</h3>
@@ -168,91 +194,12 @@ function SignInContent({
           </div>
         );
         
+      case 'sign-in':
       default:
-        return (
-          <>
-            {isEmailSignInEnabled ? (
-              <EmailSignIn
-                onError={handleError}
-                onSuccess={handleSuccess}
-                signInWithEmail={handleSignInWithEmail}
-                onForgotPassword={() => navigateToStep('password-reset')}
-              />
-            ) : (
-            <p className="text-sm text-muted-foreground">
-              Email sign-in is not enabled.
-              </p>
-            )}
-            {isSocialSignInVisible && (
-              <SocialSignIn
-                onError={handleError}
-                onSuccess={handleSuccess}
-                config={socialButtonsConfig}
-                mode={'redirect'}
-              />
-            )}
-          </>
-        );
+        // Main sign-in flow - always show SignInStart for the root sign-in path
+        return <SignInStart socialButtonsConfig={socialButtonsConfig} />;
     }
-  };
-
-  const renderFooter = () => {
-    switch (flowState.step) {
-      case 'password-reset':
-        return (
-          <CardFooter>
-            Remember your password?{' '}
-            <a onClick={() => navigateToStep('signin')}>
-              Back to sign in
-            </a>
-          </CardFooter>
-        );
-        
-      case 'verification-required':
-      case 'verification-sent':
-        return null;
-        
-      default:
-        return (
-          <CardFooter>
-            Don&apos;t have an account?{' '}
-            <a href="/sign-up">
-              Sign up
-            </a>
-          </CardFooter>
-        );
-    }
-  };
-
-  const getStepTitle = () => {
-    switch (flowState.step) {
-      case 'password-reset':
-        return 'Reset your password';
-      case 'verification-required':
-        return 'Verify your email';
-      case 'verification-sent':
-        return 'Check your email';
-      case 'verification-complete':
-        return 'Email verified!';
-      default:
-        return `Sign in to ${appName || 'your account'}`;
-    }
-  };
-
-  const getStepDescription = () => {
-    switch (flowState.step) {
-      case 'password-reset':
-        return 'Enter your email to receive a password reset link';
-      case 'verification-required':
-        return 'Please verify your email address to continue';
-      case 'verification-sent':
-        return 'We sent a verification link to your email';
-      case 'verification-complete':
-        return 'Your email has been successfully verified';
-      default:
-        return 'Please sign in to continue';
-    }
-  };
+  }, [socialButtonsConfig]);
 
   return (
     <div className="relative flex items-center justify-center">
@@ -267,17 +214,12 @@ function SignInContent({
               />
               </div>
             )}
-          <CardTitle className={cn("font-bold")}>{getStepTitle()}</CardTitle>
-          <CardDescription className={cn("text-muted-foreground")}>{getStepDescription()}</CardDescription>
+          <CardTitle className={cn("font-bold")}>Sign in to {appName || 'your account'}</CardTitle>
+          <CardDescription className={cn("text-muted-foreground")}>Please sign in to continue</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {renderStepContent()}
         </CardContent>
-        {renderFooter() && (
-          <CardFooter className="flex justify-center">
-            {renderFooter()}
-          </CardFooter>
-        )}
       </Card>
     </div>
   );

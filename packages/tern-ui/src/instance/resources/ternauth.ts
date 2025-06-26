@@ -297,12 +297,13 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       });
   }
 
-  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = false): Promise<void> {
+  private async updateInternalAuthState(user: TernSecureUser | null): Promise<void> {
     const previousState = { ...this._authState };
     try {
       if (user) {
         const isValid = !!user.uid;
         const isVerified = user.emailVerified;
+        const requiresVerification = TernSecureBase.ternsecure?.requiresVerification;
         const isAuthenticated = isValid && (!requiresVerification || isVerified);
 
         this._authState = {

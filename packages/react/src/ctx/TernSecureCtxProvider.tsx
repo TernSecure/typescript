@@ -19,7 +19,6 @@ type TernSecureCtxProviderProps = {
   children: React.ReactNode
   instanceOptions: IsomorphicTernSecureOptions
   initialState: TernSecureState | undefined
-  requiresVerification?: boolean
 }
 
 export type AuthStateProps = {
@@ -32,9 +31,10 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   const { 
     children,
     initialState, 
-    instanceOptions,
-    requiresVerification = false
+    instanceOptions
   } = props
+
+  const rv = props.instanceOptions.requiresVerification
 
   const { isomorphicTernSecure: instance, instanceStatus} = useLoadIsomorphicTernSecure(instanceOptions)
 

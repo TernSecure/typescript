@@ -6,86 +6,76 @@ import {
   ReactNode, 
   useState, 
   useCallback,
-  useMemo
+  useMemo,
+  useEffect
 } from 'react'
 import type { 
   AuthErrorTree, 
-  TernSecureUser 
+  TernSecureUser,
+  SignInRedirectOptions,
+  SignUpRedirectOptions 
 } from '@tern-secure/types'
 import type { SignInCtx } from '../../types'
+import { useTernSecure } from '@tern-secure/shared/react'
 
-type AuthFlowStep = 
-  | 'signin' 
-  | 'password-reset' 
-  | 'verification-required' 
-  | 'verification-sent' 
-  | 'verification-complete'
-  | 'mfa-required'
-
-
-interface AuthFlowState {
-  step: AuthFlowStep
-  email?: string
-  user?: TernSecureUser | null
-  requiresVerification?: boolean
-}
-
-interface SignInContextType {
+// Simplified context interface focusing only on auth lifecycle and navigation
+interface SignInContextType extends Omit<SignInCtx, 'forceRedirectUrl' | 'signInForceRedirectUrl' | 'signUpForceRedirectUrl'> {
+  // State management
   isError: boolean
   isLoading: boolean
   error: AuthErrorTree | null
-  flowState: AuthFlowState
+  
+  // Core auth lifecycle
+  clearError: () => void
   handleSignInStart: () => void
   handleSignInSuccess: (user?: TernSecureUser | null) => void
   handleSignInError: (error: AuthErrorTree) => void
-  clearError: () => void
-  navigateToStep: (step: AuthFlowStep, data?: Partial<AuthFlowState>) => void
-  resetFlow: () => void
-  handlePasswordReset: (email: string) => Promise<void>
-  handleVerificationRequest: (email?: string) => Promise<void>
-  handleVerificationCheck: () => Promise<void>
+  
+  // Redirect management (source of truth for navigation)
+  redirectToSignUp: (options?: SignUpRedirectOptions) => Promise<void>
+  redirectAfterSignIn: () => void
+  shouldRedirect: (currentPath: string) => boolean | string
+  constructSignInUrl: (baseUrl?: string) => string
+  constructSignUpUrl: (baseUrl?: string) => string
+  
+  // Check for redirect results (OAuth flows)
   checkRedirectResult: () => Promise<void>
-}
-
-const DEFAULT_FLOW_STATE: AuthFlowState = {
-  step: 'signin'
 }
 
 const SignInContext = createContext<SignInContextType>({
   isError: false,
   isLoading: false,
   error: null,
-  flowState: DEFAULT_FLOW_STATE,
+  clearError: () => {},
   handleSignInStart: () => {},
   handleSignInSuccess: () => {},
   handleSignInError: () => {},
-  clearError: () => {},
-  navigateToStep: () => {},
-  resetFlow: () => {},
-  handlePasswordReset: async () => {},
-  handleVerificationRequest: async () => {},
-  handleVerificationCheck: async () => {},
-  checkRedirectResult: async () => {}
+  redirectToSignUp: async () => {},
+  redirectAfterSignIn: () => {},
+  shouldRedirect: () => false,
+  constructSignInUrl: () => '',
+  constructSignUpUrl: () => '',
+  checkRedirectResult: async () => {},
 })
 
 export const useSignInContext = () => useContext(SignInContext)
 
-interface SignInProviderProps {
+interface SignInProviderProps extends Partial<SignInCtx> {
   children: ReactNode
-  onSuccess?: (user: TernSecureUser | null) => void
-  onError?: (error: AuthErrorTree) => void
-  onFlowChange?: (step: AuthFlowStep) => void
 }
 
 export function SignInProvider({ 
   children, 
   onSuccess,
   onError,
-  onFlowChange 
+  forceRedirectUrl,
+  signInForceRedirectUrl,
+  signUpForceRedirectUrl,
+  ...ctxProps
 }: SignInProviderProps) {
+  const ternSecure = useTernSecure()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<AuthErrorTree | null>(null)
-  const [flowState, setFlowState] = useState<AuthFlowState>(DEFAULT_FLOW_STATE)
 
   const createAuthError = useCallback((
     message: string, 
@@ -100,9 +90,65 @@ export function SignInProvider({
     return authError
   }, [])
 
-  
+  // Redirect management - source of truth for navigation (delegates to main instance)
+  const redirectToSignUp = useCallback(async (options?: SignUpRedirectOptions): Promise<void> => {
+    try {
+      await ternSecure.redirectToSignUp(options)
+    } catch (error) {
+      console.error('[SignInProvider] Error redirecting to sign up:', error)
+    }
+  }, [ternSecure])
 
+  const redirectAfterSignIn = useCallback(() => {
+    try {
+      ternSecure.redirectAfterSignIn()
+    } catch (error) {
+      console.error('[SignInProvider] Error redirecting after sign in:', error)
+    }
+  }, [ternSecure])
 
+  const shouldRedirect = useCallback((currentPath: string): boolean | string => {
+    try {
+      return ternSecure.shouldRedirect(currentPath)
+    } catch (error) {
+      console.error('[SignInProvider] Error checking redirect:', error)
+      return false
+    }
+  }, [ternSecure])
+
+  const constructSignInUrl = useCallback((baseUrl?: string): string => {
+    try {
+      const signInPath = baseUrl || '/sign-in'
+      const redirectPath = forceRedirectUrl || signInForceRedirectUrl
+      
+      if (redirectPath) {
+        return ternSecure.constructUrlWithRedirect(signInPath) + `?redirect=${encodeURIComponent(redirectPath)}`
+      }
+      
+      return ternSecure.constructUrlWithRedirect(signInPath)
+    } catch (error) {
+      console.error('[SignInProvider] Error constructing sign in URL:', error)
+      return baseUrl || '/sign-in'
+    }
+  }, [ternSecure, signInForceRedirectUrl, forceRedirectUrl])
+
+  const constructSignUpUrl = useCallback((baseUrl?: string): string => {
+    try {
+      const signUpPath = baseUrl || '/sign-up'
+      const redirectPath = signUpForceRedirectUrl
+      
+      if (redirectPath) {
+        return ternSecure.constructUrlWithRedirect(signUpPath) + `?redirect=${encodeURIComponent(redirectPath)}`
+      }
+      
+      return ternSecure.constructUrlWithRedirect(signUpPath)
+    } catch (error) {
+      console.error('[SignInProvider] Error constructing sign up URL:', error)
+      return baseUrl || '/sign-up'
+    }
+  }, [ternSecure, signUpForceRedirectUrl])
+
+  // Core authentication lifecycle handlers
   const handleSignInStart = useCallback(() => {
     setIsLoading(true)
     setError(null)
@@ -112,26 +158,12 @@ export function SignInProvider({
     setIsLoading(false)
     setError(null)
     
-    // Check if user requires email verification
-    if (user && !user.emailVerified) {
-      setFlowState(prev => ({
-        ...prev,
-        step: 'verification-required',
-        user,
-        email: user.email || prev.email
-      }))
-      onFlowChange?.(  'verification-required')
-      return
-    }
-    
-    // Complete successful sign in
-    setFlowState(prev => ({
-      ...prev,
-      step: 'signin',
-      user
-    }))
+    // Trigger success callback first
     onSuccess?.(user || null)
-  }, [onSuccess, onFlowChange])
+    
+    // Then handle redirect via main instance
+    redirectAfterSignIn()
+  }, [onSuccess, redirectAfterSignIn])
 
   const handleSignInError = useCallback((authError: AuthErrorTree) => {
     setIsLoading(false)
@@ -143,152 +175,70 @@ export function SignInProvider({
     setError(null)
   }, [])
 
-  const navigateToStep = useCallback((step: AuthFlowStep, data?: Partial<AuthFlowState>) => {
-    setFlowState(prev => ({
-      ...prev,
-      step,
-      ...data
-    }))
-    onFlowChange?.(step)
-    clearError()
-  }, [onFlowChange, clearError])
-
-
-  const resetFlow = useCallback(() => {
-    setFlowState(DEFAULT_FLOW_STATE)
-    setIsLoading(false)
-    clearError()
-    onFlowChange?.('signin')
-  }, [clearError, onFlowChange])
-
-  const handlePasswordReset = useCallback(async (email: string) => {
-    setIsLoading(true)
-    setError(null)
-    
+  const checkRedirectResult = useCallback(async (): Promise<void> => {
     try {
-      // TODO: Implement actual password reset logic
-      // await signIn.sendPasswordResetEmail(email)
-      
-      navigateToStep('verification-sent', { email })
-    } catch (error) {
-      const authError = createAuthError(
-        error instanceof Error ? error.message : 'Failed to send password reset email',
-        'PASSWORD_RESET_FAILED',
-        'PasswordResetError',
-        error
-      )
-      handleSignInError(authError)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [navigateToStep, createAuthError, handleSignInError])
-
-  const handleVerificationRequest = useCallback(async (email?: string) => {
-    const targetEmail = email || flowState.email || flowState.user?.email
-    
-    if (!targetEmail) {
-      const authError = createAuthError(
-        'No email address available for verification',
-        'MISSING_EMAIL',
-        'VerificationError'
-      )
-      handleSignInError(authError)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      // TODO: Implement actual verification resend logic
-      // await signIn.resendEmailVerification()
-      
-      navigateToStep('verification-sent', { email: targetEmail })
-    } catch (error) {
-      const authError = createAuthError(
-        error instanceof Error ? error.message : 'Failed to send verification email',
-        'VERIFICATION_REQUEST_FAILED',
-        'VerificationError',
-        error
-      )
-      handleSignInError(authError)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [flowState.email, flowState.user?.email, navigateToStep, createAuthError, handleSignInError])
-
-  const handleVerificationCheck = useCallback(async () => {
-    if (!flowState.user) {
-      const authError = createAuthError(
-        'No user available for verification check',
-        'MISSING_USER',
-        'VerificationError'
-      )
-      handleSignInError(authError)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      // TODO: Implement actual verification check logic
-      // await flowState.user.reload()
-      
-      if (flowState.user?.emailVerified) {
-        navigateToStep('verification-complete')
-        setTimeout(() => {
-          handleSignInSuccess(flowState.user)
-        }, 1500) // Brief success message before redirect
-      } else {
-        throw new Error('Email is still not verified')
+      const result = await ternSecure.getRedirectResult()
+      if (result && result.success) {
+        handleSignInSuccess(result.user)
+      } else if (result && !result.success) {
+        const authError = createAuthError(
+          result.message || 'Redirect sign-in failed',
+          result.error || 'REDIRECT_FAILED',
+          'RedirectError',
+          result
+        )
+        handleSignInError(authError)
       }
     } catch (error) {
       const authError = createAuthError(
-        error instanceof Error ? error.message : 'Failed to check verification status',
-        'VERIFICATION_CHECK_FAILED',
-        'VerificationError',
+        error instanceof Error ? error.message : 'Failed to check redirect result',
+        'REDIRECT_CHECK_FAILED',
+        'RedirectError',
         error
       )
       handleSignInError(authError)
-    } finally {
-      setIsLoading(false)
     }
-  }, [flowState.user, navigateToStep, createAuthError, handleSignInError, handleSignInSuccess])
+  }, [ternSecure, handleSignInSuccess, handleSignInError, createAuthError])
 
-
-
-  const checkRedirectResult = useCallback(async () => {}, [])
 
   const contextValue: SignInContextType = useMemo(() => ({
+    // State management
     isError: !!error,
     isLoading,
     error,
-    flowState,
+    
+    // Core lifecycle
+    clearError,
     handleSignInStart,
     handleSignInSuccess,
     handleSignInError,
-    clearError,
-    navigateToStep,
-    resetFlow,
-    handlePasswordReset,
-    handleVerificationRequest,
-    handleVerificationCheck,
-    checkRedirectResult
+    
+    // Redirect management
+    redirectToSignUp,
+    redirectAfterSignIn,
+    shouldRedirect,
+    constructSignInUrl,
+    constructSignUpUrl,
+    checkRedirectResult,
+    
+    // SignInCtx properties (inherited)
+    onError,
+    onSuccess,
   }), [
     error,
     isLoading,
-    flowState,
+    clearError,
     handleSignInStart,
     handleSignInSuccess,
     handleSignInError,
-    clearError,
-    navigateToStep,
-    resetFlow,
-    handlePasswordReset,
-    handleVerificationRequest,
-    handleVerificationCheck,
-    checkRedirectResult
+    redirectToSignUp,
+    redirectAfterSignIn,
+    shouldRedirect,
+    constructSignInUrl,
+    constructSignUpUrl,
+    checkRedirectResult,
+    onError,
+    onSuccess,
   ])
 
   return (

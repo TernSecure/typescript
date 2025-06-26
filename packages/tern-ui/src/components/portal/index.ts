@@ -1,5 +1,4 @@
 import ReactDOM from "react-dom";
-import type { AvailableComponentProps } from "../types";
 
 interface PortalRendererProps {
   node: HTMLDivElement;

@@ -80,7 +80,6 @@ export const allNextProviderPropsWithEnv = (
     requiresVerification: propsRequiresVerification,
     isTernSecureDev: propsIsTernSecureDev,
     loadingComponent: propsLoadingComponent,
-    ...(propsRequiresVerification !== undefined && { requireverification: propsRequiresVerification }),
 
     //TernSecure: baseProps.Instance,
     initialState: baseProps.initialState,
