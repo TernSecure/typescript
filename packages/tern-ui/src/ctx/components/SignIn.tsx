@@ -33,7 +33,7 @@ interface SignInContextType extends Omit<SignInCtx, 'forceRedirectUrl' | 'signIn
   
   // Redirect management (source of truth for navigation)
   redirectToSignUp: (options?: SignUpRedirectOptions) => Promise<void>
-  //redirectAfterSignIn: () => void
+  redirectAfterSignIn: () => void
   shouldRedirect: (currentPath: string) => boolean | string
   constructSignInUrl: (baseUrl?: string) => string
   constructSignUpUrl: (baseUrl?: string) => string
@@ -51,7 +51,7 @@ const SignInContext = createContext<SignInContextType>({
   handleSignInSuccess: () => {},
   handleSignInError: () => {},
   redirectToSignUp: async () => {},
-  //redirectAfterSignIn: () => {},
+  redirectAfterSignIn: () => {},
   shouldRedirect: () => false,
   constructSignInUrl: () => '',
   constructSignUpUrl: () => '',
@@ -99,6 +99,13 @@ export function SignInProvider({
     }
   }, [ternSecure])
 
+  const redirectAfterSignIn = useCallback(() => {
+    try {
+      ternSecure.redirectAfterSignIn()
+    } catch (error) {
+      console.error('[SignInProvider] Error redirecting after sign in:', error)
+    }
+  }, [ternSecure])
 
   const shouldRedirect = useCallback((currentPath: string): boolean | string => {
     try {
@@ -155,8 +162,8 @@ export function SignInProvider({
     onSuccess?.(user || null)
     
     // Then handle redirect via main instance
-    //redirectAfterSignIn()
-  }, [onSuccess])
+    redirectAfterSignIn()
+  }, [onSuccess, redirectAfterSignIn])
 
   const handleSignInError = useCallback((authError: AuthErrorTree) => {
     setIsLoading(false)
@@ -208,6 +215,7 @@ export function SignInProvider({
     
     // Redirect management
     redirectToSignUp,
+    redirectAfterSignIn,
     shouldRedirect,
     constructSignInUrl,
     constructSignUpUrl,
@@ -224,7 +232,7 @@ export function SignInProvider({
     handleSignInSuccess,
     handleSignInError,
     redirectToSignUp,
-    //redirectAfterSignIn,
+    redirectAfterSignIn,
     shouldRedirect,
     constructSignInUrl,
     constructSignUpUrl,
