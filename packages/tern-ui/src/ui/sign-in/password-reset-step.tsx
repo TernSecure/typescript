@@ -5,15 +5,20 @@ import { Button } from '../../components/elements/button';
 import { useAuthSignIn } from '../../ctx';
 import { useSignInContext } from '../../ctx/components/SignIn';
 import type { AuthErrorTree } from '@tern-secure/types';
+import { useRouter } from '../../components/router';
 
 export function PasswordResetStep() {
   const signIn = useAuthSignIn();
-  const { isLoading, handleSignInError } = useSignInContext();
+  const { 
+    isLoading, 
+    handleSignInError,
+  } = useSignInContext();
   
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { navigate } = useRouter();
 
   const createAuthError = (
     message: string, 
@@ -29,11 +34,7 @@ export function PasswordResetStep() {
   };
 
   const handleBackToSignIn = () => {
-    // Navigate back to main sign-in route
-    const currentParams = new URLSearchParams(window.location.search);
-    const newUrl = `/sign-in${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
-    window.history.pushState(null, '', newUrl);
-    window.dispatchEvent(new CustomEvent('navigate-to-signin'));
+    return navigate('../');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

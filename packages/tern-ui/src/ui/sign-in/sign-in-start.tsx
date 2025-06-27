@@ -3,19 +3,32 @@ import { EmailSignIn } from './email-sign-in';
 import { useAuthSignIn } from '../../ctx';
 import { useSignInContext } from '../../ctx/components/SignIn';
 import { useTernSecure } from '@tern-secure/shared/react';
+import { 
+  Card,
+  CardTitle,
+  CardDescription,
+  CardHeader,
+  CardContent,
+} from '../../components/elements';
+import { cn } from '../../lib/utils';
 import type { 
     AuthErrorTree, 
     TernSecureUser, 
-    SignInUIConfig 
+    SignInUIConfig,
+    SignInPropsTree
 } from '@tern-secure/types';
+import { useRouter } from '../../components/router';
 
 interface SignInStartProps {
   socialButtonsConfig?: SignInUIConfig['socialButtons'];
+  ui?: SignInPropsTree['ui'];
+  className?: string;
 }
 
-export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
+export function SignInStart({ socialButtonsConfig, ui, className }: SignInStartProps) {
   const signIn = useAuthSignIn();
   const ternSecure = useTernSecure();
+  const { navigate } = useRouter();
   const {
     isLoading,
     handleSignInStart,
@@ -25,10 +38,6 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
 
   const isEmailSignInEnabled = !!signIn.withEmailAndPassword;
   const isSocialSignInGloballyEnabled = !!signIn.withSocialProvider;
-  const isSocialSignInVisible = isSocialSignInGloballyEnabled && (
-    socialButtonsConfig?.google !== false || 
-    socialButtonsConfig?.microsoft !== false
-  );
 
   const handleSignInWithEmail = async (email: string, password: string) => {
     handleSignInStart();
@@ -39,13 +48,8 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
         const requiresVerification = ternSecure.requiresVerification
 
         if (requiresVerification && !user.emailVerified) {
-          // Navigate to verification route and dispatch event with user data
-          const currentParams = new URLSearchParams(window.location.search);
-          const newUrl = `/sign-in/verification${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
-          window.history.pushState(null, '', newUrl);
-          window.dispatchEvent(new CustomEvent('navigate-to-verification', {
-            detail: { user, email: user.email || email }
-          }));
+          const queryParams = new URLSearchParams();
+          navigate(`verify?${queryParams.toString()}`);
           return response;
         }
         
@@ -74,11 +78,8 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
   };
 
   const handleForgotPassword = () => {
-    // Navigate to password reset route
-    const currentParams = new URLSearchParams(window.location.search);
-    const newUrl = `/sign-in/password-reset${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
-    window.history.pushState(null, '', newUrl);
-    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
+    const queryParams = new URLSearchParams();
+    navigate(`password-reset?${queryParams.toString()}`);
   };
 
   const handleError = (error: AuthErrorTree) => {
@@ -89,28 +90,47 @@ export function SignInStart({ socialButtonsConfig }: SignInStartProps) {
     handleSignInSuccess(user);
   };
 
+  const { appName, logo } = ui || {};
+
   return (
-    <>
-      {isEmailSignInEnabled ? (
-        <EmailSignIn
-          onError={handleError}
-          onSuccess={handleSuccess}
-          signInWithEmail={handleSignInWithEmail}
-          onForgotPassword={handleForgotPassword}
-        />
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Email sign-in is not enabled.
-        </p>
-      )}
-      {isSocialSignInVisible && (
-        <SocialSignIn
-          onError={handleError}
-          onSuccess={handleSuccess}
-          config={socialButtonsConfig}
-          mode={'popup'}
-        />
-      )}
-    </>
+    <div className="relative flex items-center justify-center">
+      <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
+        <CardHeader className="space-y-1 text-center">
+          {logo && (
+            <div className="flex justify-center mb-6">
+              <img
+                src={logo} 
+                alt={appName ? `${appName} Logo` : 'Application Logo'} 
+                className="h-16 w-auto" 
+              />
+            </div>
+          )}
+          <CardTitle className={cn("font-bold")}>Sign in to {appName || 'your account'}</CardTitle>
+          <CardDescription className={cn("text-muted-foreground")}>Please sign in to continue</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isEmailSignInEnabled ? (
+            <EmailSignIn
+              onError={handleError}
+              onSuccess={handleSuccess}
+              signInWithEmail={handleSignInWithEmail}
+              onForgotPassword={handleForgotPassword}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Email sign-in is not enabled.
+            </p>
+          )}
+          {isSocialSignInGloballyEnabled && (
+            <SocialSignIn
+              onError={handleError}
+              onSuccess={handleSuccess}
+              config={socialButtonsConfig}
+              mode={'popup'}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

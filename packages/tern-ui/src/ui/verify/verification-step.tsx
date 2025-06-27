@@ -60,9 +60,8 @@ export function VerificationStep() {
   };
 
   const handleBackToSignIn = () => {
-    // This will be handled by the parent component through URL or other means
-    // For now, we can trigger a custom event or use a callback
-    window.dispatchEvent(new CustomEvent('navigate-to-signin'));
+    // Navigate back to sign-in using context
+    //navigateToSignIn();
   };
 
   const handleResend = async () => {

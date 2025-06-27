@@ -124,6 +124,8 @@ export type SignUpInitialValueTree = Partial<SignUpFormValuesTree>;
  * Props for SignIn component focusing on UI concerns
  */
 export type SignInPropsTree = {
+  /** Routing Path */
+  path?: string;
   /** URL to navigate to after successfully sign-in */
   forceRedirectUrl?: string | null;
   /** Initial form values */

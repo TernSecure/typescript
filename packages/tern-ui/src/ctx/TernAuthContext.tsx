@@ -8,7 +8,7 @@ import type {
     SignInResource,
     TernSecureUser,
     SignUpResource,
-    TernSecureState
+    TernSecureState,
 } from "@tern-secure/types"
 
 export function useAuthSignIn(): SignInResource {

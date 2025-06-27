@@ -22,3 +22,7 @@ export type ComponentsProps =
 export type AvailableComponentProps = 
     | SignInPropsTree
     | SignUpPropsTree;
+
+export type AvailableComponentCtx = 
+    | SignInCtx
+
