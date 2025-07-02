@@ -420,11 +420,11 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     return this.ternui.shouldRedirect(currentPath);
   };
 
-  constructUrlWithRedirect = (baseUrl: string): string => {
-    if (!this.ternui?.constructUrlWithRedirect) {
+  constructUrlWithAuthRedirect = (baseUrl: string): string => {
+    if (!this.ternui?.constructUrlWithAuthRedirect) {
       return baseUrl;
     }
-    return this.ternui.constructUrlWithRedirect(baseUrl);
+    return this.ternui.constructUrlWithAuthRedirect(baseUrl);
   };
 
   redirectToSignIn = async (options?: SignInRedirectOptions) => {
