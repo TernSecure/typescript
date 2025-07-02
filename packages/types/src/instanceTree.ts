@@ -90,7 +90,7 @@ export interface TernSecureInstanceTree {
   /** Check if redirect is needed */
   shouldRedirect: (currentPath: string) => boolean | string;
   /** Construct URL with redirect parameters */
-  constructUrlWithRedirect: (to: string) => string;
+  constructUrlWithAuthRedirect: (to: string) => string;
   /** Navigate to SignIn page */
   redirectToSignIn(options?: SignInRedirectOptions): Promise<unknown>;
   /** Navigate to SignUp page */

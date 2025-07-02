@@ -63,6 +63,8 @@ export function EmailSignIn({
           }
 
           if (res.user) {
+            //const requiresVerification = ternSecure.requiresVerification
+            //const isFullyAuthenticated = res.error
             onSuccess?.(res.user)
         }
         //ternSecure.redirectAfterSignIn();

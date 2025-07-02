@@ -23,6 +23,12 @@ import {
     buildURL
 } from '../utils/construct'
 
+import { createCSRFCookie } from './auth/cookies';
+import { cookieHandler } from '@tern-secure/shared/cookie'
+
+const ternSecureEndpoint = 'https://api.ternsecure.com'
+const CSRF_SESSION_COOKIE_NAME=  '__session'
+
 
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -405,7 +411,7 @@ export class TernSecure implements TernSecureInterface {
 
 
     
-    public constructUrlWithRedirect = (to: string): string => {
+    public constructUrlWithAuthRedirect = (to: string): string => {
         const baseUrl = window.location.origin
         
         const url = new URL(to, baseUrl)
@@ -416,6 +422,52 @@ export class TernSecure implements TernSecureInterface {
 
         return url.toString()
     };
+
+      createSessionCookie = async(token: string): Promise<void> => {
+        try {
+          const csrfCookie = createCSRFCookie();
+          const ctoken = this.generateCSRFToken()
+          const csrfToken = csrfCookie.set(ctoken);
+    
+          console.log('Creating session cookie with endpoint:', `${ternSecureEndpoint}/session`);
+    
+          const req = await fetch (`${ternSecureEndpoint}/session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': ctoken,
+            },
+            body: JSON.stringify({ 
+              idToken: token,
+              csrfToken: ctoken
+            }),
+            credentials: 'include'
+            });
+    
+            console.log('Response status:', req.status, req.statusText);
+    
+            if (!req.ok) {
+              throw new Error('Failed to create session cookie');
+            }
+    
+            const res = await req.json();
+    
+            if (!res.success) {
+              throw new Error(res.message || 'Failed to create session cookie');
+            } else {
+                cookieHandler('_session_cookie').set(res.sessionToken, {secure: true, sameSite: 'strict', expires: 1 / 24});
+            }
+        } catch (error) {
+          console.error('Failed to create session cookie:', error);
+          throw error;
+        }
+      }
+
+    private generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
 
     #constructAfterSignInUrl = (): string => {
         if (!inBrowser()) {
@@ -451,7 +503,7 @@ export class TernSecure implements TernSecureInterface {
             return defaultRedirectPath;
         }
         
-        return this.constructUrlWithRedirect(redirectPath);
+        return this.constructUrlWithAuthRedirect(redirectPath);
     }
     
     public redirectToSignIn = async (options?: SignInRedirectOptions): Promise<unknown> => {
@@ -470,12 +522,30 @@ export class TernSecure implements TernSecureInterface {
         return 
     }
 
-    redirectAfterSignIn = (): void => {
-        if (inBrowser()) {
+redirectAfterSignIn = async (): Promise<void> => {
+    if (inBrowser()) {
+        try {
+            const currentUser = this.auth.user;
+            if (currentUser && this.ternAuth) {
+                try {
+                    const idToken = await currentUser.getIdToken();
+                    if (idToken) {
+                        await this.createSessionCookie(idToken);
+                    }
+                } catch (sessionError) {
+                    throw new Error(`Error creating session: ${sessionError instanceof Error ? sessionError.message : 'Unknown error'}`);
+                }
+            }
+
+            const destinationUrl = this.#constructAfterSignInUrl();
+            window.location.href = destinationUrl;
+        } catch (error) {
+            console.error('[TernSecure] Error during post-sign-in redirect:', error);
             const destinationUrl = this.#constructAfterSignInUrl();
             window.location.href = destinationUrl;
         }
     }
+}
 
     redirectAfterSignUp =  (): void => {
         throw new Error('redirectAfterSignUp is not implemented yet');

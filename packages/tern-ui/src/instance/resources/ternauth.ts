@@ -34,7 +34,10 @@ import {
 } from 'firebase/auth'
 
 import { TernSecureBase, SignUp } from './internal';
+import { createCSRFCookie } from '../auth/cookies';
 
+const ternSecureEndpoint = 'https://api.ternsecure.com'
+const CSRF_SESSION_COOKIE_NAME=  '__session'
 
 interface ProviderConfig {
   provider: GoogleAuthProvider | OAuthProvider;
@@ -227,6 +230,51 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     };
 
   }
+
+  createSessionCookie = async(token: string): Promise<void> => {
+    try {
+      const csrfCookie = createCSRFCookie();
+      const ctoken = this.generateCSRFToken()
+      const csrfToken = csrfCookie.set(ctoken);
+
+      console.log('Creating session cookie with endpoint:', `${ternSecureEndpoint}/session`);
+
+      const req = await fetch (`${ternSecureEndpoint}/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': ctoken,
+        },
+        body: JSON.stringify({ 
+          idToken: token,
+          csrfToken: ctoken
+        }),
+        credentials: 'include'
+        });
+
+        console.log('Response status:', req.status, req.statusText);
+
+        if (!req.ok) {
+          throw new Error('Failed to create session cookie');
+        }
+
+        const res = await req.json();
+
+        if (!res.success) {
+          throw new Error(res.message || 'Failed to create session cookie');
+        }
+    } catch (error) {
+      console.error('Failed to create session cookie:', error);
+      throw error;
+    }
+  }
+  
+  private generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
 
   signOut = async(): Promise<void> => {
     await Promise.all([
