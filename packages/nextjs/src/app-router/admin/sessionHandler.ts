@@ -1,0 +1,26 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createSessionCookie } from "@tern-secure/backend"
+
+export async function createSessionHandler(request: NextRequest): Promise<NextResponse> {
+    try {
+        const body = await request.json()
+        const { idToken } = body
+
+        const res = await createSessionCookie(idToken);
+
+        const statusCode = res.success ? 200 : 
+                           res.error === 'INVALID_TOKEN' ? 400 :
+                            res.error === 'EXPIRED_TOKEN' ? 401 : 500;
+
+        return NextResponse.json(res, { status: statusCode })
+
+    } catch (error) {
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Invalid request format'
+            },
+            { status: 400 }
+        )
+    }
+}

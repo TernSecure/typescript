@@ -52,6 +52,12 @@ export function SignInStart({ socialButtonsConfig, ui, className }: SignInStartP
           navigate(`verify?${queryParams.toString()}`);
           return response;
         }
+
+        const authCookieManager = ternSecure.ternAuth.authCookieManager()
+        if (authCookieManager) {
+          const idToken = await user.getIdToken();
+          authCookieManager.createSessionCookie(idToken);
+        }
         
         //handleSignInSuccess(user);
         if (user?.emailVerified) {

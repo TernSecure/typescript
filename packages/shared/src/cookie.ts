@@ -18,3 +18,5 @@ export function cookieHandler(cookieNanme: string) {
         }
     }
 }
+
+export type CookieAttributes = Cookies.CookieAttributes;

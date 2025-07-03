@@ -34,10 +34,8 @@ import {
 } from 'firebase/auth'
 
 import { TernSecureBase, SignUp } from './internal';
-import { createCSRFCookie } from '../auth/cookies';
+import { AuthCookieManager } from './Auth';
 
-const ternSecureEndpoint = 'https://api.ternsecure.com'
-const CSRF_SESSION_COOKIE_NAME=  '__session'
 
 interface ProviderConfig {
   provider: GoogleAuthProvider | OAuthProvider;
@@ -65,6 +63,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     private authStateUnsubscribe: (() => void) | null = null;
     private _initAuthStateResolvedPromise: Promise<void>;
     private _resolveInitialAuthState!: () => void;
+    #authCookieManager: AuthCookieManager
 
     signIn: SignInResource;
     signUp: SignUpResource = new SignUp();
@@ -84,6 +83,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       this.ternSecureConfig = config;
 
       this.auth = getAuth(this.firebaseApp);
+
+      this.#authCookieManager = new AuthCookieManager();
+      console.log("TernAuth: AuthCookieManager initialized");
 
       setPersistence(this.auth, browserLocalPersistence)
        .catch(error => console.error("TernAuth: Error setting auth persistence:", error));
@@ -231,50 +233,6 @@ export class TernAuth implements TernSecureAuthProviderInterface {
 
   }
 
-  createSessionCookie = async(token: string): Promise<void> => {
-    try {
-      const csrfCookie = createCSRFCookie();
-      const ctoken = this.generateCSRFToken()
-      const csrfToken = csrfCookie.set(ctoken);
-
-      console.log('Creating session cookie with endpoint:', `${ternSecureEndpoint}/session`);
-
-      const req = await fetch (`${ternSecureEndpoint}/session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': ctoken,
-        },
-        body: JSON.stringify({ 
-          idToken: token,
-          csrfToken: ctoken
-        }),
-        credentials: 'include'
-        });
-
-        console.log('Response status:', req.status, req.statusText);
-
-        if (!req.ok) {
-          throw new Error('Failed to create session cookie');
-        }
-
-        const res = await req.json();
-
-        if (!res.success) {
-          throw new Error(res.message || 'Failed to create session cookie');
-        }
-    } catch (error) {
-      console.error('Failed to create session cookie:', error);
-      throw error;
-    }
-  }
-  
-  private generateCSRFToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-  }
-
 
   signOut = async(): Promise<void> => {
     await Promise.all([
@@ -284,7 +242,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     TernSecureBase.ternsecure.redirectToSignIn();
   }
 
-  currentSession =  async(): Promise<SignedInSession | null> => {
+  currentSession = async(): Promise<SignedInSession | null> => {
     if (!this._currentUser) {
       return null;
     }
@@ -531,5 +489,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
 
   public async checkRedirectResult(): Promise<SignInResponseTree | null> {
     return this.authRedirectResult();
+  }
+
+  public authCookieManager(): AuthCookieManager {
+    return this.#authCookieManager;
   }
 }

@@ -38,9 +38,14 @@ export async function createSessionCookie(idToken: string) {
           path: '/',
       });
       return { success: true, message: 'Session created' };
-  } catch (error) {
-      return { success: false, message: 'Failed to create session' };
-  }
+    } catch (error) {
+      const authError = handleFirebaseAuthError(error)
+      return {
+        success: false, 
+        message: authError.message || 'Failed to create session',
+        error: authError.code
+      };
+    }
 }
 
 

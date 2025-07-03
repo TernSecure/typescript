@@ -47,6 +47,9 @@ export interface TernSecureAuthProvider {
   /** Current user*/
   ternSecureUser(): TernSecureUser | null;
 
+  /** AuthCookie Manager */
+  authCookieManager(): void;
+
   /** Current session */
   currentSession: SignedInSession | null;
 

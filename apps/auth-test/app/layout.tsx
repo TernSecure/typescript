@@ -35,7 +35,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TernSecureProvider 
-          requiresVerification={true}  //default is true
+          requiresVerification={false}  //default is true
           customDomain="http://localhost:4000"
           isTernSecureDev={true}  //use popup mode. if redirect on localhost it cannot 
         > 

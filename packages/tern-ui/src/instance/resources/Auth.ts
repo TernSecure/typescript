@@ -1,12 +1,18 @@
-import { cookieHandler } from '@tern-secure/shared/cookie';
+import { cookieHandler, type CookieAttributes } from '@tern-secure/shared/cookie';
 
-interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  idToken?: string;
+const SESSION_COOKIE_NAME = '_session_cookie';
+const CSRF_COOKIE_NAME = '__session_terncf';
+
+
+type AuthToken = {
+  idToken: string | null;
 }
 
-interface AuthUser {
+type CSRFToken = {
+  token: string | null;
+}
+
+type AuthUser = {
   uid: string;
   email?: string;
   displayName?: string;
@@ -19,34 +25,91 @@ interface ApiResponse<T = any> {
   error?: string;
 }
 
-const AUTH_COOKIE_OPTIONS = {
+type CookieOptions = CookieAttributes
+
+
+const CSRF_COOKIE_OPTIONS: CookieOptions = {
   secure: true,
-  sameSite: 'strict' as const,
-  httpOnly: false, // Since this is client-side
-  expires: 7 // 7 days
+  sameSite: 'strict',
+  expires: 1 / 24 //1 hour
 };
 
 /**
  * AuthService class for managing authentication state and cookies
  * Integrates with Firebase Admin via api.ternsecure.com endpoint
  */
-export class AuthService {
-  private readonly baseUrl = 'https://api.ternsecure.com';
-  private readonly accessTokenHandler = cookieHandler('auth_access_token');
-  private readonly refreshTokenHandler = cookieHandler('auth_refresh_token');
-  private readonly idTokenHandler = cookieHandler('auth_id_token');
-  private readonly userHandler = cookieHandler('auth_user');
+export class AuthCookieManager {
+  private readonly baseUrl: string;
+  private readonly csrfCookieHandler = cookieHandler(CSRF_COOKIE_NAME);
+  private readonly sessionCookieHandler = cookieHandler(SESSION_COOKIE_NAME);
+
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || this.getApiEndpoint();
+    console.log('[AuthCookieManager] Initialized with base URL:', this.baseUrl);
+    this.ensureCSRFToken();
+  }
+  
+  private getApiEndpoint(): string {
+    const isLocalhost = window.location.hostname === 'localhost';
+    return isLocalhost ? 'http://localhost:3000/api' : `${window.location.origin}/api`;
+  }
+  
+  private generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  private ensureCSRFToken(): string {
+    let ctoken = this.getCSRFToken();
+    if (!ctoken) {
+      ctoken = this.generateCSRFToken();
+      this.setCSRFToken({ token: ctoken });
+    }
+    return ctoken;
+  }
+  
+  createSessionCookie = async(token: string): Promise<void> => {
+    try {
+      const csrfToken = this.ensureCSRFToken();
+
+      const req = await fetch (`${this.baseUrl}/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          idToken: token,
+          csrfToken: csrfToken
+        }),
+        credentials: 'include'
+      });
+
+      console.log('Response status:', req.status, req.statusText);
+      
+      if (!req.ok) {
+        throw new Error('Failed to create session cookie');
+      }
+
+      const res = await req.json();
+
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to create session cookie');
+      }
+    } catch (error) {
+      console.error('Failed to create session cookie:', error);
+      throw error;
+    }
+  }
+
 
   /**
    * Set authentication tokens in cookies
    */
-  setAuthTokens(tokens: AuthTokens): void {
+  setSessionCookie(token: AuthToken): void {
     try {
-      this.accessTokenHandler.set(tokens.accessToken, AUTH_COOKIE_OPTIONS);
-      this.refreshTokenHandler.set(tokens.refreshToken, AUTH_COOKIE_OPTIONS);
-      
-      if (tokens.idToken) {
-        this.idTokenHandler.set(tokens.idToken, AUTH_COOKIE_OPTIONS);
+      if (token.idToken) {
+        this.sessionCookieHandler.set(token.idToken, CSRF_COOKIE_OPTIONS);
       }
     } catch (error) {
       console.error('Failed to set auth tokens:', error);
@@ -57,72 +120,61 @@ export class AuthService {
   /**
    * Get authentication tokens from cookies
    */
-  getAuthTokens(): AuthTokens | null {
+  getSessionCookie(): string | undefined {
     try {
-      const accessToken = this.accessTokenHandler.get();
-      const refreshToken = this.refreshTokenHandler.get();
-      const idToken = this.idTokenHandler.get();
-
-      if (!accessToken || !refreshToken) {
-        return null;
-      }
-
-      return {
-        accessToken,
-        refreshToken,
-        ...(idToken && { idToken })
-      };
+      return this.sessionCookieHandler.get();
     } catch (error) {
       console.error('Failed to get auth tokens:', error);
-      return null;
+      return undefined
     }
   }
 
   /**
-   * Set user information in cookies
+   * Set CSRFcookie
    */
-  setUser(user: AuthUser): void {
+
+  setCSRFToken(token: CSRFToken): void {
     try {
-      this.userHandler.set(JSON.stringify(user), AUTH_COOKIE_OPTIONS);
+      if (token.token) {
+        this.csrfCookieHandler.set(token.token, CSRF_COOKIE_OPTIONS);
+      }
     } catch (error) {
-      console.error('Failed to set user data:', error);
-      throw new Error('Unable to store user information');
+      console.error('Failed to set CSRF token:', error);
+      throw new Error('Unable to store CSRF token');
     }
   }
 
   /**
-   * Get user information from cookies
+   * Get CSRF token from cookies
    */
-  getUser(): AuthUser | null {
+  getCSRFToken(): string | undefined {
     try {
-      const userData = this.userHandler.get();
-      return userData ? JSON.parse(userData) : null;
+      return this.csrfCookieHandler.get();
     } catch (error) {
-      console.error('Failed to get user data:', error);
-      return null;
+      console.error('Failed to get CSRF token:', error);
+      return undefined;
     }
   }
 
-  /**
-   * Check if user is authenticated by verifying tokens
-   */
-  isAuthenticated(): boolean {
-    const tokens = this.getAuthTokens();
-    return tokens !== null && !!tokens.accessToken && !!tokens.refreshToken;
-  }
 
   /**
    * Clear all authentication cookies
    */
   clearAuth(): void {
     try {
-      this.accessTokenHandler.remove();
-      this.refreshTokenHandler.remove();
-      this.idTokenHandler.remove();
-      this.userHandler.remove();
+      this.sessionCookieHandler.remove();
+      this.csrfCookieHandler.remove();
     } catch (error) {
       console.error('Failed to clear auth cookies:', error);
     }
+  }
+
+  /**
+   * Check if user has valid session cookie
+   */
+  hasValidSession(): boolean {
+    const sessionToken = this.getSessionCookie();
+    return !!sessionToken;
   }
 
   /**
@@ -130,7 +182,7 @@ export class AuthService {
    */
   async verifyToken(token?: string): Promise<ApiResponse<AuthUser>> {
     try {
-      const tokenToVerify = token || this.accessTokenHandler.get();
+      const tokenToVerify = token
       
       if (!tokenToVerify) {
         return {
@@ -169,59 +221,13 @@ export class AuthService {
     }
   }
 
-  /**
-   * Refresh authentication tokens
-   */
-  async refreshTokens(): Promise<ApiResponse<AuthTokens>> {
-    try {
-      const refreshToken = this.refreshTokenHandler.get();
-      
-      if (!refreshToken) {
-        return {
-          success: false,
-          error: 'No refresh token available'
-        };
-      }
-
-      const response = await fetch(`${this.baseUrl}/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refreshToken })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'Token refresh failed'
-        };
-      }
-
-      // Update cookies with new tokens
-      this.setAuthTokens(data.tokens);
-
-      return {
-        success: true,
-        data: data.tokens
-      };
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      return {
-        success: false,
-        error: 'Network error during token refresh'
-      };
-    }
-  }
 
   /**
    * Sign out user by clearing cookies and calling API
    */
   async signOut(): Promise<ApiResponse> {
     try {
-      const accessToken = this.accessTokenHandler.get();
+      const accessToken = this.getSessionCookie();
       
       // Clear cookies first
       this.clearAuth();
@@ -250,21 +256,4 @@ export class AuthService {
       };
     }
   }
-
-  /**
-   * Get current access token
-   */
-  getAccessToken(): string | undefined {
-    return this.accessTokenHandler.get();
-  }
-
-  /**
-   * Get current refresh token
-   */
-  getRefreshToken(): string | undefined {
-    return this.refreshTokenHandler.get();
-  }
 }
-
-// Create and export a singleton instance
-export const authService = new AuthService();
