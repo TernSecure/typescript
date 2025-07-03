@@ -36,10 +36,8 @@ export function SocialSignIn({
   mode = 'popup'
 }: SocialSignInProps) {
   const signIn  = useAuthSignIn();
-  const { isLoading, handleSignInStart } = useSignInContext();
 
   const handleSocialSignIn = useCallback(async (provider: 'google' | 'microsoft') => {
-    handleSignInStart();
     try {
 
       const result = await signIn.withSocialProvider(provider, { mode });
@@ -53,7 +51,7 @@ export function SocialSignIn({
     } catch (error) {
       onError?.(error as Error)
     }
-  }, [signIn, onError, onSuccess, mode, handleSignInStart])
+  }, [signIn, onError, onSuccess, mode])
 
   const showGoogle = config?.google !== false
   const showMicrosoft = config?.microsoft !== false

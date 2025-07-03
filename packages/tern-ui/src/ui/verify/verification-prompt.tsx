@@ -10,7 +10,6 @@ export function VerificationPrompt() {
   const signIn = useAuthSignIn();
   const ternSecure = useTernSecure();
   const { 
-    isLoading, 
     handleSignInError,
     handleSignInSuccess,
   } = useSignInContext();
@@ -50,7 +49,7 @@ export function VerificationPrompt() {
   };
 
   const handleResend = async () => {
-    if (isProcessing || isLoading) return;
+    if (isProcessing) return;
     
     setIsProcessing(true);
     try {
@@ -81,7 +80,7 @@ export function VerificationPrompt() {
   };
 
   const handleCheck = async () => {
-    if (isProcessing || isLoading) return;
+    if (isProcessing) return;
     
     setIsProcessing(true);
     try {
@@ -120,7 +119,7 @@ export function VerificationPrompt() {
     }
   };
 
-  const isDisabled = isLoading || isProcessing;
+  const isDisabled = isProcessing;
 
   return (
     <div className="flex flex-col gap-6 text-center py-4">

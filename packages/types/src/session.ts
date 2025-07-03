@@ -86,3 +86,17 @@ export type TernSecureSessionTree = ActiveSession | ExpiredSession;
 
 
 export type SignedInSession = ActiveSession | PendingSession | ExpiredSession;
+
+
+export interface SessionParams {
+  idToken: string;
+  csrfToken?: string;
+}
+
+export interface SessionResult {
+  success: boolean;
+  message: string;
+  expiresIn?: number;
+  error?: string;
+  cookieSet?: boolean;
+}

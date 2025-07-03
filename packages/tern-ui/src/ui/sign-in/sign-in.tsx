@@ -4,7 +4,8 @@ import { useTernSecure } from '@tern-secure/shared/react';
 import { SignInProvider } from '../../ctx/components/SignIn';
 import { Route, Switch } from '../../components/router';
 import { SignInStart } from './sign-in-start';
-import { PasswordResetStep } from './password-reset-step';
+import { PasswordReset } from './password-reset';
+import { PasswordResetSuccess } from './password-reset-success';
 import { VerificationStep } from '../verify';
 import { Card, CardContent } from '../../components/elements';
 
@@ -31,7 +32,10 @@ function SignInRouter() {
   return (
     <Switch>
       <Route path='password-reset'>
-        <PasswordResetStep />
+        <PasswordReset />
+      </Route>
+      <Route path='password-reset-success'>
+        <PasswordResetSuccess />
       </Route>
       <Route path='verify'>
         <VerificationStep />

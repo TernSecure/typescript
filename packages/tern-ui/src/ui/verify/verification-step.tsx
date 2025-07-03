@@ -12,7 +12,6 @@ export function VerificationStep() {
   const signIn = useAuthSignIn();
   const ternSecure = useTernSecure();
   const { 
-    isLoading, 
     handleSignInError,
     handleSignInSuccess,
   } = useSignInContext();
@@ -65,7 +64,7 @@ export function VerificationStep() {
   };
 
   const handleResend = async () => {
-    if (isProcessing || isLoading) return;
+    if (isProcessing) return;
     
     setIsProcessing(true);
     try {
@@ -98,7 +97,7 @@ export function VerificationStep() {
   };
 
   const handleCheck = async () => {
-    if (isProcessing || isLoading) return;
+    if (isProcessing) return;
     
     setIsProcessing(true);
     try {
@@ -137,7 +136,7 @@ export function VerificationStep() {
     }
   };
 
-  const isDisabled = isLoading || isProcessing;
+  const isDisabled = isProcessing;
 
   const renderPromptStep = () => (
     <div className="flex flex-col gap-6 text-center py-4">

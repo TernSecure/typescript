@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import { FormErrors, FormButton } from '../../utils/form'
-import { useAppForm, Button } from '../../components/elements'
+import { useAppForm, Button, useCardState } from '../../components/elements'
 import { useTernSecure } from '@tern-secure/shared/react'
 import type { SignInResponseTree, TernSecureUser } from '@tern-secure/types'
 import { useAuthState } from '../../ctx'
 import { cn } from './../../lib/utils'
-import { useSignInContext } from '../../ctx/components/SignIn'
 
 
 
@@ -34,9 +33,7 @@ export function EmailSignIn({
   signInWithEmail,
   onForgotPassword
 }: EmailSignInProps) {
-  const ternSecure = useTernSecure();
-  const authState = useAuthState();
-  const { isLoading, clearError } = useSignInContext();
+  const card = useCardState()
 
   const [formError, setFormError] = useState<SignInResponseTree | null>(null);
 
@@ -52,7 +49,7 @@ export function EmailSignIn({
         if (signInWithEmail) {
           const res = await signInWithEmail(value.email, value.password)
           if (!res.success) {
-            setFormError({
+            card.setError({
               success: false,
               error: res.error,
               message: res.message,
@@ -63,12 +60,8 @@ export function EmailSignIn({
           }
 
           if (res.user) {
-            //const requiresVerification = ternSecure.requiresVerification
-            //const isFullyAuthenticated = res.error
             onSuccess?.(res.user)
-        }
-        //ternSecure.redirectAfterSignIn();
-        //onSuccess?.(res.user)
+          }
         }
       } catch (error) {
         onError?.(error as Error)
@@ -89,7 +82,7 @@ export function EmailSignIn({
       className="space-y-4"
     >
 
-      <FormErrors errors={formError?.message || formError?.error || form.state.errors} />
+      {/*<FormErrors errors={formError?.message || formError?.error || form.state.errors} />*/}
       <form.AppField name="email">
         {(field) => (
           <field.EmailField

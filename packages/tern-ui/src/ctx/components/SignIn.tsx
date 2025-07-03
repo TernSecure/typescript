@@ -20,11 +20,6 @@ import { useTernSecureOptions } from '../TernSecureOptions'
 
 
 interface SignInContextType extends Omit<SignInCtx, 'forceRedirectUrl' | 'signInForceRedirectUrl'> {
-  isError: boolean
-  isLoading: boolean
-  error: AuthErrorTree | null
-  clearError: () => void
-  handleSignInStart: () => void
   handleSignInSuccess: (user?: TernSecureUser | null) => void
   handleSignInError: (error: AuthErrorTree) => void
   redirectAfterSignIn: () => void
@@ -34,11 +29,6 @@ interface SignInContextType extends Omit<SignInCtx, 'forceRedirectUrl' | 'signIn
 }
 
 const SignInContext = createContext<SignInContextType>({
-  isError: false,
-  isLoading: false,
-  error: null,
-  clearError: () => {},
-  handleSignInStart: () => {},
   handleSignInSuccess: () => {},
   handleSignInError: () => {},
   redirectAfterSignIn: () => {},
@@ -67,8 +57,6 @@ export function SignInProvider({
 }: SignInProviderProps) {
   const ternSecure = useTernSecure()
   const ternSecureOptions = useTernSecureOptions()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<AuthErrorTree | null>(null)
   const currentParams = useMemo(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search)
@@ -98,31 +86,14 @@ export function SignInProvider({
   }, [ternSecure])
 
 
-
-  // Core authentication lifecycle handlers
-  const handleSignInStart = useCallback(() => {
-    setIsLoading(true)
-    setError(null)
-  }, [])
-
   const handleSignInSuccess = useCallback((user?: TernSecureUser | null) => {
-    setIsLoading(false)
-    setError(null)
-
     onSuccess?.(user || null)
-    
     redirectAfterSignIn()
   }, [onSuccess, redirectAfterSignIn])
 
   const handleSignInError = useCallback((authError: AuthErrorTree) => {
-    setIsLoading(false)
-    setError(authError)
     onError?.(authError)
   }, [onError])
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
 
   const checkRedirectResult = useCallback(async (): Promise<void> => {
     try {
@@ -163,11 +134,6 @@ export function SignInProvider({
   }, { stringify: true, skipOrigin: false }) as string;
 
   const contextValue: SignInContextType = useMemo(() => ({
-    isError: !!error,
-    isLoading,
-    error,
-    clearError,
-    handleSignInStart,
     handleSignInSuccess,
     handleSignInError,
     redirectAfterSignIn,
@@ -177,10 +143,6 @@ export function SignInProvider({
     onError,
     onSuccess,
   }), [
-    error,
-    isLoading,
-    clearError,
-    handleSignInStart,
     handleSignInSuccess,
     handleSignInError,
     redirectAfterSignIn,

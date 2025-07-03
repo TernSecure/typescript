@@ -5,7 +5,6 @@ import {
 import type { TernSecureNextProps } from "../../types"
 import { allNextProviderPropsWithEnv } from "../../utils/allNextProviderProps"
 import { TernUIScript } from "../../utils/tern-ui-script";
-import { useRouter } from 'next/compat/router';
 
 
 

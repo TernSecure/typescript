@@ -23,8 +23,6 @@ import {
     buildURL
 } from '../utils/construct'
 
-import { AuthCookieManager } from './resources/Auth';
-
 
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';

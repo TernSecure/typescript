@@ -35,8 +35,7 @@ const CSRF_COOKIE_OPTIONS: CookieOptions = {
 };
 
 /**
- * AuthService class for managing authentication state and cookies
- * Integrates with Firebase Admin via api.ternsecure.com endpoint
+ * AuthCookieManger class for managing authentication state and cookies
  */
 export class AuthCookieManager {
   private readonly baseUrl: string;
@@ -52,6 +51,29 @@ export class AuthCookieManager {
   private getApiEndpoint(): string {
     const isLocalhost = window.location.hostname === 'localhost';
     return isLocalhost ? 'http://localhost:3000/api' : `${window.location.origin}/api`;
+  }
+
+  private async validateApiEndpoint(): Promise<void> {
+    try {
+      const testResponse = await fetch(`${this.baseUrl}/session`, {
+        method: 'OPTIONS',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!testResponse.ok && testResponse.status === 404) {
+        const error = new Error(`API endpoint not found: Please create: ${this.baseUrl}/session\n\nExample:\n// app/api/session/route.ts\nimport { createSessionHandler } from '@tern-secure/nextjs/admin'\nexport const POST = createSessionHandler`);
+        console.error('[AuthCookieManager] API endpoint validation failed:', error);
+        throw error;
+      }
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new Error(`Cannot connect to session API at ${this.baseUrl}/session. Please check your API configuration.`);
+        console.error('[AuthCookieManager] Network error:', networkError);
+        throw networkError;
+      }
+      throw error;
+    }
+
   }
   
   private generateCSRFToken(): string {
@@ -71,6 +93,9 @@ export class AuthCookieManager {
   
   createSessionCookie = async(token: string): Promise<void> => {
     try {
+      console.log('[AuthCookieManager] Starting session cookie creation');
+
+      await this.validateApiEndpoint();
       const csrfToken = this.ensureCSRFToken();
 
       const req = await fetch (`${this.baseUrl}/session`, {
@@ -85,7 +110,7 @@ export class AuthCookieManager {
         credentials: 'include'
       });
 
-      console.log('Response status:', req.status, req.statusText);
+      console.log('[AuthCookieManager] Session API response:', req.status, req.statusText);
       
       if (!req.ok) {
         throw new Error('Failed to create session cookie');
@@ -94,13 +119,33 @@ export class AuthCookieManager {
       const res = await req.json();
 
       if (!res.success) {
-        throw new Error(res.message || 'Failed to create session cookie');
+        const error = new Error(res.message || 'Session creation failed');
+        console.error('[AuthCookieManager] Session creation unsuccessful:', {
+          error: res.error,
+          message: res.message,
+          cookieSet: res.cookieSet
+        });
+        throw error;
       }
+
+      if (res.cookieSet === false) {
+        const error = new Error('Session si created but cookie is not set properly.');
+        console.error('[AuthCookieManager] Cookie setting failed:', error);
+        throw error;
+      }
+
+      console.log('[AuthCookieManager] Session cookie created successfully');
+
     } catch (error) {
       console.error('Failed to create session cookie:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          throw new Error(`Session API endpoint not found. Please create: ${this.baseUrl}/session\n\nExample:\n// app/api/session/route.ts\nimport { createSessionHandler } from '@tern-secure/nextjs/admin'\nexport const POST = createSessionHandler`);
+        }
+      }
       throw error;
     }
-  }
+  };
 
 
   /**
@@ -175,85 +220,5 @@ export class AuthCookieManager {
   hasValidSession(): boolean {
     const sessionToken = this.getSessionCookie();
     return !!sessionToken;
-  }
-
-  /**
-   * Verify token with Firebase Admin via API
-   */
-  async verifyToken(token?: string): Promise<ApiResponse<AuthUser>> {
-    try {
-      const tokenToVerify = token
-      
-      if (!tokenToVerify) {
-        return {
-          success: false,
-          error: 'No token provided'
-        };
-      }
-
-      const response = await fetch(`${this.baseUrl}/auth/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tokenToVerify}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'Token verification failed'
-        };
-      }
-
-      return {
-        success: true,
-        data: data.user
-      };
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return {
-        success: false,
-        error: 'Network error during token verification'
-      };
-    }
-  }
-
-
-  /**
-   * Sign out user by clearing cookies and calling API
-   */
-  async signOut(): Promise<ApiResponse> {
-    try {
-      const accessToken = this.getSessionCookie();
-      
-      // Clear cookies first
-      this.clearAuth();
-
-      // Call API to invalidate tokens on server
-      if (accessToken) {
-        await fetch(`${this.baseUrl}/auth/signout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-      }
-
-      return {
-        success: true
-      };
-    } catch (error) {
-      console.error('Sign out failed:', error);
-      // Still clear cookies even if API call fails
-      this.clearAuth();
-      return {
-        success: false,
-        error: 'Sign out completed locally but server notification failed'
-      };
-    }
   }
 }
