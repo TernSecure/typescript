@@ -1,3 +1,4 @@
+export * from './background'
 export * from '../customize/FieldControl'
 export * from '../customize/Form'
 export * from './card'

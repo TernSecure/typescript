@@ -4,6 +4,7 @@ import { useAuthSignIn } from '../../ctx';
 import { useSignInContext } from '../../ctx/components/SignIn';
 import { useTernSecure } from '@tern-secure/shared/react';
 import { 
+  AuthBackground,
   Card,
   CardTitle,
   CardDescription,
