@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
 import { FormErrors, FormButton } from '../../utils/form'
 import { useAppForm, Button, useCardState } from '../../components/elements'
-import { useTernSecure } from '@tern-secure/shared/react'
 import type { SignInResponseTree, TernSecureUser } from '@tern-secure/types'
-import { useAuthState } from '../../ctx'
 import { cn } from './../../lib/utils'
 
 
@@ -59,7 +57,7 @@ export function EmailSignIn({
             return 
           }
 
-          if (res.user) {
+          if (res.user && onSuccess) {
             onSuccess?.(res.user)
           }
         }

@@ -40,18 +40,15 @@ const createAuthError = (
   let response: unknown;
   
   if (source && typeof source === 'object' && 'success' in source && !source.success) {
-    // Handle SignInResponseTree (failed response)
     const signInResponse = source as SignInResponseTree;
     message = signInResponse.message || 'Operation failed';
     code = signInResponse.error || fallbackCode;
     response = signInResponse;
   } else if (source instanceof Error) {
-    // Handle Error objects
     message = source.message;
     code = fallbackCode;
     response = source;
   } else {
-    // Handle unknown errors
     message = 'Operation failed';
     code = fallbackCode;
     response = source;
@@ -108,7 +105,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
   };
   
   const handleSuccess = (user: TernSecureUser | null) => {
-    handleSignInSuccess(user);
+
   };
   
   const handlePostAuthentication = async (user: TernSecureUser) => {

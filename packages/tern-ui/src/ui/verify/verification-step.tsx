@@ -1,33 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../../components/elements/button';
+import { 
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+  Button,
+  Alert,
+  AlertDescription,
+  CardStateProvider,
+  useCardState
+} from '../../components/elements';
 import { cn } from '../../lib/utils';
 import { useAuthSignIn } from '../../ctx';
 import { useTernSecure } from '@tern-secure/shared/react';
 import { useSignInContext } from '../../ctx/components/SignIn';
+import { useRouter } from '../../components/router';
 import type { AuthErrorTree } from '@tern-secure/types';
 
-type VerificationFlowStep = 'prompt' | 'sent';
+type VerificationStatus = 'prompt' | 'sent' | 'success';
 
-export function VerificationStep() {
+function VerificationStepInternal({ className }: { className?: string }) {
   const signIn = useAuthSignIn();
+  const cardState = useCardState();
   const ternSecure = useTernSecure();
+  const { navigate } = useRouter();
   const { 
-    handleSignInError,
     handleSignInSuccess,
+    redirectAfterSignIn
   } = useSignInContext();
   
-  const [currentStep, setCurrentStep] = useState<VerificationFlowStep>('prompt');
+  const [status, setStatus] = useState<VerificationStatus>('prompt');
   const [isProcessing, setIsProcessing] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
-  // Get current user and email from auth state
   const currentUser = ternSecure.auth?.user;
   const email = currentUser?.email;
 
-  // Countdown timer for resend button
   useEffect(() => {
-    if (currentStep === 'sent' && countdown > 0) {
+    if (status === 'sent' && countdown > 0) {
       const timer = setTimeout(() => {
         setCountdown(countdown - 1);
       }, 1000);
@@ -35,220 +47,209 @@ export function VerificationStep() {
     } else if (countdown <= 0) {
       setCanResend(true);
     }
-    return undefined;
-  }, [currentStep, countdown]);
+  }, [status, countdown]);
 
-  const createAuthError = (
-    message: string, 
-    code: string, 
-    name: string = 'VerificationError',
-    response?: any
-  ): AuthErrorTree => {
-    const error = new Error(message) as AuthErrorTree;
-    error.name = name;
-    error.code = code;
-    error.response = response;
-    return error;
-  };
+  const handleBackToSignIn = () => navigate('../');
 
-  const handleVerificationSuccess = () => {
-    if (currentUser) {
-      handleSignInSuccess(currentUser);
-      ternSecure.redirectAfterSignIn();
+  const handleCheck = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    cardState.setLoading();
+
+    try {
+      if (!currentUser) {
+        throw new Error('No user found for verification check');
+      }
+
+      await currentUser.reload();
+      
+      if (currentUser.emailVerified) {
+        setStatus('success');
+        handleSignInSuccess(currentUser);
+        setTimeout(() => {
+          redirectAfterSignIn();
+        }, 2000);
+      } else {
+        throw new Error('Email not yet verified. Please check your email and try again.');
+      }
+    } catch (error) {
+      cardState.setError({
+        name: 'VerificationError',
+        message: error instanceof Error ? error.message : 'Failed to check verification status',
+        code: 'VERIFICATION_CHECK_FAILED',
+        response: error
+      } as AuthErrorTree);
+    } finally {
+      setIsProcessing(false);
+      cardState.setIdle();
     }
-  };
-
-  const handleBackToSignIn = () => {
-    // Navigate back to sign-in using context
-    //navigateToSignIn();
   };
 
   const handleResend = async () => {
     if (isProcessing) return;
     
     setIsProcessing(true);
+    cardState.setLoading();
+
     try {
       const result = await signIn.resendEmailVerification?.();
       if (result?.success) {
-        setCurrentStep('sent');
+        setStatus('sent');
         setCountdown(60);
         setCanResend(false);
       } else {
-        const error = createAuthError(
-          result?.message || 'Failed to resend verification email',
-          'VERIFICATION_RESEND_FAILED',
-          'VerificationError',
-          result
-        );
-        handleSignInError(error);
+        throw new Error(result?.message || 'Failed to resend verification email');
       }
     } catch (error) {
-      const authError = createAuthError(
-        error instanceof Error ? error.message : 'Failed to resend verification email',
-        'VERIFICATION_RESEND_FAILED',
-        'VerificationError',
-        error
-      );
-      handleSignInError(authError);
-      console.error('Failed to resend verification:', error);
+      cardState.setError({
+        name: 'VerificationError',
+        message: error instanceof Error ? error.message : 'Failed to send verification email',
+        code: 'VERIFICATION_RESEND_FAILED',
+        response: error
+      } as AuthErrorTree);
     } finally {
       setIsProcessing(false);
+      cardState.setIdle();
     }
   };
 
-  const handleCheck = async () => {
-    if (isProcessing) return;
-    
-    setIsProcessing(true);
-    try {
-      if (!currentUser) {
-        const error = createAuthError(
-          'No user found for verification check',
-          'NO_USER_FOUND',
-          'VerificationError'
+  const renderContent = () => {
+    switch (status) {
+      case 'success':
+        return (
+          <>
+            <CardHeader className="space-y-1 text-center">
+              <div className="w-12 h-12 mx-auto bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">
+                ✓
+              </div>
+              <CardTitle className="font-bold">Email Verified</CardTitle>
+              <CardDescription>Redirecting you to your account...</CardDescription>
+            </CardHeader>
+          </>
         );
-        handleSignInError(error);
-        return;
-      }
 
-      await currentUser.reload();
-      if (currentUser.emailVerified) {
-        handleVerificationSuccess();
-      } else {
-        const error = createAuthError(
-          'Email not yet verified. Please check your email and try again.',
-          'EMAIL_NOT_VERIFIED',
-          'VerificationError'
+      case 'sent':
+        return (
+          <>
+            <CardHeader className="space-y-1 text-center">
+              <CardTitle className="font-bold">Check your email</CardTitle>
+              <CardDescription>We&apos;ve sent you a verification link</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {email && (
+                <div className="bg-gray-50 px-4 py-3 rounded-md font-mono text-sm text-gray-700 break-all">
+                  {email}
+                </div>
+              )}
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={handleCheck}
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? 'Checking...' : 'I\'ve verified my email'}
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isProcessing || !canResend}
+                  className={cn(
+                    "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
+                    "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {canResend ? 
+                    (isProcessing ? 'Sending...' : 'Resend verification email') : 
+                    <>Resend in <span className="text-gray-400 text-xs">{countdown}s</span></>
+                  }
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBackToSignIn}
+                  disabled={isProcessing}
+                  className={cn(
+                    "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
+                    "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  Back to sign in
+                </button>
+              </div>
+            </CardContent>
+          </>
         );
-        handleSignInError(error);
-      }
-    } catch (error) {
-      const authError = createAuthError(
-        error instanceof Error ? error.message : 'Failed to check verification status',
-        'VERIFICATION_CHECK_FAILED',
-        'VerificationError',
-        error
-      );
-      handleSignInError(authError);
-      console.error('Failed to check verification:', error);
-    } finally {
-      setIsProcessing(false);
+
+      default: // prompt
+        return (
+          <>
+            <CardHeader className="space-y-1 text-center">
+              <CardTitle className="font-bold">Verify your email</CardTitle>
+              <CardDescription>Please verify your email address to continue</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {email && (
+                <div className="bg-gray-50 px-4 py-3 rounded-md font-mono text-sm text-gray-700 break-all">
+                  {email}
+                </div>
+              )}
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={handleCheck}
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? 'Checking...' : 'I\'ve verified my email'}
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isProcessing}
+                  className={cn(
+                    "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
+                    "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {isProcessing ? 'Sending...' : 'Resend verification email'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBackToSignIn}
+                  disabled={isProcessing}
+                  className={cn(
+                    "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
+                    "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                >
+                  Back to sign in
+                </button>
+              </div>
+            </CardContent>
+          </>
+        );
     }
   };
 
-  const isDisabled = isProcessing;
-
-  const renderPromptStep = () => (
-    <div className="flex flex-col gap-6 text-center py-4">
-      <p className="text-gray-500 text-sm leading-relaxed m-0">
-        We need to verify your email address before you can continue.
-      </p>
-
-      {email && (
-        <div className="bg-gray-50 px-4 py-3 rounded-md font-mono text-sm text-gray-700 break-all">
-          {email}
-        </div>
-      )}
-
-      <p className="text-gray-500 text-sm leading-relaxed m-0">
-        Please check your email and click the verification link. 
-        Once verified, click the button below to continue.
-      </p>
-
-      <div className="flex flex-col gap-3">
-        <Button
-          onClick={handleCheck}
-          disabled={isDisabled}
-          className="w-full"
-        >
-          {isProcessing ? 'Checking...' : 'I\'ve verified my email'}
-        </Button>
-
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={isDisabled}
-          className={cn(
-            "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
-            "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {isProcessing ? 'Sending...' : 'Resend verification email'}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleBackToSignIn}
-          disabled={isDisabled}
-          className={cn(
-            "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
-            "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          Back to sign in
-        </button>
-      </div>
+  return (
+    <div className="relative flex items-center justify-center">
+      <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
+        {cardState.error && (
+          <Alert variant="destructive" className="animate-in fade-in-50">
+            <AlertDescription>
+              {cardState.error.message}
+            </AlertDescription>
+          </Alert>
+        )}
+        {renderContent()}
+      </Card>
     </div>
   );
+}
 
-  const renderSentStep = () => (
-    <div className="flex flex-col gap-6 text-center py-4">
-      <div className="w-12 h-12 mx-auto bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">
-        ✓
-      </div>
-
-      <p className="text-gray-500 text-sm leading-relaxed m-0">
-        Verification email sent! Check your inbox and click the verification link.
-      </p>
-
-      {email && (
-        <div className="bg-gray-50 px-4 py-3 rounded-md font-mono text-sm text-gray-700 break-all">
-          {email}
-        </div>
-      )}
-
-      <p className="text-gray-500 text-sm leading-relaxed m-0">
-        Don&apos;t see the email? Check your spam folder or request a new one.
-      </p>
-
-      <div className="flex flex-col gap-3">
-        <Button
-          onClick={handleCheck}
-          disabled={isDisabled}
-          className="w-full"
-        >
-          {isProcessing ? 'Checking...' : 'I&apos;ve verified my email'}
-        </Button>
-
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={isDisabled || !canResend}
-          className={cn(
-            "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
-            "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {canResend ? 
-            (isProcessing ? 'Sending...' : 'Resend verification email') : 
-            <>Resend in <span className="text-gray-400 text-xs">{countdown}s</span></>
-          }
-        </button>
-
-        <button
-          type="button"
-          onClick={handleBackToSignIn}
-          disabled={isDisabled}
-          className={cn(
-            "bg-transparent border-none text-blue-600 text-sm underline cursor-pointer",
-            "hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          Back to sign in
-        </button>
-      </div>
-    </div>
+export function VerificationStep() {
+  return (
+    <CardStateProvider>
+      <VerificationStepInternal />
+    </CardStateProvider>
   );
-
-  return currentStep === 'sent' ? renderSentStep() : renderPromptStep();
 }

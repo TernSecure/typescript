@@ -6,22 +6,17 @@ import {
   CardDescription,
   Button,
 } from '../../components/elements';
+import { useRouter } from '../../components/router';
 import { cn } from '../../lib/utils';
 
-interface PasswordResetSuccessProps {
-  email: string;
-  onBackToSignIn: () => void;
-  className?: string;
-}
 
-export function PasswordResetSuccess({ 
-  email, 
-  onBackToSignIn,
-  className 
-}: PasswordResetSuccessProps) {
+export function PasswordResetSuccess() {
+  const { navigate } = useRouter();
+  const onBackToSignIn = () => navigate('../');
+
   return (
     <div className="relative flex items-center justify-center">
-      <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
+      <Card className={cn('w-full max-w-md mx-auto mt-8')}>
         <CardHeader className="space-y-1 text-center">
           <div className="w-12 h-12 mx-auto bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">
             ✓
@@ -32,11 +27,6 @@ export function PasswordResetSuccess({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {email && (
-            <div className="bg-muted px-4 py-3 rounded-md font-mono text-sm text-muted-foreground break-all">
-              {email}
-            </div>
-          )}
           <Button
             onClick={onBackToSignIn}
             className="w-full"

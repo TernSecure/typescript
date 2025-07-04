@@ -14,7 +14,6 @@ import {
   CardStateProvider,
 } from '../../components/elements';
 import { useAuthSignIn } from '../../ctx';
-import { useSignInContext } from '../../ctx/components/SignIn';
 import type { AuthErrorTree } from '@tern-secure/types';
 import { useRouter } from '../../components/router';
 import { cn } from '../../lib/utils';
@@ -22,27 +21,13 @@ import { cn } from '../../lib/utils';
 export function PasswordResetInternal({ className }: { className?: string }) {
   const signIn = useAuthSignIn();
   const cardState = useCardState();
-  const { 
-    handleSignInError,
-  } = useSignInContext();
   
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { navigate } = useRouter();
 
-  const createAuthError = (
-    message: string, 
-    code: string, 
-    name: string = 'PasswordResetError',
-    response?: any
-  ): AuthErrorTree => {
-    const error = new Error(message) as AuthErrorTree;
-    error.name = name;
-    error.code = code;
-    error.response = response;
-    return error;
-  };
+
 
   const handleBackToSignIn = () => navigate('../');
 
@@ -57,7 +42,7 @@ export function PasswordResetInternal({ className }: { className?: string }) {
         message: 'Please enter your email address',
         code: 'EMPTY_EMAIL',
         name: 'ValidationError',
-      });
+      } as AuthErrorTree);
       return;
     }
 
@@ -66,7 +51,7 @@ export function PasswordResetInternal({ className }: { className?: string }) {
         message: 'Please enter a valid email address',
         code: 'INVALID_EMAIL',
         name: 'ValidationError',
-      });
+      } as AuthErrorTree);
       return;
     }
     cardState.setLoading();
@@ -77,13 +62,13 @@ export function PasswordResetInternal({ className }: { className?: string }) {
       setIsSuccess(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
-      const authError = createAuthError(
-        errorMessage,
-        'PASSWORD_RESET_FAILED',
-        'PasswordResetError',
-        error
-      );
-      handleSignInError(authError);
+      const authError: AuthErrorTree = {
+        name: 'PasswordResetError',
+        message: errorMessage,
+        code: 'PASSWORD_RESET_FAILED',
+        response: error,
+      }
+      cardState.setError(authError);
     } finally {
       setIsSubmitting(false);
       cardState.setIdle();

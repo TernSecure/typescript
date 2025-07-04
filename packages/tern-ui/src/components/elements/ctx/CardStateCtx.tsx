@@ -13,7 +13,7 @@ interface CardStateCtxValue extends CardState {
     setCardState: (state: Partial<CardState>) => void
     setStatus: (status: CardStatus) => void
     setLoading: () => void
-    setError: (error: SignInResponseTree) => void
+    setError: (error: SignInResponseTree | AuthErrorTree) => void
     setIdle: () => void
     clearError: () => void
     isLoading: boolean
@@ -52,12 +52,17 @@ function CardStateProvider({ children }: CardStateProviderProps) {
         setCardStateInternal(prev => ({ ...prev, status: 'loading', error: null }))
     }, [])
 
-    const setError = useCallback((error: SignInResponseTree) => {
-        setCardStateInternal(prev => ({ ...prev, status: 'error', error }))
-    }, [])
-
-    const setSuccess = useCallback(() => {
-        setCardStateInternal(prev => ({ ...prev, status: 'success', error: null }))
+    const setError = useCallback((error: SignInResponseTree | AuthErrorTree) => {
+        setCardStateInternal(prev => ({
+            ...prev, 
+            status: 'error', 
+            error : {
+                success: false,
+                message: error.message,
+                error: 'code' in error ? error.code : undefined,
+                ...(error as any)
+            } 
+        }))
     }, [])
 
     const setIdle = useCallback(() => {

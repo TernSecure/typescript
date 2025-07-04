@@ -20,7 +20,7 @@ import { useTernSecureOptions } from '../TernSecureOptions'
 
 
 interface SignInContextType extends Omit<SignInCtx, 'forceRedirectUrl' | 'signInForceRedirectUrl'> {
-  handleSignInSuccess: (user?: TernSecureUser | null) => void
+  handleSignInSuccess: (user?: TernSecureUser | null, options?: { skipRedirect?: boolean }) => void
   handleSignInError: (error: AuthErrorTree) => void
   redirectAfterSignIn: () => void
   SignInUrl: string
@@ -78,17 +78,18 @@ export function SignInProvider({
   }, [])
 
   const redirectAfterSignIn = useCallback(() => {
-    try {
       ternSecure.redirectAfterSignIn()
-    } catch (error) {
-      console.error('[SignInProvider] Error redirecting after sign in:', error)
-    }
   }, [ternSecure])
 
 
-  const handleSignInSuccess = useCallback((user?: TernSecureUser | null) => {
+  const handleSignInSuccess = useCallback((
+    user?: TernSecureUser | null,
+    options?: { skipRedirect?: boolean }
+  ) => {
     onSuccess?.(user || null)
-    redirectAfterSignIn()
+    if (!options?.skipRedirect) {
+      redirectAfterSignIn()
+    }
   }, [onSuccess, redirectAfterSignIn])
 
   const handleSignInError = useCallback((authError: AuthErrorTree) => {
