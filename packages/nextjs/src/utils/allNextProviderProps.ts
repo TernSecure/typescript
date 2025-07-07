@@ -37,6 +37,9 @@ export const allNextProviderPropsWithEnv = (
     signUpUrl: process.env.NEXT_PUBLIC_SIGN_UP_URL,
     signInForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_IN_FORCE_REDIRECT_URL,
     signUpForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_UP_FORCE_REDIRECT_URL,
+    projectIdAdmin: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
   };
 
   const ternSecureConfig = {

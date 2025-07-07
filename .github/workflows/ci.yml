@@ -51,10 +51,10 @@ jobs:
         shell: bash
         
       - name: Build
-        run: pnpm turbo build
+        run: pnpm turbo build --filter=!./apps/auth-test
         
       - name: Lint
-        run: npm run lint
+        run: pnpm turbo lint
 
       - name: Check branch status
         run: |

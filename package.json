@@ -2,7 +2,7 @@
   "name": "@tern-secure/ts",
   "private": true,
   "scripts": {
-    "build": "turbo build --filter='!./apps/auth-test'",
+    "build": "turbo build --filter=!./apps/auth-test",
     "dev": "turbo dev",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
