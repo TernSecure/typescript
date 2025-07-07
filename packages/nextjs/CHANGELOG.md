@@ -1,5 +1,11 @@
 # @tern-secure/nextjs
 
+## 5.1.2
+
+### Patch Changes
+
+- 246f528: refactor: remove unused exports and dependencies from admin module and tsup config
+
 ## 5.1.1
 
 ### Patch Changes
