@@ -1,5 +1,11 @@
 # @tern-secure/nextjs
 
+## 5.1.1
+
+### Patch Changes
+
+- f784994: fix: added backend package as dependency
+
 ## 5.1.0
 
 ### Minor Changes
