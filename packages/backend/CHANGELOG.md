@@ -1,5 +1,11 @@
 # @tern-secure/backend
 
+## 1.1.1
+
+### Patch Changes
+
+- ccd486a: fix: update package.json to include 'dist' in files and remove '@tern-secure/types' from external dependencies in tsup.config
+
 ## 1.1.0
 
 ### Minor Changes

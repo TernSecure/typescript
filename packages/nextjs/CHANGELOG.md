@@ -1,5 +1,12 @@
 # @tern-secure/nextjs
 
+## 5.1.3
+
+### Patch Changes
+
+- Updated dependencies [ccd486a]
+  - @tern-secure/backend@1.1.1
+
 ## 5.1.2
 
 ### Patch Changes
