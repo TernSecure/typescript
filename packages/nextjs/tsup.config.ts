@@ -12,10 +12,7 @@ const config: Options = {
         'react',
         'react-dom',
         'firebase',
-        'firebase-admin',
-        '@tern-secure/types',
-        '@tern-secure/backend',
-        '@tern-secure/ui'
+        'firebase-admin'
     ]
 };
 
