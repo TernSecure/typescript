@@ -1,7 +1,7 @@
 "use client"
 
 import { useAssertWrappedByTernSecureProvider } from './useAssertWrappedTernSecureProvider'
-import { TernSecureState } from '@tern-secure/types'
+import { DEFAULT_TERN_SECURE_STATE, TernSecureState } from '@tern-secure/types'
 import { useAuthProviderCtx } from '../ctx/AuthProvider'
 
 
@@ -12,6 +12,10 @@ export const useAuth = (): TernSecureState => {
 
   if (!ctx.isLoaded) {
     console.warn('[useAuth] TernSecure is not loaded yet. Returning default state.')
+    return {
+      ...DEFAULT_TERN_SECURE_STATE,
+      isLoaded: false,
+    }
   }
   
   return {

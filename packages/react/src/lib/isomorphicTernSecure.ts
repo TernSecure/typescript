@@ -327,16 +327,16 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
   #awaitForTernUI(): Promise<HeadlessUIBrowser | Browser>{
     return new Promise<HeadlessUIBrowser | Browser>(resolve => {
-      console.log('[IsomorphicTernSecure] Awaiting TernUI initialization...');
+      //console.log('[IsomorphicTernSecure] Awaiting TernUI initialization...');
       resolve(this.ternui!);
     });
   }
 
   initialize = async (props: any): Promise<void> => {
     try {
-      console.log('[IsomorphicTernSecure] Initializing TernUI...');
+      //console.log('[IsomorphicTernSecure] Initializing TernUI...');
       await this.#awaitForTernUI();
-      console.log('[IsomorphicTernSecure] TernUI initialized successfully');
+      //console.log('[IsomorphicTernSecure] TernUI initialized successfully');
     } catch (error) {
       console.error('[IsomorphicTernSecure] Failed to initialize TernUI:', error);
       throw error;

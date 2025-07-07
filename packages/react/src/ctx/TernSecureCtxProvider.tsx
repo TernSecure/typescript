@@ -56,14 +56,13 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   
   const loadingComponent = useMemo(() => (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
-        <div className="tern-secure-loading">Loading authentication...</div>
     </IsomorphicTernSecureCtx.Provider>
   ), [ternsecureCtx, ternAuthCtx])
 
 
-  //if (instanceStatus === 'loading' || !instance.ternAuth) {
-  //  return loadingComponent;
-  //}
+  if (instanceStatus === 'loading' || !instance.ternAuth) {
+    return loadingComponent;
+  }
 
 
   return (
