@@ -1,6 +1,6 @@
 {
   "name": "@tern-secure/types",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Type definitions for TernSecure packages",
   "repository": {
     "type": "git",

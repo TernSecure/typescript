@@ -1,5 +1,18 @@
 # @tern-secure/nextjs
 
+## 5.1.0
+
+### Minor Changes
+
+- 5f29862: advanced Auth cookies and session management
+
+### Patch Changes
+
+- Updated dependencies [5f29862]
+  - @tern-secure/react@1.1.0
+  - @tern-secure/shared@1.1.1
+  - @tern-secure/types@1.0.2
+
 ## 5.0.1
 
 ### Patch Changes
