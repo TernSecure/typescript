@@ -25,10 +25,20 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          crossOrigin="anonymous"
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TernSecureProvider requireverification={false} customDomain="http://localhost:4000">
+        <TernSecureProvider 
+          requiresVerification={true}  //default is true
+          customDomain="http://localhost:4000"
+          isTernSecureDev={true}  //use popup mode. if redirect on localhost it cannot 
+        > 
         <UserButton />
         {children}
         </TernSecureProvider>

@@ -1,14 +1,15 @@
 'use client'
 
 import { useAuth } from "@tern-secure/nextjs";
-import { useRouter, redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  //console.log('Home user:', user);
+  console.log('isAuthenticated:', isAuthenticated);
 
+  if (!user) return null;
 
   const redirectToMoPage = () => {
     router.push('/mo');

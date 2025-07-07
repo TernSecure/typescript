@@ -1,13 +1,13 @@
 import { cache } from "react"
 import { cookies } from "next/headers"
-import type { User } from "./types"
+import type { UserInfo } from "./types"
 import { verifyFirebaseToken } from "./jwt-edge"
 import { TernSecureError } from "../errors"
 
 
 
 export interface AuthResult {
-  user: User | null
+  user: UserInfo | null
   error: Error | null
 }
 
@@ -25,7 +25,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
     if (sessionCookie) {
       const result = await verifyFirebaseToken(sessionCookie, true)
       if (result.valid) {
-        const user: User = {
+        const user: UserInfo = {
           uid: result.uid ?? '',
           email: result.email || null,
           authTime: result.authTime
@@ -39,7 +39,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
     if (idToken) {
       const result = await verifyFirebaseToken(idToken, false)
       if (result.valid) {
-        const user: User = {
+        const user: UserInfo = {
           uid: result.uid ?? '',
           email: result.email || null,
           authTime: result.authTime
@@ -79,7 +79,7 @@ export const isAuthenticated = cache(async (): Promise<boolean>  => {
 /**
  * Get user info from auth result
  */
-export const getUser = cache(async (): Promise<User | null> => {
+export const getUser = cache(async (): Promise<UserInfo | null> => {
   const { user } = await auth()
   return user
 })
@@ -88,7 +88,7 @@ export const getUser = cache(async (): Promise<User | null> => {
  * Require authentication
  * Throws error if not authenticated
  */
-export const requireAuth = cache(async (): Promise<User> => {
+export const requireAuth = cache(async (): Promise<UserInfo> => {
   const { user, error } = await auth()
 
   if (!user) {

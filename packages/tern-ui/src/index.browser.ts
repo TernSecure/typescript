@@ -1,7 +1,7 @@
 import { TernSecure } from './instance/ternsecure';
 import { mountComponentRenderer } from './ui/Renderer';
 
-console.log('[Tern-UI index.browser.ts] Script loaded and executing.');
+//console.log('[Tern-UI index.browser.ts] Script loaded and executing.');
 
 TernSecure.mountComponentRenderer = mountComponentRenderer;
 

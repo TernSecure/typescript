@@ -19,7 +19,6 @@ type TernSecureCtxProviderProps = {
   children: React.ReactNode
   instanceOptions: IsomorphicTernSecureOptions
   initialState: TernSecureState | undefined
-  requiresVerification?: boolean
 }
 
 export type AuthStateProps = {
@@ -32,9 +31,10 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   const { 
     children,
     initialState, 
-    instanceOptions,
-    requiresVerification = false
+    instanceOptions
   } = props
+
+  const rv = props.instanceOptions.requiresVerification
 
   const { isomorphicTernSecure: instance, instanceStatus} = useLoadIsomorphicTernSecure(instanceOptions)
 
@@ -56,7 +56,6 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   
   const loadingComponent = useMemo(() => (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
-        <div className="tern-secure-loading">Loading authentication...</div>
     </IsomorphicTernSecureCtx.Provider>
   ), [ternsecureCtx, ternAuthCtx])
 
@@ -65,11 +64,6 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     return loadingComponent;
   }
 
-
-  //console.log('[TernSecureCtxProvider] userCtx:', userCtx);
-  //console.log('[TernSecureCtxProvider] authState from instance:', instance.ternAuth?.internalAuthState);
-  //console.log('[TernSecureCtxProvider] ternsecureCtx:', ternsecureCtx);
-  //console.log('[TernSecureCtxProvider] ternAuthCtx:', ternAuthCtx);
 
   return (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>

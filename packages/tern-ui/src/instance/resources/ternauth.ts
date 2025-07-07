@@ -16,7 +16,6 @@ import {
 import { 
   initializeApp, 
   getApps,
-  FirebaseApp 
 } from 'firebase/app';
 import {
   Auth,
@@ -27,7 +26,6 @@ import {
   getRedirectResult, 
   GoogleAuthProvider, 
   OAuthProvider, 
-  createUserWithEmailAndPassword, 
   sendEmailVerification, 
   setPersistence,
   browserLocalPersistence,
@@ -36,10 +34,7 @@ import {
 } from 'firebase/auth'
 
 import { TernSecureBase, SignUp } from './internal';
-import { 
-  storePreviousPath,
-  constructFullUrl
-} from '../../utils/construct';
+import { AuthCookieManager } from './Auth';
 
 
 interface ProviderConfig {
@@ -68,6 +63,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     private authStateUnsubscribe: (() => void) | null = null;
     private _initAuthStateResolvedPromise: Promise<void>;
     private _resolveInitialAuthState!: () => void;
+    #authCookieManager: AuthCookieManager
 
     signIn: SignInResource;
     signUp: SignUpResource = new SignUp();
@@ -83,10 +79,13 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       ? initializeApp(config, appName) 
       : getApps()[0];
 
-
       this.ternSecureConfig = config;
 
       this.auth = getAuth(this.firebaseApp);
+  
+
+      this.#authCookieManager = new AuthCookieManager();
+      console.log("TernAuth: AuthCookieManager initialized");
 
       setPersistence(this.auth, browserLocalPersistence)
        .catch(error => console.error("TernAuth: Error setting auth persistence:", error));
@@ -96,10 +95,13 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         withSocialProvider: this.withSocialProvider.bind(this),
         completeMfaSignIn: this.completeMfaSignIn.bind(this),
         sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
-        resendEmailVerification: this.resendEmailVerification.bind(this)
+        resendEmailVerification: this.resendEmailVerification.bind(this),
+        checkRedirectResult: this.authRedirectResult.bind(this),
       };
 
-      this.authStateUnsubscribe = this.initAuthStateListener();
+      //this.initializeAuthState();
+
+      this.authStateUnsubscribe = this.initAuthStateListenerOld();
     }
 
   public static async getOrCreateInstance(config: TernSecureConfig): Promise<TernAuth> {
@@ -169,6 +171,9 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         const redirectResult = await this.authRedirectResult();
         
         if (redirectResult) {
+          if (redirectResult.success) {
+            TernSecureBase.ternsecure.redirectAfterSignIn();
+          }
           return redirectResult;
         }
 
@@ -230,6 +235,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
 
   }
 
+
   signOut = async(): Promise<void> => {
     await Promise.all([
       this.auth.signOut(),
@@ -238,7 +244,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     TernSecureBase.ternsecure.redirectToSignIn();
   }
 
-  currentSession =  async(): Promise<SignedInSession | null> => {
+  currentSession = async(): Promise<SignedInSession | null> => {
     if (!this._currentUser) {
       return null;
     }
@@ -285,7 +291,32 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     }
   }
 
-  private initAuthStateListener() : () => void {
+  private  async initializeAuthState(): Promise<void> {
+    try {
+      await this.auth.authStateReady();
+
+      this.authStateUnsubscribe = this.initAuthStateListener();
+
+      await this.updateInternalAuthState(this.auth.currentUser as TernSecureUser);
+
+      this._resolveInitialAuthState();
+    } catch (error) {
+      console.error("TernAuth: Error initializing auth state:", error);
+      this._authState = {
+        ...DEFAULT_TERN_SECURE_STATE,
+        isLoaded: true,
+        error: error as Error,
+        status: "unauthenticated",
+        user: null
+      };
+      this._resolveInitialAuthState();
+    }
+  }
+
+  /**
+   * @deprecated This method is deprecated and will be removed in future versions.
+   */
+  private initAuthStateListenerOld() : () => void {
     return onAuthStateChanged(this.auth, async (user: TernSecureUser | null) => {
         this._currentUser = user;
         await this.updateInternalAuthState(user);
@@ -299,12 +330,28 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       });
   }
 
-  private async updateInternalAuthState(user: TernSecureUser | null, requiresVerification = false): Promise<void> {
+  private initAuthStateListener(): () => void {
+    return onAuthStateChanged(this.auth, async (user: TernSecureUser | null) => {
+     this._currentUser = user;
+      await this.updateInternalAuthState(user);
+    });
+  }
+  
+  private setupTokenRefreshListener(): void {
+    this.auth.onIdTokenChanged(async (user) => {
+      if (user) {
+        await this.updateInternalAuthState(user as TernSecureUser);
+      }
+    });
+  }
+
+  private async updateInternalAuthState(user: TernSecureUser | null): Promise<void> {
     const previousState = { ...this._authState };
     try {
       if (user) {
         const isValid = !!user.uid;
         const isVerified = user.emailVerified;
+        const requiresVerification = TernSecureBase.ternsecure?.requiresVerification;
         const isAuthenticated = isValid && (!requiresVerification || isVerified);
 
         this._authState = {
@@ -317,7 +364,6 @@ export class TernAuth implements TernSecureAuthProviderInterface {
           token: user.getIdToken() || null,
           email: user.email || null,
           status: this.determineAuthStatus(user, requiresVerification),
-          requiresVerification,
           user
         };
       } else {
@@ -480,5 +526,13 @@ export class TernAuth implements TernSecureAuthProviderInterface {
   
   private async __signInWithPopUp(providerName: string): Promise<SignInResponseTree> {
     return this.executePopupAuthMethod(providerName);
+  }
+
+  public async checkRedirectResult(): Promise<SignInResponseTree | null> {
+    return this.authRedirectResult();
+  }
+
+  public authCookieManager(): AuthCookieManager {
+    return this.#authCookieManager;
   }
 }

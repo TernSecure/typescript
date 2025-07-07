@@ -13,8 +13,8 @@ export default function MoPage() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUserDataExpanded, setIsUserDataExpanded] = useState(false);
   const [isTokenDataExpanded, setIsTokenDataExpanded] = useState(false);
-  const {  user, userId, isLoaded, token } = useAuth()
-  const { accessToken, expirationTime, status, isLoading } = useSession()
+  const {  user, userId } = useAuth()
+  const { accessToken, expirationTime, status } = useSession()
   const { tokenResult, loading: tokenLoading, error, refreshToken } = useIdToken()
 
   const currentUser = user
@@ -27,8 +27,8 @@ export default function MoPage() {
       value !== null && typeof value !== 'function'
     )
   ) : null
-
-if (!user) return null
+  
+  if (!user) return null
 
 
   return (

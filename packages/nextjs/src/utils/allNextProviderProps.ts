@@ -21,6 +21,8 @@ export const allNextProviderPropsWithEnv = (
     proxyUrl: propsProxyUrl,
     environment: propsEnvironment,
     requiresVerification: propsRequiresVerification,
+    isTernSecureDev: propsIsTernSecureDev,
+    enableServiceWorker: propsEnableServiceWorker,
     loadingComponent: propsLoadingComponent,
     ...baseProps 
   } = nextProps;
@@ -35,6 +37,9 @@ export const allNextProviderPropsWithEnv = (
     signUpUrl: process.env.NEXT_PUBLIC_SIGN_UP_URL,
     signInForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_IN_FORCE_REDIRECT_URL,
     signUpForceRedirectUrl: process.env.NEXT_PUBLIC_SIGN_UP_FORCE_REDIRECT_URL,
+    projectIdAdmin: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
   };
 
   const ternSecureConfig = {
@@ -77,8 +82,9 @@ export const allNextProviderPropsWithEnv = (
     // Set properties explicitly taken from TernSecureNextProps (props version)
     // These are part of the TernSecureProviderProps interface.
     requiresVerification: propsRequiresVerification,
+    isTernSecureDev: propsIsTernSecureDev,
+    enableServiceWorker: propsEnableServiceWorker,
     loadingComponent: propsLoadingComponent,
-    ...(propsRequiresVerification !== undefined && { requireverification: propsRequiresVerification }),
 
     //TernSecure: baseProps.Instance,
     initialState: baseProps.initialState,

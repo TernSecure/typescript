@@ -111,7 +111,6 @@ export interface HeadlessUIBrowserConstructor {
 export type TernSecureProviderProps = IsomorphicTernSecureOptions & {
     children: React.ReactNode
     initialState?: TernSecureState
-    requiresVerification?: boolean
     loadingComponent?: React.ReactNode
     bypassApiKey?: boolean
 }

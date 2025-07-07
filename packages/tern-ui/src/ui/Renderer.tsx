@@ -17,7 +17,7 @@ import {
 
 import type {
     AvailableComponentProps
-} from '../components/types';
+} from '../types';
 
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
 

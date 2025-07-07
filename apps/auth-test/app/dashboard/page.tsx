@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@tern-secure/nextjs"
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
  const router = useRouter();
@@ -9,7 +9,8 @@ export default function Dashboard() {
 
  //console.log('Dashboard user:', user);
 
-
+   if (!user) return null;
+   
     const redirectToHome = () => {
       router.push('/');
     };

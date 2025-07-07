@@ -58,7 +58,6 @@ export class TernSecure implements TernSecureInterface {
     #eventBus = new EventEmitter();
     //#customDomain: DomainOrProxyUrl['domain'];
     #proxyUrl: DomainOrProxyUrl['proxyUrl'];
-    //#authProvider?: TernSecureAuthProvider;
 
     public proxyUrl?: string;
     public apiKey?: string;
@@ -76,13 +75,13 @@ export class TernSecure implements TernSecureInterface {
             throw new Error('TernSecure requires a domain or proxy URL to be initialized.');
         }
 
-        console.log('[TernSecure constructor] Initializing... Received domain:', domain);
+        //console.log('[TernSecure constructor] Initializing... Received domain:', domain);
         this.customDomain = domain;
-        console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
+        //console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
 
         this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
         //this.#setStatus('ready');
-        console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
+        //console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
 
         TernSecureBase.ternsecure = this
     }
@@ -93,6 +92,10 @@ export class TernSecure implements TernSecureInterface {
 
     get status(): TernSecureInterface['status'] {
         return this.#status;
+    }
+
+    get requiresVerification(): boolean {
+        return this.#options.requiresVerification ?? true; //default always to true
     }
 
     public load = async (options?: TernSecureInstanceTreeOptions): Promise<void> => {
@@ -254,21 +257,21 @@ export class TernSecure implements TernSecureInterface {
         }
         
         this.ternAuth = ternAuth;
-        console.log('[TernSecure] TernAuth provider set:', ternAuth);
-        console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
+        //console.log('[TernSecure] TernAuth provider set:', ternAuth);
+        //console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
         this.#eventBus.emit('TernAuthReady', ternAuth);
     }
 
     public emitAuthStateChange(authState: any): void {
         this.#eventBus.emit('authStateChange', authState);
-        console.warn('[TernSecure] AuthState changed:', authState);
+        //console.warn('[TernSecure] AuthState changed:', authState);
     }
 
     public get events(): TernSecureInterface['events'] {
         return {
             onAuthStateChanged: (callback) => {
                 this.#eventBus.on('authStateChange', callback);
-                console.log('[TernSecure] onAuthStateChanged listener added');
+                //console.log('[TernSecure] onAuthStateChanged listener added');
                 return () => {
                   this.#eventBus.off('authStateChange', callback);
                 }  
@@ -388,7 +391,7 @@ export class TernSecure implements TernSecureInterface {
             return base; // Non-browser fallback
         }
 
-        return constructedUrl;
+        return this.constructUrlWithAuthRedirect(constructedUrl);
     }
     
     public constructSignInUrl = (options?: SignInRedirectOptions): string => {
@@ -401,9 +404,8 @@ export class TernSecure implements TernSecureInterface {
 
 
     
-    public constructUrlWithRedirect = (to: string): string => {
+    public constructUrlWithAuthRedirect = (to: string): string => {
         const baseUrl = window.location.origin
-        
         const url = new URL(to, baseUrl)
         
         if (url.origin === window.location.origin) {
@@ -443,11 +445,11 @@ export class TernSecure implements TernSecureInterface {
         const currentPath = window.location.pathname;
 
         if (hasRedirectLoop(currentPath, redirectPath)) {
-            console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
+            //console.warn('[TernSecure] Redirect loop detected. Redirecting to default path.');
             return defaultRedirectPath;
         }
         
-        return this.constructUrlWithRedirect(redirectPath);
+        return this.constructUrlWithAuthRedirect(redirectPath);
     }
     
     public redirectToSignIn = async (options?: SignInRedirectOptions): Promise<unknown> => {
@@ -465,8 +467,8 @@ export class TernSecure implements TernSecureInterface {
         }
         return 
     }
-
-    redirectAfterSignIn = (): void => {
+    
+    redirectAfterSignIn = async (): Promise<void> => {
         if (inBrowser()) {
             const destinationUrl = this.#constructAfterSignInUrl();
             window.location.href = destinationUrl;
@@ -525,7 +527,7 @@ export class TernSecure implements TernSecureInterface {
             try {
                 const authProvider = TernSecure.authProviderFactory();
                 this.setTernAuth(authProvider);
-                console.log('[TernSecure] Auth provider initialized via factory')
+                //console.log('[TernSecure] Auth provider initialized via factory')
             } catch (error) {
                 console.error('[TernSecure] Error initializing auth provider:', error);
             }
@@ -554,7 +556,7 @@ export class TernSecure implements TernSecureInterface {
 
     #setupAuthStateSync(): void {
         this.events.onAuthStateChanged((authState) => {
-            console.log('[TernSecure] onAuthStateChanged:', authState.status);
+            //console.log('[TernSecure] onAuthStateChanged:', authState.status);
             if (authState.error) {
                 this.error = authState.error;
             }

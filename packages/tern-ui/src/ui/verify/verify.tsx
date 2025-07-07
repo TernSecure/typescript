@@ -21,7 +21,7 @@ import {
 } from '../../components/elements'
 import { cn } from "../../lib/utils"
 import { useAuthSignUp } from '../../ctx/TernAuthContext'
-import { useTernSecure } from "@tern-secure/shared/react/index"
+import { useTernSecure } from "@tern-secure/shared/react"
 
 const RESEND_COOLDOWN = 59 // 59 seconds cooldown for resend
 const MAX_RESEND_ATTEMPTS = 3

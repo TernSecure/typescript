@@ -41,8 +41,10 @@ export type TernSecureInstanceTreeOptions = {
   onAuthStateChanged?: (user: TernSecureUser | null) => void;
   onError?: (error: AuthErrorTree) => void;
   environment?: string | undefined;
-  requireverification?: boolean;
-  ternSecureConfig?: TernSecureConfig
+  requiresVerification?: boolean;
+  isTernSecureDev?: boolean;
+  ternSecureConfig?: TernSecureConfig;
+  enableServiceWorker?: boolean;
 } & SignInRedirectUrl & SignUpRedirectUrl;
 
 export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';
@@ -63,6 +65,7 @@ export interface TernSecureInstanceTree {
   currentView: 'signIn' | 'signUp' | 'verify' | null;
   isLoading: boolean;
   error: Error | null;
+  requiresVerification: boolean;
   /** Authentication State */
   auth: {
     /** Current authenticated user */
@@ -88,7 +91,7 @@ export interface TernSecureInstanceTree {
   /** Check if redirect is needed */
   shouldRedirect: (currentPath: string) => boolean | string;
   /** Construct URL with redirect parameters */
-  constructUrlWithRedirect: (to: string) => string;
+  constructUrlWithAuthRedirect: (to: string) => string;
   /** Navigate to SignIn page */
   redirectToSignIn(options?: SignInRedirectOptions): Promise<unknown>;
   /** Navigate to SignUp page */
@@ -122,6 +125,8 @@ export type SignUpInitialValueTree = Partial<SignUpFormValuesTree>;
  * Props for SignIn component focusing on UI concerns
  */
 export type SignInPropsTree = {
+  /** Routing Path */
+  path?: string;
   /** URL to navigate to after successfully sign-in */
   forceRedirectUrl?: string | null;
   /** Initial form values */

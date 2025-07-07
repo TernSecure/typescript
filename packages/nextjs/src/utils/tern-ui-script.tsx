@@ -8,6 +8,7 @@ const localPort = process.env.TERN_UI_PORT || '4000';
 type TernUIScriptProps = Pick<TernSecureNextProps, 'customDomain' | 'proxyUrl'> & {
     version?: string;
     nonce?: string;
+    router: 'app' | 'pages';
 }
 
 const devDomain = isDevelopment 
@@ -20,6 +21,7 @@ export function TernUIScript({
     proxyUrl,
     version,
     nonce,
+    router = 'app'
 }: TernUIScriptProps) {
     const effectiveDomain = isDevelopment ? devDomain : customDomain
     console.log('[TernSecure] TernUIScript: Using effective domain:', effectiveDomain);
@@ -34,6 +36,7 @@ export function TernUIScript({
         proxyUrl,
         version,
         nonce,
+        router
     };
 
     const scriptUrl = ternUIgetScriptUrl(scriptOptions);

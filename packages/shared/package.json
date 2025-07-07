@@ -21,13 +21,16 @@
   "description": "Shared types and utilities for TernSecure projects",
   "files": [
     "dist",
+    "cookie",
     "derivedAuthState",
     "eventBus",
     "loadScript",
     "loadTernUIScript",
+    "react",
     "retry"
   ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": {
         "types": "./dist/index.d.mts",
@@ -61,6 +64,7 @@
   },
   "main": "./dist/index.js",
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "tsup": "^8.3.5",
@@ -68,6 +72,7 @@
   },
   "dependencies": {
     "@tern-secure/types": "workspace:*",
+    "js-cookie": "^3.0.5",
     "tslib": "2.4.1"
   },
   "peerDependencies": {

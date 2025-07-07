@@ -72,4 +72,9 @@ export interface SignInResource {
    * @returns A promise that resolves with the sign-in response.
    */
   resendEmailVerification: () => Promise<ResendEmailVerification>;
+  /**
+   * Checks the result of a redirect-based sign-in flow, typically used in OAuth or SSO scenarios.
+   * @returns A promise that resolves with the sign-in response or null if no result is available.
+   */
+  checkRedirectResult: () => Promise<SignInResponseTree | null>;
 }

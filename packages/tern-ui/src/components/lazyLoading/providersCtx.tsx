@@ -8,7 +8,7 @@ import type {
 
 import type {
     AvailableComponentProps
-} from '../types';
+} from '../../types';
 
 
 export type LazyComponentRendererProps = {

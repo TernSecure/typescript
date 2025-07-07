@@ -1,5 +1,23 @@
 import React from 'react';
 
+/**
+ * Options for the navigate function.
+ */
+export interface NavigateOptions {
+  /**
+   * URLSearchParams to append to the navigation path.
+   */
+  searchParams?: URLSearchParams;
+  /**
+   * If true, the new URL will replace the current entry in the history stack.
+   */
+  replace?: boolean;
+  /**
+   * State to associate with the new history entry.
+   */
+  state?: any; // Consider using a more specific type if your application has a defined state structure
+}
+
 export interface RouteContextValue {
   basePath: string;
   startPath: string;
@@ -9,7 +27,7 @@ export interface RouteContextValue {
   currentPath: string;
   matches: (path?: string, index?: boolean) => boolean;
   baseNavigate: (toURL: URL) => Promise<unknown>;
-  navigate: (to: string, options?: { searchParams?: URLSearchParams }) => Promise<unknown>;
+  navigate: (to: string, options?: NavigateOptions) => Promise<unknown>;
   resolve: (to: string) => URL;
   refresh: () => void;
   params: { [key: string]: string };

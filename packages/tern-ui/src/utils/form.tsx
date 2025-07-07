@@ -1,8 +1,7 @@
 'use client'
 
-import { Alert, AlertDescription } from '../components/elements/alert'
+import { Alert, AlertDescription, Button } from '../components/elements'
 import { LoaderCircle } from '../components/icons'
-import { Button } from '../components/elements/button'
 import { cn } from '../lib/utils'
 
 interface FormErrorsProps {

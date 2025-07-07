@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { FormErrors, FormButton } from '../../utils/form'
-import { useAppForm } from '../../components/elements'
-import { useTernSecure } from '@tern-secure/shared/react'
+import { useAppForm, Button, useCardState } from '../../components/elements'
 import type { SignInResponseTree, TernSecureUser } from '@tern-secure/types'
-import { useAuthState } from '../../ctx'
+import { cn } from './../../lib/utils'
+
 
 
 interface SignInFormValues {
@@ -13,9 +13,10 @@ interface SignInFormValues {
 
 interface EmailSignInProps {
   onError?: (error: Error) => void
-  onSuccess?: () => void
+  onSuccess?: (user: TernSecureUser | null) => void
   isDisabled?: boolean
   signInWithEmail?: (email: string, password: string) => Promise<SignInResponseTree>
+  onForgotPassword?: () => void
 }
 
 const successAuth = async(user: TernSecureUser) => {
@@ -28,10 +29,9 @@ export function EmailSignIn({
   onSuccess,
   isDisabled,
   signInWithEmail,
+  onForgotPassword
 }: EmailSignInProps) {
-  const ternSecure = useTernSecure();
-  const authState = useAuthState();
-  const requiresVerification: boolean = false;
+  const card = useCardState()
 
   const [formError, setFormError] = useState<SignInResponseTree | null>(null);
 
@@ -47,7 +47,7 @@ export function EmailSignIn({
         if (signInWithEmail) {
           const res = await signInWithEmail(value.email, value.password)
           if (!res.success) {
-            setFormError({
+            card.setError({
               success: false,
               error: res.error,
               message: res.message,
@@ -57,20 +57,9 @@ export function EmailSignIn({
             return 
           }
 
-          if (res.user) {
-            if (requiresVerification && !res.user.isVerified) {
-              setFormError({
-                success: false,
-                message: 'Email verification required',
-                error: 'REQUIRES_VERIFICATION',
-                user: res.user,
-              })
-
-            return
+          if (res.user && onSuccess) {
+            onSuccess?.(res.user)
           }
-        }
-        ternSecure.redirectAfterSignIn();
-        onSuccess?.()
         }
       } catch (error) {
         onError?.(error as Error)
@@ -91,7 +80,7 @@ export function EmailSignIn({
       className="space-y-4"
     >
 
-      <FormErrors errors={formError?.message || formError?.error || form.state.errors} />
+      {/*<FormErrors errors={formError?.message || formError?.error || form.state.errors} />*/}
       <form.AppField name="email">
         {(field) => (
           <field.EmailField
@@ -113,6 +102,21 @@ export function EmailSignIn({
           />
         )}
       </form.AppField>
+      {onForgotPassword && (
+        <button
+          type="button"
+          onClick={onForgotPassword}
+          disabled={form.state.isSubmitting || isDisabled}
+          className={cn(
+            "w-full text-right text-sm text-blue-600 hover:text-blue-500",
+            "bg-transparent border-none cursor-pointer",
+            "mt-[-0.5rem] mb-2 hover:underline",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
+          Forgot your password?
+        </button>
+      )}
 
       <FormButton
         canSubmit={form.state.canSubmit}

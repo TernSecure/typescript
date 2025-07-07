@@ -6,7 +6,6 @@ function TernSecureProviderBase(props: TernSecureProviderProps) {
     const { 
         children, 
         initialState, 
-        requiresVerification = false,
         bypassApiKey,
         ...restProps
     } = props
@@ -23,7 +22,6 @@ function TernSecureProviderBase(props: TernSecureProviderProps) {
         <TernSecureCtxProvider
           initialState={initialState}
           instanceOptions={restProps}
-          requiresVerification={requiresVerification}
         >
             {children}
         </TernSecureCtxProvider>

@@ -1,6 +1,6 @@
 import { verifyFirebaseToken } from "./jwt-edge"
 import type { NextRequest } from "next/server"
-import type { SessionResult, User } from "./types"
+import type { SessionResult, UserInfo } from "./types"
 
 
 
@@ -17,17 +17,17 @@ export async function verifySession(request: NextRequest): Promise<SessionResult
     if (sessionCookie) {
       const result = await verifyFirebaseToken(sessionCookie, true)
       if (result.valid) {
-          const user: User = {
+          const user: UserInfo = {
             uid: result.uid ?? '',
             email: result.email || null,
             emailVerified: result.emailVerified ?? false,
+            disabled: false,
             authTime: result.authTime,
         }
 
         return {
-          user,
-          token: sessionCookie,
-          sessionId: sessionCookie,
+          isAuthenticated: true,
+          user
         }
       }
     }
@@ -37,34 +37,31 @@ export async function verifySession(request: NextRequest): Promise<SessionResult
     if (idToken) {
       const result = await verifyFirebaseToken(idToken, false)
       if (result.valid) {
-        const user: User =  {
+        const user: UserInfo =  {
             uid: result.uid ?? '',
             email: result.email || null,
             emailVerified: result.emailVerified ?? false,
+            disabled: false,
             authTime: result.authTime,
         }
-
-
+        
         return {
-          user,
-          token: idToken,
-          sessionId: idToken,
+          isAuthenticated: true,
+          user
         }
       }
     }
 
     return {
+      isAuthenticated: false,
       user: null,
-      token: null,
-      sessionId: null,
-      error: "No valid session found",
+      error: "No valid session found"
     }
   } catch (error) {
     console.error("Session verification error:", error)
     return {
+      isAuthenticated: false,
       user: null,
-      token: null,
-      sessionId: null,
       error: error instanceof Error ? error.message : "Session verification failed",
     }
   }

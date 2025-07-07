@@ -38,11 +38,11 @@ import { TernUIScript } from "../../utils/tern-ui-script";
  * }
  */
 export function TernSecureProvider(props: React.PropsWithChildren<TernSecureNextProps>) {
-  const {children, ...nextProps } = props;
+  const {children, enableServiceWorker, ...nextProps } = props;
   const providerProps = allNextProviderPropsWithEnv(nextProps);
   return (
     <TernSecureReactProvider {...providerProps}>
-      <TernUIScript />
+      <TernUIScript router='app' />
         {children}
     </TernSecureReactProvider>
   )

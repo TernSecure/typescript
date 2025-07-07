@@ -3,15 +3,18 @@
 import { useCallback } from 'react'
 import type { 
   SignInResponseTree, 
-  SignInUIConfig 
+  SignInUIConfig,
+  TernSecureUser
 } from '@tern-secure/types'
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
 import { useAuthSignIn } from '../../ctx';
+import { useSignInContext } from '../../ctx/components/SignIn'
+
 
 interface SocialSignInProps {
   onError?: (error: Error, response?: SignInResponseTree | null) => void
-  onSuccess?: () => void
+  onSuccess?: (user: TernSecureUser | null) => void
   isDisabled?: boolean
   config?: SignInUIConfig['socialButtons']
   mode?: 'popup' | 'redirect'
@@ -42,7 +45,7 @@ export function SocialSignIn({
         if (!result.success) {
           onError?.(new Error(result.message), result)
         } else {
-          onSuccess?.()
+          onSuccess?.(result.user)
         }
       }
     } catch (error) {

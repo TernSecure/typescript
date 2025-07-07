@@ -18,7 +18,6 @@ export interface TernSecureState {
   token: any | null
   email: string | null
   status: "loading" | "authenticated" | "unauthenticated" | "unverified"
-  requiresVerification?: boolean
   user?: TernSecureUser | null
 }
 
@@ -35,7 +34,6 @@ export const DEFAULT_TERN_SECURE_STATE: TernSecureState = {
   token: null,
   email: null,
   status: "loading",
-  requiresVerification: false,
   user: null
 };
 
@@ -46,6 +44,9 @@ export interface TernSecureAuthProvider {
 
   /** Current user*/
   ternSecureUser(): TernSecureUser | null;
+
+  /** AuthCookie Manager */
+  authCookieManager(): void;
 
   /** Current session */
   currentSession: SignedInSession | null;

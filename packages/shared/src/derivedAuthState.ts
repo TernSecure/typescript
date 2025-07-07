@@ -20,7 +20,6 @@ export const DEFAULT_TERN_SECURE_STATE: TernSecureState = {
   token: null,
   email: null,
   status: "loading",
-  requiresVerification: false,
   user: null
 };
 
@@ -41,7 +40,6 @@ export const deriveAuthState = (internalState: TernSecureState | undefined ): Te
   const email = internalState.email || null;
   const error = internalState.error || null;
   const status = internalState.status || "loading";
-  const requiresVerification = internalState.requiresVerification || false;
   const user = internalState.user || null;
 
   return {
@@ -54,7 +52,6 @@ export const deriveAuthState = (internalState: TernSecureState | undefined ): Te
     email,
     error,
     status,
-    requiresVerification,
     user
   }
 };
