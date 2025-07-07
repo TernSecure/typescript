@@ -1,5 +1,16 @@
 # @tern-secure/backend
 
+## 1.1.0
+
+### Minor Changes
+
+- 5f29862: advanced Auth cookies and session management
+
+### Patch Changes
+
+- Updated dependencies [5f29862]
+  - @tern-secure/types@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes

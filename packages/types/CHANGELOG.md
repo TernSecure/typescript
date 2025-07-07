@@ -1,5 +1,11 @@
 # @tern-secure/types
 
+## 1.0.2
+
+### Patch Changes
+
+- 5f29862: advanced Auth cookies and session management
+
 ## 1.0.1
 
 ### Patch Changes
