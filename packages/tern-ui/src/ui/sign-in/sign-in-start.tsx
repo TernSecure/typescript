@@ -31,6 +31,20 @@ interface SignInStartProps {
   className?: string;
 }
 
+export type SessionErrorCode = 
+  | 'ENDPOINT_NOT_FOUND'
+  | 'COOKIE_SET_FAILED'
+  | 'API_REQUEST_FAILED'
+  | 'NETWORK_ERROR'
+  | 'UNAUTHORIZED'
+  | 'UNKNOWN_ERROR';
+
+export interface SessionError {
+  code: SessionErrorCode;
+  message: string;
+  original?: unknown;
+}
+
 
 const createAuthError = (
   source: SignInResponseTree | Error | unknown,
@@ -70,7 +84,6 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
   const { navigate } = useRouter();
   const {
     handleSignInSuccess,
-    handleSignInError,
   } = useSignInContext();
 
   const isEmailSignInEnabled = !!signIn.withEmailAndPassword;
@@ -82,7 +95,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
 
       if (!response.success) {
         const authError = createAuthError(response, 'SIGN_IN_FAILED');
-        handleSignInError(authError);
+        cardState.setError(authError);
         return response;
       }
 
@@ -91,7 +104,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
 
     } catch (error) {
       const authError = createAuthError(error, 'SIGN_IN_FAILED');
-      handleSignInError(authError);
+      cardState.setError(authError);
       throw error;
     }
   };
@@ -102,7 +115,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
   };
 
   const handleError = (error: AuthErrorTree) => {
-    handleSignInError(error);
+    cardState.setError(error);
   };
   
   const handleSuccess = (user: TernSecureUser | null) => {
@@ -118,21 +131,53 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
       return { success: true, user, requiresVerification: true };
     }
     
-    await createUserSession(user);
+    const sessionCreated = await createUserSession(user);
     
-    if (user?.emailVerified) {
+    if (user?.emailVerified && sessionCreated) {
       handleSignInSuccess(user);
     }
     return { success: true, user, requiresVerification: false };
   };
 
-  const createUserSession = async (user: TernSecureUser) => {
+  const createUserSession = async (user: TernSecureUser): Promise<{success: boolean; error?: SessionError}> => {
     const authCookieManager = ternSecure.ternAuth.authCookieManager();
-    if (authCookieManager) {
-      const idToken = await user.getIdToken();
-      await authCookieManager.createSessionCookie(idToken);
+    if (!authCookieManager) {
+      return {
+        success: false,
+        error: {
+          code: 'ENDPOINT_NOT_FOUND',
+          message: 'Session management is not configured'
+        }
+      };
     }
-  };
+    
+    try {
+      const idToken = await user.getIdToken();
+      const res = await authCookieManager.createSessionCookie(idToken);
+        
+        if (!res.success) {
+          console.warn('[SignInStart] Failed to create session cookie:', res.message);
+          return {
+            success: false,
+            error: {
+              code: res.error as SessionErrorCode,
+              message: res.message
+            }
+          };
+        }
+        return { success: true };
+      } catch (error) {
+        console.error('[SignInStart] Error creating session cookie:', error);
+        return {
+          success: false,
+          error: {
+            code: 'UNKNOWN_ERROR',
+            message: 'Failed to create session cookie',
+            original: error
+          }
+        };
+      }
+    };
 
   const { appName, logo } = ui || {};
 

@@ -24,7 +24,6 @@ export const useAuth = (): TernSecureState => {
     token: ctx.token,
     email: ctx.email,
     status: ctx.status,
-    requiresVerification: ctx.requiresVerification,
     user: ctx.user
   }
 }

@@ -21,13 +21,16 @@
   "description": "Shared types and utilities for TernSecure projects",
   "files": [
     "dist",
+    "cookie",
     "derivedAuthState",
     "eventBus",
     "loadScript",
     "loadTernUIScript",
+    "react",
     "retry"
   ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": {
         "types": "./dist/index.d.mts",

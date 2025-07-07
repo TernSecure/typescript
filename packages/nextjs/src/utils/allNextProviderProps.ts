@@ -22,6 +22,7 @@ export const allNextProviderPropsWithEnv = (
     environment: propsEnvironment,
     requiresVerification: propsRequiresVerification,
     isTernSecureDev: propsIsTernSecureDev,
+    enableServiceWorker: propsEnableServiceWorker,
     loadingComponent: propsLoadingComponent,
     ...baseProps 
   } = nextProps;
@@ -79,6 +80,7 @@ export const allNextProviderPropsWithEnv = (
     // These are part of the TernSecureProviderProps interface.
     requiresVerification: propsRequiresVerification,
     isTernSecureDev: propsIsTernSecureDev,
+    enableServiceWorker: propsEnableServiceWorker,
     loadingComponent: propsLoadingComponent,
 
     //TernSecure: baseProps.Instance,

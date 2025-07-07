@@ -9,6 +9,8 @@ export default function Home() {
 
   console.log('isAuthenticated:', isAuthenticated);
 
+  if (!user) return null;
+
 
   const redirectToMoPage = () => {
     router.push('/mo');

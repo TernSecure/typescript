@@ -61,19 +61,10 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   ), [ternsecureCtx, ternAuthCtx])
 
 
-  if (instanceStatus === 'loading' || !instance.ternAuth) {
-    return loadingComponent;
-  }
+  //if (instanceStatus === 'loading' || !instance.ternAuth) {
+  //  return loadingComponent;
+  //}
 
-  if (!instance.requiresVerification) {
-    instance.redirectToSignIn()
-  }
-
-
-  //console.log('[TernSecureCtxProvider] userCtx:', userCtx);
-  //console.log('[TernSecureCtxProvider] authState from instance:', instance.ternAuth?.internalAuthState);
-  //console.log('[TernSecureCtxProvider] ternsecureCtx:', ternsecureCtx);
-  //console.log('[TernSecureCtxProvider] ternAuthCtx:', ternAuthCtx);
 
   return (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>

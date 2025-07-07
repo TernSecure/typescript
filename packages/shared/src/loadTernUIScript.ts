@@ -12,6 +12,7 @@ export type LoadTernUISCriptOptions = TernSecureInstanceTreeOptions & {
   nonce?: string;
 }
 
+
 export const loadTernUIScript = async (options?: LoadTernUISCriptOptions) => {
   const existingScript =  document.querySelector<HTMLScriptElement>('script[data-ternui-script]');
   console.log('[TernSecure-shared] Existing script:', existingScript);

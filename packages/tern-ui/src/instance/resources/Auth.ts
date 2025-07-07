@@ -1,4 +1,5 @@
 import { cookieHandler, type CookieAttributes } from '@tern-secure/shared/cookie';
+import type { SessionResult } from '@tern-secure/types';
 
 const SESSION_COOKIE_NAME = '_session_cookie';
 const CSRF_COOKIE_NAME = '__session_terncf';
@@ -12,18 +13,6 @@ type CSRFToken = {
   token: string | null;
 }
 
-type AuthUser = {
-  uid: string;
-  email?: string;
-  displayName?: string;
-  emailVerified?: boolean;
-}
-
-interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
 
 type CookieOptions = CookieAttributes
 
@@ -91,7 +80,7 @@ export class AuthCookieManager {
     return ctoken;
   }
   
-  createSessionCookie = async(token: string): Promise<void> => {
+  createSessionCookie = async(token: string): Promise<SessionResult> => {
     try {
       console.log('[AuthCookieManager] Starting session cookie creation');
 
@@ -113,37 +102,59 @@ export class AuthCookieManager {
       console.log('[AuthCookieManager] Session API response:', req.status, req.statusText);
       
       if (!req.ok) {
-        throw new Error('Failed to create session cookie');
+        console.warn('[AuthCookieManager] Session cookie creation failed API request failed');
+        return {
+          success: false,
+          message: 'Failed to create session cookie',
+          error: 'API request failed',
+        }
       }
 
       const res = await req.json();
 
       if (!res.success) {
-        const error = new Error(res.message || 'Session creation failed');
         console.error('[AuthCookieManager] Session creation unsuccessful:', {
           error: res.error,
           message: res.message,
           cookieSet: res.cookieSet
         });
-        throw error;
+        return res;
       }
 
       if (res.cookieSet === false) {
-        const error = new Error('Session si created but cookie is not set properly.');
-        console.error('[AuthCookieManager] Cookie setting failed:', error);
-        throw error;
+        console.warn('[AuthCookieManager] Session created but cookie not set:', res);
+        return {
+          success: false,
+          message: 'Session created but cookie not set properly',
+          error: 'COOKIE_SET_FAILED',
+          cookieSet: false,
+        };
       }
 
       console.log('[AuthCookieManager] Session cookie created successfully');
+      return {
+        success: true,
+        message: 'Session cookie created successfully',
+        expiresIn: res.expiresIn,
+        cookieSet: true,
+      };
 
     } catch (error) {
       console.error('Failed to create session cookie:', error);
       if (error instanceof Error) {
         if (error.message.includes('404') || error.message.includes('not found')) {
-          throw new Error(`Session API endpoint not found. Please create: ${this.baseUrl}/session\n\nExample:\n// app/api/session/route.ts\nimport { createSessionHandler } from '@tern-secure/nextjs/admin'\nexport const POST = createSessionHandler`);
+          return {
+            success: false,
+            message: 'Session API endpoint not found',
+            error: 'ENDPOINT_NOT_FOUND',
+          }
         }
       }
-      throw error;
+      return {
+        success: false,
+        message: 'Failed to create session cookie',
+        error: 'Unknown error',
+      }
     }
   };
 

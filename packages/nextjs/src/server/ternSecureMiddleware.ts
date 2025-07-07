@@ -1,18 +1,19 @@
-import { NextResponse, type NextMiddleware, type NextRequest } from 'next/server';
-import type { User } from './types'
+import { type NextRequest, NextResponse } from 'next/server';
+import { verifySession } from './edge-session'
+import type { UserInfo } from "./types"
 
 export const runtime = "edge"
 
 interface Auth {
-  user: User | null
-  sessionId: string | null
-  protect: () => Promise<void | Response>
+  user: UserInfo | null
+  token: string | null
+  protect: () => Promise<void>
 }
 
 type MiddlewareCallback = (
   auth: Auth,
   request: NextRequest
-) => Promise<void | Response>
+) => Promise<void>
 
 
 /**
@@ -22,12 +23,52 @@ export function createRouteMatcher(patterns: string[]) {
   return (request: NextRequest): boolean => {
     const { pathname } = request.nextUrl
     return patterns.some((pattern) => {
-      // Convert route pattern to regex
-      const regexPattern = new RegExp(`^${pattern.replace(/\*/g, ".*").replace(/$$(.*)$$/, "(?:$1)?")}$`)
-      return regexPattern.test(pathname)
+      // Convert glob pattern to regex safely without dynamic evaluation
+      const regexPattern = pattern
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\\\*/g, ".*")
+      
+      return new RegExp(`^${regexPattern}$`).test(pathname)
     })
   }
 }
+
+
+/**
+ * Edge-compatible auth check
+ */
+async function edgeAuth(request: NextRequest): Promise<Auth> {
+  async function protect() {
+    throw new Error("Unauthorized access")
+  }
+
+  try {
+    const sessionResult = await verifySession(request)
+
+    if (sessionResult.isAuthenticated && sessionResult.user) {
+      return {
+        user: sessionResult.user,
+        token: request.cookies.get("_session_cookie")?.value || request.cookies.get("_session_token")?.value || null,
+        protect: async () => {},
+      }
+    }
+
+    return {
+      user: null,
+      token: null,
+      protect,
+    }
+  } catch (error) {
+    console.error("Auth check error:", error instanceof Error ? error
+    .message : "Unknown error")
+    return {
+      user: null,
+      token: null,
+      protect,
+    }
+  }
+}
+
 
 
 /**
@@ -35,41 +76,30 @@ export function createRouteMatcher(patterns: string[]) {
  * @param customHandler Optional function for additional custom logic
  */
 
-export function ternSecureMiddleware(callback?: MiddlewareCallback): NextMiddleware {
+export function ternSecureMiddleware(callback: MiddlewareCallback) {
   return async function middleware(request: NextRequest) {
     try {
+      const auth = await edgeAuth(request)
 
-      const sessionCookie = request.cookies.get("_session_cookie")
-      const idToken = request.cookies.get("_session_token")
-      const hasCookies = !!sessionCookie || !!idToken
+      try {
+        
+        await callback(auth, request)
 
-      const auth: Auth = {
-        user: null,
-        sessionId: null,
-        protect: async () => {
-          if (!hasCookies) {
-            const currentPath = request.nextUrl.pathname
-            if (currentPath !== '/sign-in') {
-              const redirectUrl = new URL('/sign-in', request.url)
-              redirectUrl.searchParams.set('redirect', currentPath)
-              return NextResponse.redirect(redirectUrl)
-            }
-          }
-        },
-      }
+        const response = NextResponse.next()
 
-    if (callback) {
-        const result = await callback(auth, request)
-        if (result instanceof Response) {
-          return result
+
+        return response
+      } catch (error) {
+        // Handle unauthorized access
+        if (error instanceof Error && error.message === 'Unauthorized access') {
+          const redirectUrl = new URL("/sign-in", request.url)
+          redirectUrl.searchParams.set("redirect", request.nextUrl.pathname)
+          return NextResponse.redirect(redirectUrl)
         }
-    }
-
-
-      // Continue to the next middleware or route handler
-      return  NextResponse.next()
+        throw error
+      }
     } catch (error) {
-      console.error("Middleware error:", error)
+      console.error("Middleware error:", error instanceof Error ? error.message : "Unknown error")
       const redirectUrl = new URL("/sign-in", request.url)
       return NextResponse.redirect(redirectUrl)
     }

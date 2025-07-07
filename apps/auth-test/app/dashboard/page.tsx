@@ -5,11 +5,12 @@ import { redirect, useRouter } from "next/navigation"
 
 export default function Dashboard() {
  const router = useRouter();
- const { user } = useAuth();
+ const { user, isAuthenticated } = useAuth();
 
  //console.log('Dashboard user:', user);
 
-
+   if (!user) return null;
+   
     const redirectToHome = () => {
       router.push('/');
     };
@@ -21,7 +22,7 @@ export default function Dashboard() {
     return (
       <div>
         <h1>Dashboard</h1>
-        <p>Welcome, {user?.displayName || user?.email}!</p>
+        <p>Welcome, {user.displayName || user.email}!</p>
         <button 
           onClick={redirectToMoPage}
           className="bg-blue-500 text-white px-4 py-2 rounded"

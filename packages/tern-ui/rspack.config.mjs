@@ -24,6 +24,7 @@ const packageJSON = require('./package.json');
 const APP_ENTRY_POINTS_CONFIG = {
   ternsecure: './src/index.ts',
   'ternsecure.browser': './src/index.browser.ts',
+  'service-worker': './service-worker-registar.js',
 };
 
 /**
@@ -286,6 +287,28 @@ const prodConfig = () => {
     }
   );
 
+  const ServiceWorkerConfig = merge(
+    entry('service-worker'),
+    sharedConfig(),
+    sharedProdConfig(),
+    prodBundler(),
+    {
+      mode: 'production',
+      output: {
+        filename: 'service-worker.js',
+        libraryTarget: 'self',
+    },
+    plugins: [
+      new rspack.optimize.LimitChunkCountPlugin({
+        maxChunks: 1,
+      }),
+    ],
+    optimization: {
+      splitChunks: false,
+    },
+  }
+);
+
   const EsmConfig = merge(baseProdConfig, {
     ...entry('ternsecure'),
     experiments: {
@@ -323,6 +346,7 @@ const prodConfig = () => {
 
   return [
     BrowserConfig,
+    ServiceWorkerConfig,
     EsmConfig,
     CjsConfig
   ];
@@ -399,9 +423,31 @@ const devConfig = ({ env }) => {
     }
   );
 
-  const mergedConfig = configToMerge;
+  const ServiceWorkerConfig = merge(
+    entry('service-worker'),
+    sharedConfig(),
+    sharedDevConfig(),
+    {
+      mode: 'development',
+      output: {
+        filename: 'service-worker.js',
+        libraryTarget: 'self',
+      },
+      plugins: [
+        new rspack.optimize.LimitChunkCountPlugin({
+          maxChunks: 1,
+        }),
+      ],
+      optimization: {
+        splitChunks: false,
+        minimize: false,
+      },
+    }
+  );
 
-  return mergedConfig;
+  //const mergedConfig = configToMerge;
+
+  return [configToMerge, ServiceWorkerConfig];
 }
 
 /**

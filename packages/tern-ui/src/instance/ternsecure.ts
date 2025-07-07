@@ -119,7 +119,7 @@ export class TernSecure implements TernSecureInterface {
             }
 
             const initTernAuth = async () => {
-                //console.log('[TernSecure] Creating TernSecureAuthProvider instance...')
+                console.log('[TernSecure] Creating TernSecureAuthProvider instance...')
                 return await  TernAuth.getOrCreateInstance(this.#options.ternSecureConfig!);
             };
 

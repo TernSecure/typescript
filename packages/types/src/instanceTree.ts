@@ -43,7 +43,8 @@ export type TernSecureInstanceTreeOptions = {
   environment?: string | undefined;
   requiresVerification?: boolean;
   isTernSecureDev?: boolean;
-  ternSecureConfig?: TernSecureConfig
+  ternSecureConfig?: TernSecureConfig;
+  enableServiceWorker?: boolean;
 } & SignInRedirectUrl & SignUpRedirectUrl;
 
 export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';

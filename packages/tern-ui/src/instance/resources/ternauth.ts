@@ -79,10 +79,10 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       ? initializeApp(config, appName) 
       : getApps()[0];
 
-
       this.ternSecureConfig = config;
 
       this.auth = getAuth(this.firebaseApp);
+  
 
       this.#authCookieManager = new AuthCookieManager();
       console.log("TernAuth: AuthCookieManager initialized");
@@ -99,19 +99,21 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         checkRedirectResult: this.authRedirectResult.bind(this),
       };
 
-      this.authStateUnsubscribe = this.initAuthStateListener();
+      //this.initializeAuthState();
+
+      this.authStateUnsubscribe = this.initAuthStateListenerOld();
     }
 
   public static async getOrCreateInstance(config: TernSecureConfig): Promise<TernAuth> {
     if (!TernAuth.instance) {
-      //console.log('[TernAuth] Creating new instance...');
+      console.log('[TernAuth] Creating new instance...');
       TernAuth.instance = new TernAuth(config);
 
-      //console.log('[TernAuth] Awaiting initial auth state resolution...');
+      console.log('[TernAuth] Awaiting initial auth state resolution...');
       await TernAuth.instance._initAuthStateResolvedPromise;
-      //console.log('[TernAuth] Initial auth state resolved.');
+      console.log('[TernAuth] Initial auth state resolved.');
     } else {
-      //console.log('[TernAuth] Returning existing instance, ensuring initial auth state was resolved...');
+      console.log('[TernAuth] Returning existing instance, ensuring initial auth state was resolved...');
       await TernAuth.instance._initAuthStateResolvedPromise;
     }
     return TernAuth.instance;
@@ -289,7 +291,32 @@ export class TernAuth implements TernSecureAuthProviderInterface {
     }
   }
 
-  private initAuthStateListener() : () => void {
+  private  async initializeAuthState(): Promise<void> {
+    try {
+      await this.auth.authStateReady();
+
+      this.authStateUnsubscribe = this.initAuthStateListener();
+
+      await this.updateInternalAuthState(this.auth.currentUser as TernSecureUser);
+
+      this._resolveInitialAuthState();
+    } catch (error) {
+      console.error("TernAuth: Error initializing auth state:", error);
+      this._authState = {
+        ...DEFAULT_TERN_SECURE_STATE,
+        isLoaded: true,
+        error: error as Error,
+        status: "unauthenticated",
+        user: null
+      };
+      this._resolveInitialAuthState();
+    }
+  }
+
+  /**
+   * @deprecated This method is deprecated and will be removed in future versions.
+   */
+  private initAuthStateListenerOld() : () => void {
     return onAuthStateChanged(this.auth, async (user: TernSecureUser | null) => {
         this._currentUser = user;
         await this.updateInternalAuthState(user);
@@ -301,6 +328,21 @@ export class TernAuth implements TernSecureAuthProviderInterface {
           this._resolveInitialAuthState = null; 
         }
       });
+  }
+
+  private initAuthStateListener(): () => void {
+    return onAuthStateChanged(this.auth, async (user: TernSecureUser | null) => {
+     this._currentUser = user;
+      await this.updateInternalAuthState(user);
+    });
+  }
+  
+  private setupTokenRefreshListener(): void {
+    this.auth.onIdTokenChanged(async (user) => {
+      if (user) {
+        await this.updateInternalAuthState(user as TernSecureUser);
+      }
+    });
   }
 
   private async updateInternalAuthState(user: TernSecureUser | null): Promise<void> {
@@ -322,7 +364,6 @@ export class TernAuth implements TernSecureAuthProviderInterface {
           token: user.getIdToken() || null,
           email: user.email || null,
           status: this.determineAuthStatus(user, requiresVerification),
-          requiresVerification,
           user
         };
       } else {
