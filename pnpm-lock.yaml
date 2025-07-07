@@ -163,6 +163,9 @@ importers:
 
   packages/nextjs:
     dependencies:
+      '@tern-secure/backend':
+        specifier: workspace:*
+        version: link:../backend
       '@tern-secure/react':
         specifier: workspace:*
         version: link:../react
