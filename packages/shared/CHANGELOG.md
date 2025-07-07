@@ -1,5 +1,13 @@
 # @tern-secure/shared
 
+## 1.1.1
+
+### Patch Changes
+
+- 5f29862: advanced Auth cookies and session management
+- Updated dependencies [5f29862]
+  - @tern-secure/types@1.0.2
+
 ## 1.1.0
 
 ### Minor Changes

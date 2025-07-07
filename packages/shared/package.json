@@ -1,6 +1,6 @@
 {
   "name": "@tern-secure/shared",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TernSecure/typescript.git",
