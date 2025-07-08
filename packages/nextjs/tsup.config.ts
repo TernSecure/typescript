@@ -11,9 +11,7 @@ const config: Options = {
     legacyOutput: true,
     external: [
         'react',
-        'react-dom',
-        'firebase',
-        'firebase-admin'
+        'react-dom'
     ], 
     define: {
         PACKAGE_NAME: `"${name}"`,
