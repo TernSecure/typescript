@@ -1,5 +1,11 @@
 # @tern-secure/backend
 
+## 1.1.5
+
+### Patch Changes
+
+- c77edd0: fix: removed unused dependecies
+
 ## 1.1.4
 
 ### Patch Changes

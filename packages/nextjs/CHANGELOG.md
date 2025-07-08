@@ -1,5 +1,12 @@
 # @tern-secure/nextjs
 
+## 5.1.7
+
+### Patch Changes
+
+- c77edd0: fix: removed unused dependecies
+  - @tern-secure/react@1.1.4
+
 ## 5.1.6
 
 ### Patch Changes
