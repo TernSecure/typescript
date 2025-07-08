@@ -1,5 +1,12 @@
 # @tern-secure/react
 
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [c77edd0]
+  - @tern-secure/backend@1.1.5
+
 ## 1.1.3
 
 ### Patch Changes
