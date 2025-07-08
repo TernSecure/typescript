@@ -52,14 +52,14 @@ const sharedConfig = () => {
         __TERN_UI_PACKAGE_NAME__: JSON.stringify(packageJSON.name),
         __TERN_UI_PACKAGE_VERSION__: JSON.stringify(packageJSON.version),
       }),
-      new RsdoctorRspackPlugin({
+      process.env.RSDOCTOR && new RsdoctorRspackPlugin({
         mode: process.env.RSDOCTOR === 'brief' ? 'brief' : 'normal',
         disableClientServer: process.env.RSDOCTOR === 'brief',
         supports: {
           generateTileGraph: true,
         }
       })
-    ],
+    ].filter(Boolean),
     output: {
       chunkFilename: `[name]_ternsecure_[fullhash:6]_${packageJSON.version}.js`
     },
