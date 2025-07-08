@@ -147,13 +147,13 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
+      firebase-admin:
+        specifier: ^12.7.0
+        version: 12.7.0
       tslib:
         specifier: 2.4.1
         version: 2.4.1
     devDependencies:
-      firebase-admin:
-        specifier: ^12.7.0
-        version: 12.7.0
       jose:
         specifier: ^5.0.0
         version: 5.10.0
@@ -175,6 +175,9 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
+      firebase-admin:
+        specifier: ^12.7.0
+        version: 12.7.0
       jose:
         specifier: ^5.9.6
         version: 5.10.0
