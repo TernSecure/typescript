@@ -1,5 +1,16 @@
 # @tern-secure/nextjs
 
+## 5.1.5
+
+### Patch Changes
+
+- 2e908c2: enhance versioning across packages.
+- Updated dependencies [2e908c2]
+  - @tern-secure/shared@1.2.0
+  - @tern-secure/backend@1.1.3
+  - @tern-secure/react@1.1.2
+  - @tern-secure/types@1.0.4
+
 ## 5.1.4
 
 ### Patch Changes
