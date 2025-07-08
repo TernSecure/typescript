@@ -1,5 +1,11 @@
 # @tern-secure/types
 
+## 1.0.3
+
+### Patch Changes
+
+- 7af68e4: update backend
+
 ## 1.0.2
 
 ### Patch Changes
