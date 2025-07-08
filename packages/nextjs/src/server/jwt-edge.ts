@@ -66,10 +66,10 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
       throw new Error("Invalid token format")
     }
 
-    console.log("Token details:", {
-      header: decoded.header,
-      type: isSessionCookie ? "session_cookie" : "id_token",
-    })
+    //console.log("Token details:", {
+    //  header: decoded.header,
+    //  type: isSessionCookie ? "session_cookie" : "id_token",
+    //})
 
 
         // Use different JWKS based on token type

@@ -21,7 +21,11 @@ import type {
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import { loadTernUIScript } from '@tern-secure/shared/loadTernUIScript';
 
-const ENVIRONMENT = process.env.NODE_ENV;
+const SDK_METADATA = {
+  name: __PACKAGE_NAME__,
+  version: __PACKAGE_VERSION__,
+  environment: process.env.NODE_ENV,
+}
 
 
 export interface Global {
@@ -132,8 +136,12 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     return this.ternui?.projectId;
   }
 
-  get environment() {
-    return this.ternui?.environment || this.options.environment || undefined;
+  get sdkMetadata() {
+    return this.ternui?.sdkMetadata || this.options.sdkMetadata || undefined;
+  }
+  
+  get version() {
+    return this.ternui?.version;
   }
 
   get mode(): 'browser' | 'server' | undefined {
@@ -148,8 +156,8 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this._mode = inBrowser() ? 'browser' : 'server';
     this.#eventBus.emit('statusChange', this.status);
 
-    if(!this.options.environment) {
-      this.options.environment = ENVIRONMENT;
+    if(!this.options.sdkMetadata) {
+      this.options.sdkMetadata = SDK_METADATA;
     }
 
     if (this.#customDomain) {

@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import { version as ternUiVersion } from '../tern-ui/package.json';
+import { name, version } from './package.json';
 
 export default defineConfig(() => {
   return {
@@ -13,7 +15,13 @@ export default defineConfig(() => {
     format: ['cjs', 'esm'],
     dts: true,
     external: [
-      '@tern-secure/types'
-    ]
+      'react',
+      'react-dom'
+    ],
+    define: {
+      PACKAGE_NAME: `"${name}"`,
+      PACKAGE_VERSION: `"${version}"`,
+      TERN_UI_VERSION: `"${ternUiVersion}"`,
+    },
   };
 });

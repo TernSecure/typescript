@@ -8,6 +8,7 @@ import type {
     SignInRedirectOptions,
     SignUpRedirectOptions,
     RedirectOptions,
+    TernSecureSDK,
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
@@ -16,10 +17,7 @@ import {
     TernAuth
 } from './resources/internal';
 import {
-    constructFullUrl,
     hasRedirectLoop,
-    storePreviousPath,
-    urlWithRedirect,
     buildURL
 } from '../utils/construct'
 
@@ -50,6 +48,12 @@ declare global {
 }
 
 export class TernSecure implements TernSecureInterface {
+    public static version: string = __TERN_UI_PACKAGE_VERSION__;
+    public static sdkMetadata: TernSecureSDK = {
+        name: __TERN_UI_PACKAGE_NAME__,
+        version: __TERN_UI_PACKAGE_VERSION__,
+        environment: process.env.NODE_ENV || 'production'
+    };
     public static mountComponentRenderer?: MountComponentRenderer;
     public static authProviderFactory?: () => TernSecureAuthProvider;
     #componentControls?: ReturnType<MountComponentRenderer>| null;
@@ -93,6 +97,15 @@ export class TernSecure implements TernSecureInterface {
     get status(): TernSecureInterface['status'] {
         return this.#status;
     }
+    
+    get version(): string {
+        return TernSecure.version;
+    }
+
+    get sdkMetadata(): TernSecureSDK {
+        return TernSecure.sdkMetadata;
+    }
+
 
     get requiresVerification(): boolean {
         return this.#options.requiresVerification ?? true; //default always to true
@@ -105,8 +118,8 @@ export class TernSecure implements TernSecureInterface {
 
         this.#options = this.#initOptions(options);
 
-        if (this.#options.environment) {
-            TernSecure.environment = this.#options.environment;
+        if (this.#options.sdkMetadata) {
+            TernSecure.sdkMetadata = this.#options.sdkMetadata;
         }
 
         try {

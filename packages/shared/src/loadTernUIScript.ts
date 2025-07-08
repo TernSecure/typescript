@@ -1,12 +1,14 @@
-import type { TernSecureInstanceTreeOptions } from "@tern-secure/types";
+import type { TernSecureInstanceTreeOptions, TernSecureSDK } from "@tern-secure/types";
 import { loadScript } from "./loadScript";
+import { resolveVersion } from "./resolveVersion";
 
 
 export type LoadTernUISCriptOptions = TernSecureInstanceTreeOptions & {
   apiKey?: string;
   customDomain?: string;
   proxyUrl?: string;
-  version?: string;
+  ternUIVersion?: string;
+  sdkMetadata?: TernSecureSDK;
   scriptHost?: string;
   localPort?: string;
   nonce?: string;
@@ -43,17 +45,18 @@ export const loadTernUIScript = async (options?: LoadTernUISCriptOptions) => {
     });
   }
 
-export const ternUIgetScriptUrl = (options?: LoadTernUISCriptOptions) => {
-    const isTernSecureDev = options?.isTernSecureDev
-    const version = options?.version || process.env.TERN_UI_VERSION || 'latest';
-
-    if ( isTernSecureDev) {
-        const localHost = process.env.TERN_UI_HOST || 'localhost';
-        const localPort = options?.localPort || process.env.TERN_UI_PORT || '4000';
-        return `http://${localHost}:${localPort}/ternsecure.browser.js`;
+export const ternUIgetScriptUrl = (options: LoadTernUISCriptOptions) => {
+  const { ternUIVersion, isTernSecureDev } = options
+  const version = resolveVersion(ternUIVersion)
+  
+  if ( isTernSecureDev) {
+    const localHost = process.env.TERN_UI_HOST || 'localhost';
+    const localPort = options?.localPort || process.env.TERN_UI_PORT || '4000';
+    return `http://${localHost}:${localPort}/ternsecure.browser.js`;
         //return `http://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
     }
-    return `https://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
+    //return `https://cdn.lifesprintcare.ca/dist/ternsecure.browser.js`
+    return `https://cdn.jsdelivr.net/npm/@tern-secure/ui@${version}/dist/ternsecure.browser.js`
 
     //const ternsecureCDN = options?.customDomain || 
                           //(options?.proxyUrl && new URL(options.proxyUrl).host) || 'cdn.tern-secure.com';
@@ -75,9 +78,7 @@ export const constructScriptAttributes = (options?: LoadTernUISCriptOptions) => 
   return {
     'data-domain': options?.customDomain || '',
     'data-apikey': options?.apiKey || '',
-    'data-environment': process.env.NODE_ENV || 'development',
     'data-proxyUrl': options?.proxyUrl || '',
-    'data-version': options?.version || process.env.TERN_UI_VERSION || 'latest',
     ...(options?.nonce ? { nonce: options.nonce } : {})
   };
 };
