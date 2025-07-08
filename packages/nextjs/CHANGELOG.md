@@ -1,5 +1,13 @@
 # @tern-secure/nextjs
 
+## 5.1.6
+
+### Patch Changes
+
+- bc5e08e: fix: update dependencies and scripts for consistency across packages
+- Updated dependencies [bc5e08e]
+  - @tern-secure/react@1.1.3
+
 ## 5.1.5
 
 ### Patch Changes

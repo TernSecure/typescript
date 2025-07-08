@@ -1,5 +1,13 @@
 # @tern-secure/react
 
+## 1.1.3
+
+### Patch Changes
+
+- bc5e08e: fix: update dependencies and scripts for consistency across packages
+- Updated dependencies [bc5e08e]
+  - @tern-secure/backend@1.1.4
+
 ## 1.1.2
 
 ### Patch Changes
