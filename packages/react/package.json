@@ -38,6 +38,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@tern-secure/backend": "workspace:*",
     "@tern-secure/shared": "workspace:*",
     "@tern-secure/types": "workspace:*",
     "class-variance-authority": "^0.7.1",

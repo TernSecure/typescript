@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup": "tsx scripts/ternsecure-sw.ts",
-    "postinstall": "pnpm setup"
+    "setup": "tsx scripts/ternsecure-sw.ts"
   },
   "dependencies": {
     "next": "15.3.2",
