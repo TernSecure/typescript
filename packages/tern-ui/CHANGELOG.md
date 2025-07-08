@@ -1,5 +1,14 @@
 # @tern-secure/ui
 
+## 1.1.2
+
+### Patch Changes
+
+- 2e908c2: enhance versioning across packages.
+- Updated dependencies [2e908c2]
+  - @tern-secure/shared@1.2.0
+  - @tern-secure/types@1.0.4
+
 ## 1.1.1
 
 ### Patch Changes
