@@ -172,9 +172,6 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
-      firebase-admin:
-        specifier: ^12.7.0
-        version: 12.7.0
       jose:
         specifier: ^5.9.6
         version: 5.10.0
