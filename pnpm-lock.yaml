@@ -147,13 +147,13 @@ importers:
       '@tern-secure/types':
         specifier: workspace:*
         version: link:../types
-      firebase-admin:
-        specifier: ^12.7.0
-        version: 12.7.0
       tslib:
         specifier: 2.4.1
         version: 2.4.1
     devDependencies:
+      firebase-admin:
+        specifier: ^12.7.0
+        version: 12.7.0
       jose:
         specifier: ^5.0.0
         version: 5.10.0
@@ -163,9 +163,6 @@ importers:
 
   packages/nextjs:
     dependencies:
-      '@tern-secure/backend':
-        specifier: workspace:*
-        version: link:../backend
       '@tern-secure/react':
         specifier: workspace:*
         version: link:../react
@@ -209,6 +206,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@tern-secure/backend':
+        specifier: workspace:*
+        version: link:../backend
       '@tern-secure/shared':
         specifier: workspace:*
         version: link:../shared
