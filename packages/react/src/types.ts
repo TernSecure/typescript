@@ -135,6 +135,7 @@ export type TernSecureProps =
 
 export type IsomorphicTernSecureOptions = TernSecureInstanceTreeOptions & {
   TernSecure?: TernSecureProps;
+  ternUIVersion?: string;
   apiKey?: string;
   customDomain?: string;
   proxyUrl?: string;

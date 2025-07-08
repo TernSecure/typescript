@@ -31,8 +31,26 @@ import type {
 
 type Mode = 'browser' | 'server';
 
+export type TernSecureSDK = {
+  /** SDK package name (e.g., @tern-secure/ui) */
+  name: string;
+  /** SDK version (e.g., 1.2.3) */
+  version: string;
+  /** Build environment (development, production, test) */
+  environment?: string;
+  /** Build date as ISO string */
+  buildDate?: string;
+  /** Additional build metadata */
+  buildInfo?: {
+    name: string;
+    version: string;
+    buildDate: string;
+    buildEnv: string;
+  };
+}
 
 export type TernSecureInstanceTreeOptions = {
+  sdkMetadata?: TernSecureSDK;
   initialSession?: TernSecureSessionTree | null;
   defaultAppearance?: Appearance;
   signInUrl?: string;
@@ -40,7 +58,6 @@ export type TernSecureInstanceTreeOptions = {
   mode?: Mode;
   onAuthStateChanged?: (user: TernSecureUser | null) => void;
   onError?: (error: AuthErrorTree) => void;
-  environment?: string | undefined;
   requiresVerification?: boolean;
   isTernSecureDev?: boolean;
   ternSecureConfig?: TernSecureConfig;
@@ -53,6 +70,8 @@ export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';
  * Instance interface for managing auth UI state
  */
 export interface TernSecureInstanceTree {
+  version: string | undefined;
+  sdkMetadata: TernSecureSDK| undefined;
   customDomain?: string;
   proxyUrl?: string;
   apiKey?: string;

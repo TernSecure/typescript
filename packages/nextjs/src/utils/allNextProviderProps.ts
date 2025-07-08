@@ -19,7 +19,6 @@ export const allNextProviderPropsWithEnv = (
     projectId: propsProjectId,
     customDomain: propsCustomDomain,
     proxyUrl: propsProxyUrl,
-    environment: propsEnvironment,
     requiresVerification: propsRequiresVerification,
     isTernSecureDev: propsIsTernSecureDev,
     enableServiceWorker: propsEnableServiceWorker,
@@ -58,7 +57,6 @@ export const allNextProviderPropsWithEnv = (
   const finalProjectId = propsProjectId ?? envConfig.projectId;
   const finalCustomDomain = propsCustomDomain ?? envConfig.customDomain;
   const finalProxyUrl = propsProxyUrl ?? envConfig.proxyUrl;
-  const finalEnvironment = propsEnvironment ?? envConfig.environment;
   const finalSignInUrl = signInUrl ?? envConfig.signInUrl;
   const finalSignUpUrl = signUpUrl ?? envConfig.signUpUrl;
   const finalSignInForceRedirectUrl = propsSignInForceRedirectUrl ?? envConfig.signInForceRedirectUrl;
@@ -74,7 +72,6 @@ export const allNextProviderPropsWithEnv = (
     projectId: finalProjectId,
     customDomain: finalCustomDomain,
     proxyUrl: finalProxyUrl,
-    environment: finalEnvironment,
 
     // Set the Firebase configuration properties
     ternSecureConfig,

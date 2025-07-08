@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import { version as ternUiVersion } from '../tern-ui/package.json';
+import { name, version } from './package.json';
 
 export default defineConfig(() => {
   return {
@@ -19,13 +21,14 @@ export default defineConfig(() => {
     'firebase-admin',
     '@tern-secure/types',
     '@tanstack/react-form',
-    '@tern-secure/next-backend',
+    '@tern-secure/backend',
     '@tern-secure/shared',
-    'tailwindcss',
-    'firebase/auth',
-    'firebase/storage',
-    'firebase/firestore'
   ],
+  define: {
+    __PACKAGE_NAME__: `"${name}"`,
+    __PACKAGE_VERSION__: `"${version}"`,
+    __TERN_UI_VERSION__: `"${ternUiVersion}"`,
+  },
   injectStyle: true,
   //onSuccess: 'pnpm build:styles'
   };

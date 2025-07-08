@@ -27,6 +27,7 @@
     "loadScript",
     "loadTernUIScript",
     "react",
+    "resolveVersion",
     "retry"
   ],
   "exports": {
