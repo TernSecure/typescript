@@ -1,5 +1,11 @@
 # @tern-secure/backend
 
+## 1.1.4
+
+### Patch Changes
+
+- bc5e08e: fix: update dependencies and scripts for consistency across packages
+
 ## 1.1.3
 
 ### Patch Changes
