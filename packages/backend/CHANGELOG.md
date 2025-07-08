@@ -1,5 +1,13 @@
 # @tern-secure/backend
 
+## 1.1.3
+
+### Patch Changes
+
+- 2e908c2: enhance versioning across packages.
+- Updated dependencies [2e908c2]
+  - @tern-secure/types@1.0.4
+
 ## 1.1.2
 
 ### Patch Changes

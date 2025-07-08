@@ -1,5 +1,16 @@
 # @tern-secure/shared
 
+## 1.2.0
+
+### Minor Changes
+
+- 2e908c2: enhance versioning across packages.
+
+### Patch Changes
+
+- Updated dependencies [2e908c2]
+  - @tern-secure/types@1.0.4
+
 ## 1.1.2
 
 ### Patch Changes
