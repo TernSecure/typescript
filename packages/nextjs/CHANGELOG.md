@@ -1,5 +1,23 @@
 # @tern-secure/nextjs
 
+## 5.1.4
+
+### Patch Changes
+
+- 7af68e4: update backend
+- Updated dependencies [7af68e4]
+  - @tern-secure/backend@1.1.2
+  - @tern-secure/shared@1.1.2
+  - @tern-secure/react@1.1.1
+  - @tern-secure/types@1.0.3
+
+## 5.1.3
+
+### Patch Changes
+
+- Updated dependencies [ccd486a]
+  - @tern-secure/backend@1.1.1
+
 ## 5.1.2
 
 ### Patch Changes

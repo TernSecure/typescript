@@ -1,5 +1,13 @@
 # @tern-secure/shared
 
+## 1.1.2
+
+### Patch Changes
+
+- 7af68e4: update backend
+- Updated dependencies [7af68e4]
+  - @tern-secure/types@1.0.3
+
 ## 1.1.1
 
 ### Patch Changes
