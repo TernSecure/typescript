@@ -12,7 +12,7 @@ export function UserButton() {
     const ternSecure = useTernSecure();
 
     const handleSignOut = () => {
-        ternSecure.ternAuth.signOut();
+        ternSecure.signOut();
     }
 
     const handleSignIn = () => {

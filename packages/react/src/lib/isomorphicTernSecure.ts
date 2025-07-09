@@ -9,6 +9,7 @@ import type {
   SignInRedirectOptions,
   SignUpRedirectOptions,
   RedirectOptions,
+  SignOutOptions,
 } from '@tern-secure/types';
 import type { 
   Browser, 
@@ -456,6 +457,16 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   redirectAfterSignUp = (redirectUrl?: string): void => {
     if (this.ternui?.redirectAfterSignUp) {
       this.ternui.redirectAfterSignUp();
+    }
+  };
+
+  signOut = async (options?: SignOutOptions): Promise<void> => {
+    if (this.ternui && this.isReady) {
+      await this.ternui.signOut(options);
+    } else {
+      this.queueMethodCall('signOut', async () => {
+        await this.signOut(options);
+      });
     }
   };
 

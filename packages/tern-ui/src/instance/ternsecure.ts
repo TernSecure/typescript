@@ -9,6 +9,7 @@ import type {
     SignUpRedirectOptions,
     RedirectOptions,
     TernSecureSDK,
+    SignOutOptions
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
@@ -312,6 +313,25 @@ export class TernSecure implements TernSecureInterface {
         throw new Error('shouldRedirect not implemented');
     }
 
+    public signOut = async (opts?: SignOutOptions): Promise<void> => {
+        if (!this.ternAuth) {
+            return
+        }
+        const redirectUrl = opts?.redirectUrl || this.#constructAfterSignOutUrl();
+
+        if (opts?.onBeforeSignOut) {
+            await opts.onBeforeSignOut();
+        }
+        await this.ternAuth?.signOut();
+
+        if (opts?.onAfterSignOut) {
+            await opts.onAfterSignOut();
+        }
+        if (inBrowser()) {
+            window.location.href = redirectUrl;
+        }
+    }
+
     #buildUrl = (
         key: 'signInUrl' | 'signUpUrl', 
         options: RedirectOptions // This is SignInRedirectOptions | SignUpRedirectOptions
@@ -463,6 +483,13 @@ export class TernSecure implements TernSecureInterface {
         }
         
         return this.constructUrlWithAuthRedirect(redirectPath);
+    }
+
+    #constructAfterSignOutUrl = (): string => {
+        if (!this.#options.afterSignOutUrl) {
+            return '/';
+        }
+        return this.constructUrlWithAuthRedirect(this.#options.afterSignOutUrl)
     }
     
     public redirectToSignIn = async (options?: SignInRedirectOptions): Promise<unknown> => {

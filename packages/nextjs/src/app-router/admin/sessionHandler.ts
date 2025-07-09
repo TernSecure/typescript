@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createSessionCookie } from "@tern-secure/react"
+import { NextCookieStore } from "../../utils/NextCookieAdapter"
 
 export async function createSessionHandler(request: NextRequest): Promise<NextResponse> {
     try {
         const body = await request.json()
         const { idToken, csrfToken } = body
+        const cookieStore = new NextCookieStore()
 
         if (!idToken) {
             return NextResponse.json(
@@ -28,7 +30,7 @@ export async function createSessionHandler(request: NextRequest): Promise<NextRe
             );
         }
 
-        const res = await createSessionCookie(idToken);
+        const res = await createSessionCookie(idToken, cookieStore);
 
         if (!res.success) {
             console.error('[createSessionHandler] Error creating session cookie:', {

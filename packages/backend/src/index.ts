@@ -1,7 +1,6 @@
 export { 
-    verifyTernSessionCookie,
     createSessionCookie, 
-    clearSessionCookie 
+    clearSessionCookie
 } from './admin/sessionTernSecure'
 export { 
     adminTernSecureAuth, 

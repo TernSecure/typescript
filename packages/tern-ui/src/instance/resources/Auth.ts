@@ -1,5 +1,9 @@
-import { cookieHandler, type CookieAttributes } from '@tern-secure/shared/cookie';
-import type { SessionResult } from '@tern-secure/types';
+import { 
+  cookieHandler, 
+  serverCookieHandler,
+  type CookieAttributes
+} from '@tern-secure/shared/cookie';
+import type { SessionResult, CookieStore } from '@tern-secure/types';
 
 const SESSION_COOKIE_NAME = '_session_cookie';
 const CSRF_COOKIE_NAME = '__session_terncf';
@@ -13,6 +17,18 @@ type CSRFToken = {
   token: string | null;
 }
 
+const cookieOptions = {
+  maxAge: 60 * 60, // 1 hour in seconds
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict' as const,
+  path: '/'
+};
+
+const ENVIRONMENT_DETECTION = {
+  isClientSide: () => typeof window !== 'undefined',
+  isServerSide: () => typeof window === 'undefined'
+} as const;
 
 type CookieOptions = CookieAttributes
 
@@ -30,12 +46,14 @@ export class AuthCookieManager {
   private readonly baseUrl: string;
   private readonly csrfCookieHandler = cookieHandler(CSRF_COOKIE_NAME);
   private readonly sessionCookieHandler = cookieHandler(SESSION_COOKIE_NAME);
+  private serverCookie: CookieStore | null = null;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || this.getApiEndpoint();
     console.log('[AuthCookieManager] Initialized with base URL:', this.baseUrl);
     this.ensureCSRFToken();
   }
+
   
   private getApiEndpoint(): string {
     const isLocalhost = window.location.hostname === 'localhost';
@@ -78,6 +96,10 @@ export class AuthCookieManager {
       this.setCSRFToken({ token: ctoken });
     }
     return ctoken;
+  }
+  
+  private isServerCookieAvailable(): boolean {
+    return ENVIRONMENT_DETECTION.isServerSide() && this.serverCookie !== null;
   }
   
   createSessionCookie = async(token: string): Promise<SessionResult> => {
@@ -158,6 +180,35 @@ export class AuthCookieManager {
     }
   };
 
+  createSessionCookieTwo = async(token: string): Promise<SessionResult> => {
+    try {
+      if (ENVIRONMENT_DETECTION.isClientSide()) {
+        console.warn('[AuthCookieManager] createSessionCookieTwo called in client-side context. Falling back to API-based session creation.');
+        throw new Error('Client-side session creation not supported');
+        //return await this.createSessionCookie(token);
+      }
+      
+      if (!this.isServerCookieAvailable()) {
+        console.error('[AuthCookieManager] Server cookie handler not initialized. Call setServerResponse() first.');
+        return {
+          success: false,
+          message: 'Server cookie handler not initialized',
+          error: 'HANDLER_NOT_INITIALIZED'
+        };
+      }
+      
+      await this.serverCookie!.set(SESSION_COOKIE_NAME, token, cookieOptions);
+      return {
+        success: true,
+        message: 'Session cookie created successfully',
+        cookieSet: true
+      };
+    } catch (error) {
+      console.error('[AuthCookieManager] Failed to create session cookie:', error);
+      throw error
+    }
+  }
+
 
   /**
    * Set authentication tokens in cookies
@@ -199,6 +250,21 @@ export class AuthCookieManager {
       throw new Error('Unable to store CSRF token');
     }
   }
+  
+  setServerResponse(response: Response): void {
+    if (ENVIRONMENT_DETECTION.isClientSide()) {
+    console.warn('[AuthCookieManager] setServerResponse called in client-side context. Server cookies not available.');
+    return;
+  }
+
+  if (!response || !response.headers) {
+    console.error('[AuthCookieManager] Invalid response object provided to setServerResponse');
+    return;
+  }
+
+  this.serverCookie = serverCookieHandler(response);
+  console.log('[AuthCookieManager] Server response configured for cookie operations');
+}
 
   /**
    * Get CSRF token from cookies

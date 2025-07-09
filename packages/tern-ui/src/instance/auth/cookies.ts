@@ -1,4 +1,5 @@
-  import { cookieHandler } from '@tern-secure/shared/cookie'
+  import { cookieHandler, serverCookieHandler } from '@tern-secure/shared/cookie'
+  import { CookieStore } from '@tern-secure/types';
 
   export type csrfSessionCookieProps = {
     set: (token: string) => void;
@@ -65,3 +66,33 @@
       remove
     }
   }
+
+
+
+export const createServerCookie = (response: Response): CookieStore => {
+  const serverCookie = serverCookieHandler(response);
+
+  const set = async (name: string, value: string) => {
+    await serverCookie.set(name, value, {
+      maxAge: 3600, // 1 hour in seconds
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/'
+    });
+  };
+
+  const get = async (name: string) => {
+    return await serverCookie.get(name);
+  };
+
+  const remove = async (name: string) => {
+    await serverCookie.delete(name);
+  };
+
+  return {
+    set,
+    get,
+    delete: remove
+  };
+};

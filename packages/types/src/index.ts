@@ -1,4 +1,5 @@
 export * from './all'
+export * from './cookie'
 export * from './errors'
 export * from './ternsecure'
 export * from './theme'

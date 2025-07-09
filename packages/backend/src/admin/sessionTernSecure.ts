@@ -1,8 +1,13 @@
 'use server'
 
-import { cookies } from 'next/headers';
 import { adminTernSecureAuth as adminAuth } from '../utils/admin-init';
-import { handleFirebaseAuthError, type AuthErrorResponse, type SessionParams, type SessionResult } from '@tern-secure/types';
+import {
+  handleFirebaseAuthError, 
+  type AuthErrorResponse, 
+  type SessionParams, 
+  type SessionResult,
+  type CookieStore,
+} from '@tern-secure/types';
 
 interface FirebaseAuthError extends Error {
   code?: string;
@@ -25,12 +30,11 @@ interface TernVerificationResult extends User {
   error?: AuthErrorResponse
 }
 
-
-// DRY Constants
 const SESSION_CONSTANTS = {
   COOKIE_NAME: '_session_cookie',
   DEFAULT_EXPIRES_IN_MS: 60 * 60 * 24 * 5 * 1000, // 5 days
   DEFAULT_EXPIRES_IN_SECONDS: 60 * 60 * 24 * 5,
+  REVOKE_REFRESH_TOKENS_ON_SIGNOUT: false,
 } as const;
 
 const COOKIE_OPTIONS = {
@@ -42,8 +46,11 @@ const COOKIE_OPTIONS = {
 
 
 
-export async function createSessionCookie(params: SessionParams | string): Promise<SessionResult> {
+export async function createSessionCookie(params: SessionParams | string, cookieStore: CookieStore): Promise<SessionResult> {
   try {
+    let decodedToken;
+    let sessionCookie;
+
     // Handle both old string format and new object format for backward compatibility
     const idToken = typeof params === 'string' ? params : params.idToken;
     
@@ -58,8 +65,6 @@ export async function createSessionCookie(params: SessionParams | string): Promi
       };
     }
 
-    // Verify the ID token first
-    let decodedToken;
     try {
       decodedToken = await adminAuth.verifyIdToken(idToken);
     } catch (verifyError) {
@@ -84,8 +89,6 @@ export async function createSessionCookie(params: SessionParams | string): Promi
       };
     }
 
-    // Create session cookie
-    let sessionCookie;
     try {
       sessionCookie = await adminAuth.createSessionCookie(idToken, { 
         expiresIn: SESSION_CONSTANTS.DEFAULT_EXPIRES_IN_MS 
@@ -104,14 +107,14 @@ export async function createSessionCookie(params: SessionParams | string): Promi
     // Set the cookie and verify it was set
     let cookieSetSuccessfully = false;
     try {
-      const cookieStore = await cookies();
+      //const cookieStore = await cookies();
       cookieStore.set(SESSION_CONSTANTS.COOKIE_NAME, sessionCookie, {
         maxAge: SESSION_CONSTANTS.DEFAULT_EXPIRES_IN_SECONDS,
         ...COOKIE_OPTIONS,
       });
 
       // Verify the cookie was actually set
-      const verifySetCookie = cookieStore.get(SESSION_CONSTANTS.COOKIE_NAME);
+      const verifySetCookie = await cookieStore.get(SESSION_CONSTANTS.COOKIE_NAME);
       cookieSetSuccessfully = !!verifySetCookie?.value;
       
       if (!cookieSetSuccessfully) {
@@ -151,150 +154,44 @@ export async function createSessionCookie(params: SessionParams | string): Promi
 }
 
 
-
-export async function getServerSessionCookie() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('_session_cookie')?.value;
-
-  if (!sessionCookie) {
-    throw new Error('No session cookie found')
-  }
-    
+export async function clearSessionCookie(cookieStore: CookieStore): Promise<SessionResult> {
   try {
-    const decondeClaims = await adminAuth.verifySessionCookie(sessionCookie, true)
-    return {
-      token: sessionCookie,
-      userId: decondeClaims.uid
-    }
-  } catch (error) {
-    console.error('Error verifying session:', error)
-    throw new Error('Invalid Session')
-  }
-}
+    const sessionCookie = await cookieStore.get(SESSION_CONSTANTS.COOKIE_NAME);
 
+    // Delete all session-related cookies
+    await cookieStore.delete(SESSION_CONSTANTS.COOKIE_NAME);
+    await cookieStore.delete('_session_token');
+    await cookieStore.delete('_session');
 
-export async function getIdToken() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('_session_token')?.value;
-
-  if (!token) {
-    throw new Error('No session cookie found')
-  }
-    
-  try {
-    const decodedClaims = await adminAuth.verifyIdToken(token)
-    return {
-      token: token,
-      userId: decodedClaims.uid
-    }
-  } catch (error) {
-    console.error('Error verifying session:', error)
-    throw new Error('Invalid Session')
-  }
-}
-
-export async function setServerSession(token: string) {
-  try {
-    const cookieStore = await cookies();
-    cookieStore.set('_session_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60, // 1 hour
-      path: '/',
-    });
-    return { success: true, message: 'Session created' };
-  } catch {
-    return { success: false, message: 'Failed to create session' };
-  }
-}
-
-  export async function verifyTernIdToken(token: string): Promise<TernVerificationResult> {
-    try {
-      const decodedToken = await adminAuth.verifyIdToken(token);
-      return {
-        valid: true,
-        uid: decodedToken.uid,
-        email: decodedToken.email || null,
-        authTime: decodedToken.auth_time
-      };
-    } catch (error) {
-      const errorResponse = handleFirebaseAuthError(error)
-      return {
-        valid: false,
-        uid: null,
-        email: null,
-        error: errorResponse
-      };
-    }
-  }
-  
-
-  export async function verifyTernSessionCookie(session: string): Promise<TernVerificationResult>{
-    try {
-      const res = await adminAuth.verifySessionCookie(session);
-      return { 
-          valid: true, 
-          uid: res.uid,
-          email: res.email || null,
-          authTime: res.auth_time
-        };
-    } catch (error) {
-      const errorResponse = handleFirebaseAuthError(error)
-      return {
-        valid: false, 
-        uid: null,
-        email: null,
-        error: errorResponse
-      };
-    }
-  }
-
-
-  export async function clearSessionCookie() {
-    const cookieStore = await cookies()
-    
-    cookieStore.delete('_session_cookie')
-    cookieStore.delete('_session_token')
-    cookieStore.delete('_session')
-  
-    try {
-      // Verify if there's an active session before revoking
-      const sessionCookie = cookieStore.get('_session_cookie')?.value
-      if (sessionCookie) {
-        // Get the decoded claims to get the user's ID
-        const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie)
-        
-        // Revoke all sessions for the user
-        await adminAuth.revokeRefreshTokens(decodedClaims.uid)
+    // Try to revoke refresh tokens if we have a valid session
+    if (SESSION_CONSTANTS.REVOKE_REFRESH_TOKENS_ON_SIGNOUT && sessionCookie?.value) {
+      try {
+        const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie.value);
+        await adminAuth.revokeRefreshTokens(decodedClaims.uid);
+        console.log(`[clearSessionCookie] Successfully revoked tokens for user: ${decodedClaims.uid}`);
+      } catch (revokeError) {
+        console.error('[clearSessionCookie] Failed to revoke refresh tokens:', revokeError);
       }
-      
-      return { success: true, message: 'Session cleared successfully' }
-    } catch (error) {
-      console.error('Error clearing session:', error)
-      // Still return success even if revoking fails, as cookies are cleared
-      return { success: true, message: 'Session cookies cleared' }
     }
+
+    console.log('[clearSessionCookie] Session cookies cleared successfully');
+    return {
+      success: true,
+      message: 'Session cleared successfully',
+      cookieSet: false
+    };
+
+  } catch (error) {
+    console.error('[clearSessionCookie] Unexpected error:', error);
+    const authError = handleFirebaseAuthError(error);
+    return {
+      success: false,
+      message: authError.message || 'Failed to clear session',
+      error: authError.code || 'INTERNAL_ERROR',
+      cookieSet: false
+    };
   }
+}
 
 
 
-/*
-  export async function GET(request: NextRequest) {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value
-  
-    if (!sessionCookie) {
-      return NextResponse.json({ isAuthenticated: false }, { status: 401 })
-    }
-  
-    try {
-      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true)
-      return NextResponse.json({ isAuthenticated: true, user: decodedClaims }, { status: 200 })
-    } catch (error) {
-      console.error('Error verifying session cookie:', error)
-      return NextResponse.json({ isAuthenticated: false }, { status: 401 })
-    }
-  }
-
-*/

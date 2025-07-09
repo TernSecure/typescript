@@ -19,6 +19,7 @@ import type {
   AuthErrorTree
 } from './errors';
 import type {
+  AfterSignOutUrl,
   RedirectOptions,
   SignInRedirectUrl,
   SignUpRedirectUrl
@@ -49,6 +50,15 @@ export type TernSecureSDK = {
   };
 }
 
+export type SignOutOptions = {
+  /** URL to redirect to after sign out */
+  redirectUrl?: string;
+  /** Callback to perform consumer-specific cleanup (e.g., delete session cookies) */
+  onBeforeSignOut?: () => Promise<void> | void;
+  /** Callback executed after successful sign out */
+  onAfterSignOut?: () => Promise<void> | void;
+};
+
 export type TernSecureInstanceTreeOptions = {
   sdkMetadata?: TernSecureSDK;
   initialSession?: TernSecureSessionTree | null;
@@ -62,7 +72,7 @@ export type TernSecureInstanceTreeOptions = {
   isTernSecureDev?: boolean;
   ternSecureConfig?: TernSecureConfig;
   enableServiceWorker?: boolean;
-} & SignInRedirectUrl & SignUpRedirectUrl;
+} & SignInRedirectUrl & SignUpRedirectUrl & AfterSignOutUrl;
 
 export type TernSecureInstanceTreeStatus = 'error' | 'loading' | 'ready';
 
@@ -95,6 +105,8 @@ export interface TernSecureInstanceTree {
 
   /** Core Authentication Methods */
   ternAuth: TernSecureAuthProvider | undefined;
+  /** Sign out current user with optional cleanup */
+  signOut: (options?: SignOutOptions) => Promise<void>;
   
   showSignIn: (targetNode: HTMLDivElement, config?: SignInPropsTree) => void;
   hideSignIn: (targetNode: HTMLDivElement) => void;

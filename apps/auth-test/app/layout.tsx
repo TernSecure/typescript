@@ -37,7 +37,7 @@ export default async function RootLayout({
         <TernSecureProvider 
           requiresVerification={true}  //default is true
           customDomain="http://localhost:4000"
-          isTernSecureDev={false}  //use popup mode. if redirect on localhost it cannot 
+          isTernSecureDev={true}  //use popup mode. if redirect on localhost it cannot 
         > 
         <UserButton />
         {children}

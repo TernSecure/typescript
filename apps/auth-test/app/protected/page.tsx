@@ -4,7 +4,8 @@ import { redirect} from "next/navigation";
 export default async function ProtectedPage() {
     const { user } = await auth();
 
-    
+    if (!user) return null
+
     const redirectToHome = () => {
       redirect('/');
     };

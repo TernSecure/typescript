@@ -48,7 +48,7 @@ export {
 } from '@tern-secure/shared/loadTernUIScript'
 
 export {
-    createSessionCookie,
-    clearSessionCookie
+    clearSessionCookie,
+    createSessionCookie
 } from './client/session'
 

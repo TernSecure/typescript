@@ -241,7 +241,6 @@ export class TernAuth implements TernSecureAuthProviderInterface {
       this.auth.signOut(),
       this.updateInternalAuthState(null)
     ]);
-    TernSecureBase.ternsecure.redirectToSignIn();
   }
 
   currentSession = async(): Promise<SignedInSession | null> => {

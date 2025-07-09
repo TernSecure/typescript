@@ -119,7 +119,9 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
   };
   
   const handleSuccess = (user: TernSecureUser | null) => {
-
+    if (user) {
+      handleSignInSuccess(user);
+    }
   };
   
   const handlePostAuthentication = async (user: TernSecureUser) => {
@@ -134,7 +136,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
     const sessionCreated = await createUserSession(user);
     
     if (user?.emailVerified && sessionCreated) {
-      handleSignInSuccess(user);
+      handleSuccess(user);
     }
     return { success: true, user, requiresVerification: false };
   };
@@ -156,7 +158,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
       const res = await authCookieManager.createSessionCookie(idToken);
         
         if (!res.success) {
-          console.warn('[SignInStart] Failed to create session cookie:', res.message);
+          console.error('[SignInStart] Failed to create session cookie:', res.message);
           return {
             success: false,
             error: {
