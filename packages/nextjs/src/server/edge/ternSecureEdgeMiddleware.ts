@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { verifySession } from './edge-session'
-import type { BaseUser } from "./types"
+import { verifySession, VerifySessionWithRestApi } from './edge-session'
+import type { BaseUser } from "../types"
+
 
 export const runtime = "edge"
 

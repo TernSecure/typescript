@@ -193,7 +193,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
   async loadTernUI(): Promise<HeadlessUIBrowser | Browser | undefined> {
     if (this._mode !== 'browser' || this.isReady) {
-      console.warn('[IsomorphicTernSecure] loadTernUI called in non-browser mode');
+      //console.warn('[IsomorphicTernSecure] loadTernUI called in non-browser mode');
       return;
     }
 

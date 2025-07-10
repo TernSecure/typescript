@@ -10,18 +10,19 @@
     "setup": "tsx scripts/ternsecure-sw.ts"
   },
   "dependencies": {
-    "next": "15.3.2",
+    "@tern-secure/nextjs": "workspace:*",
+    "firebase-admin": "^12.7.0",
+    "next": "15.4.0-canary.123",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@tern-secure/nextjs": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "tsx": "^4.7.0"
+    "tsx": "^4.7.0",
+    "typescript": "^5"
   }
 }

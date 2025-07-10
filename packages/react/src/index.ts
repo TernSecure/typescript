@@ -47,8 +47,3 @@ export {
     constructScriptAttributes
 } from '@tern-secure/shared/loadTernUIScript'
 
-export {
-    clearSessionCookie,
-    createSessionCookie
-} from './client/session'
-

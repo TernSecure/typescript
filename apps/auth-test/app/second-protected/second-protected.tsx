@@ -6,8 +6,8 @@ interface ProtectedPageClientProps {
     user: BaseUser;
 }
 
-export function ProtectedPageClient({ user }: ProtectedPageClientProps) {
-        console.log('User in protected page:', user)
+export function SecondProtected({ user }: ProtectedPageClientProps) {
+        console.log('User in second protected page:', user)
     const router = useRouter();
 
     const redirectToHome = () => {
@@ -18,13 +18,13 @@ export function ProtectedPageClient({ user }: ProtectedPageClientProps) {
         router.push('/mo');
     };
 
-    const redirectToSecondProtectedPage = () => {
-        router.push('/second-protected');
+    const redirectToFirstProtectedPage = () => {
+        router.push('/protected');
     }
 
     return (
         <div>
-            <h1>First Protected Page</h1>
+            <h1>Second Protected Page</h1>
             <p>Welcome, {user?.email}!</p>
             
             <button
@@ -41,10 +41,10 @@ export function ProtectedPageClient({ user }: ProtectedPageClientProps) {
                 Back to Home
             </button>
                     <button
-                onClick={redirectToSecondProtectedPage}
+                onClick={redirectToFirstProtectedPage}
                 className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
             >
-                Second Protected Page
+               First Protected Page
             </button>
         </div>
     );

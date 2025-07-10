@@ -9,19 +9,20 @@ interface FirebaseIdTokenPayload {
   sub: string
   iat: number
   exp: number
-  email?: string | null
+  email?: string
   email_verified?: boolean
   firebase: {
     identities: {
       [key: string]: any
     }
     sign_in_provider: string
+    tenant?: string;
   }
 }
 
-
 interface FirebaseTokenResult {
   valid: boolean;
+  tenant?: string;
   uid?: string;
   email?: string | null;
   emailVerified?: boolean;
@@ -78,58 +79,90 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
       throw new Error("Invalid token format")
     }
 
-    console.log("Token details:", {
-      header: decoded.header,
-      type: isSessionCookie ? "session_cookie" : "id_token",
-    })
+    //console.log("Token details:", {
+     // header: decoded.header,
+     // type: isSessionCookie ? "session_cookie" : "id_token",
+    //})
 
+    let retries = 3
+    let lastError: Error | null = null
 
+    while (retries > 0) {
+      try {
         // Use different JWKS based on token type
-    const JWKS = isSessionCookie ? await getSessionJWKS() : await getIdTokenJWKS()
+        const JWKS = isSessionCookie ? await getSessionJWKS() : await getIdTokenJWKS()
 
-    const { payload } = await jwtVerify(token, JWKS, {
+        const { payload } = await jwtVerify(token, JWKS, {
           issuer: isSessionCookie
             ? "https://session.firebase.google.com/" + projectId
             : "https://securetoken.google.com/" + projectId,
           audience: projectId,
           algorithms: ["RS256"],
-    })
+        })
 
-    const firebasePayload = payload as unknown as FirebaseIdTokenPayload
-    const now = Math.floor(Date.now() / 1000)
+        const firebasePayload = payload as unknown as FirebaseIdTokenPayload
+        const now = Math.floor(Date.now() / 1000)
 
+        // Verify token claims
+        if (firebasePayload.exp <= now) {
+          throw new Error("Token has expired")
+        }
 
-    if (!firebasePayload.sub) {
+        if (firebasePayload.iat > now) {
+          throw new Error("Token issued time is in the future")
+        }
+
+        if (!firebasePayload.sub) {
           throw new Error("Token subject is empty")
-    }
+        }
 
-    return {
+        if (firebasePayload.auth_time > now) {
+          throw new Error("Token auth time is in the future")
+        }
+
+        return {
           valid: true,
           uid: firebasePayload.sub,
-          email: firebasePayload.email ? String(firebasePayload.email) : null,
+          email: firebasePayload.email,
           emailVerified: firebasePayload.email_verified,
-          authTime: typeof firebasePayload.auth_time === 'number' ? firebasePayload.auth_time : undefined,
+          tenant: firebasePayload.firebase.tenant,
+          authTime: firebasePayload.auth_time,
           issuedAt: firebasePayload.iat,
           expiresAt: firebasePayload.exp,
         }
-    } catch (error) {
-        console.error("Token verification details:", {
-          error:
-            error instanceof Error
-              ? {
-                  name: error.name,
-                  message: error.message,
-                  stack: error.stack,
-                }
-              : error,
-          decoded: decodeJwt(token),
-          //projectId,
-          isSessionCookie,
-        })
-    
-        return {
-          valid: false,
-          error: error instanceof Error ? error.message : "Invalid token",
+      } catch (error) {
+        lastError = error as Error
+        if (error instanceof Error && error.name === "JWKSNoMatchingKey") {
+          console.warn(`JWKS retry attempt ${4 - retries}:`, error.message)
+          retries--
+          if (retries > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            continue
+          }
         }
+        throw error
       }
     }
+
+    throw lastError || new Error("Failed to verify token after retries")
+  } catch (error) {
+    console.error("Token verification details:", {
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : error,
+      decoded: decodeJwt(token),
+      //projectId,
+      isSessionCookie,
+    })
+
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : "Invalid token",
+    }
+  }
+}

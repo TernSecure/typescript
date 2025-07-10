@@ -1,5 +1,5 @@
 import { auth } from "@tern-secure/nextjs/server"
-import { ProtectedPageClient } from "./protectedClient"
+import { SecondProtected } from "./second-protected"
 
 export default async function ProtectedPage() {
     const session = await auth();
@@ -7,6 +7,6 @@ export default async function ProtectedPage() {
     if (!session || !session.user) return null
 
     const user = session.user;
-    
-    return <ProtectedPageClient user={user} />
+
+    return <SecondProtected user={user} />
 }

@@ -1,5 +1,5 @@
 // middleware.ts
-import { ternSecureMiddleware, createRouteMatcher } from '@tern-secure/nextjs/server';
+import { ternSecureMiddleware, createRouteMatcher } from '@tern-secure/nextjs/server/edge';
 
 const publicPaths = createRouteMatcher(['/sign-in', '/sign-up', '/api/session'])
 
@@ -11,7 +11,7 @@ export const config = {
 };
 
 export default ternSecureMiddleware(async (auth, request) => {
-  console.log(auth.user ? `Authenticated user: ${auth.user.uid}` : 'No authenticated user')
+  console.log('[MiddleWare]', auth.user ? `Authenticated user: ${auth.user.uid}` : 'No authenticated user')
   if(!publicPaths(request)) {
     await auth.protect()
   }

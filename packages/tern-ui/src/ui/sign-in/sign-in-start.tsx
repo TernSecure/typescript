@@ -179,7 +179,7 @@ function SignInStartInternal({ socialButtonsConfig, ui, className }: SignInStart
           }
         };
       }
-    };
+  };
 
   const { appName, logo } = ui || {};
 

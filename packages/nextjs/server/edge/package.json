@@ -1,0 +1,5 @@
+{
+  "main": "../../dist/cjs/server/edge/index.js",
+  "module": "../../dist/esm/server/edge/index.js",
+  "types": "../../dist/types/server/edge/index.d.ts"
+}

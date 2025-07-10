@@ -373,6 +373,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
           status: "unauthenticated",
           user: null
         };
+        //await this.#authCookieManager.clearServerCookie();
       }
 
       if (this.hasAuthStateChanged(previousState, this._authState)) {
@@ -468,7 +469,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
         const user = result.user;
         return {
           success: true,
-          user,
+          user
         }
       }
       return null;

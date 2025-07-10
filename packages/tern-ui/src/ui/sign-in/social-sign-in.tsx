@@ -9,8 +9,23 @@ import type {
 import { Separator, Button } from '../../components/elements'
 import { cn } from './../../lib/utils'
 import { useAuthSignIn } from '../../ctx';
+import { useTernSecure } from '@tern-secure/shared/react';
 import { useSignInContext } from '../../ctx/components/SignIn'
 
+
+export type SessionErrorCode = 
+  | 'ENDPOINT_NOT_FOUND'
+  | 'COOKIE_SET_FAILED'
+  | 'API_REQUEST_FAILED'
+  | 'NETWORK_ERROR'
+  | 'UNAUTHORIZED'
+  | 'UNKNOWN_ERROR';
+
+export interface SessionError {
+  code: SessionErrorCode;
+  message: string;
+  original?: unknown;
+}
 
 interface SocialSignInProps {
   onError?: (error: Error, response?: SignInResponseTree | null) => void
@@ -36,6 +51,8 @@ export function SocialSignIn({
   mode = 'popup'
 }: SocialSignInProps) {
   const signIn  = useAuthSignIn();
+  const ternSecure = useTernSecure();
+
 
   const handleSocialSignIn = useCallback(async (provider: 'google' | 'microsoft') => {
     try {
@@ -45,13 +62,57 @@ export function SocialSignIn({
         if (!result.success) {
           onError?.(new Error(result.message), result)
         } else {
-          onSuccess?.(result.user)
+          const sessionResult = await createUserSession(result.user);
+          console.log('[SignInStart] Session creation result:', sessionResult);
+          if (!sessionResult.success) {
+            onSuccess?.(result.user)
+          }
         }
       }
     } catch (error) {
       onError?.(error as Error)
     }
   }, [signIn, onError, onSuccess, mode])
+
+  const createUserSession = async (user: TernSecureUser): Promise<{success: boolean; error?: SessionError}> => {
+    const authCookieManager = ternSecure.ternAuth.authCookieManager();
+    if (!authCookieManager) {
+      return {
+        success: false,
+        error: {
+          code: 'ENDPOINT_NOT_FOUND',
+          message: 'Session management is not configured'
+        }
+      };
+    }
+    
+    try {
+      const idToken = await user.getIdToken();
+      const res = await authCookieManager.createSessionCookie(idToken);
+        
+        if (!res.success) {
+          console.error('[SignInStart] Failed to create session cookie:', res.message);
+          return {
+            success: false,
+            error: {
+              code: res.error as SessionErrorCode,
+              message: res.message
+            }
+          };
+        }
+        return { success: true };
+      } catch (error) {
+        console.error('[SignInStart] Error creating session cookie:', error);
+        return {
+          success: false,
+          error: {
+            code: 'UNKNOWN_ERROR',
+            message: 'Failed to create session cookie',
+            original: error
+          }
+        };
+      }
+  };
 
   const showGoogle = config?.google !== false
   const showMicrosoft = config?.microsoft !== false

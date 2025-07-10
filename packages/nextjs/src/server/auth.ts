@@ -1,7 +1,7 @@
 import { cache } from "react"
 import { cookies } from "next/headers"
-import type { BaseUser } from "./types"
-import { verifyFirebaseToken } from "./jwt"
+import type { BaseUser } from "../types"
+import { verifyFirebaseToken } from "./SessionTernSecure"
 import { TernSecureError } from "../errors"
 
 
@@ -15,11 +15,9 @@ export interface AuthResult {
    */
 export const auth = cache(async (): Promise<AuthResult> => {
   try {
-    // Get all active sessions for debugging
    console.log("auth: Starting auth check...")
    const cookieStore = await cookies()
 
-    // First try session cookie as it's more secure
     const sessionCookie = cookieStore.get("_session_cookie")?.value
     if (sessionCookie) {
       const result = await verifyFirebaseToken(sessionCookie, true)
@@ -30,6 +28,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
           tenantId: result.tenant || 'default',
           authTime: (result.authTime && typeof result.authTime === 'number') ? result.authTime : undefined
         }
+        console.log("[useAuth nodejs] User found in session cookie:", user)
         return { user, error: null }
       }
     }
@@ -45,6 +44,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
           tenantId: result.tenant || 'default',
           authTime: (result.authTime && typeof result.authTime === 'number') ? result.authTime : undefined
         }
+        console.log("[useAuth nodejs] User found in ID token:", user)
         return { user, error: null }
       }
     }

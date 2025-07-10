@@ -3,32 +3,12 @@
 import { adminTernSecureAuth as adminAuth } from '../utils/admin-init';
 import {
   handleFirebaseAuthError, 
-  type AuthErrorResponse, 
   type SessionParams, 
   type SessionResult,
   type CookieStore,
 } from '@tern-secure/types';
 
-interface FirebaseAuthError extends Error {
-  code?: string;
-}
 
-export interface User {
-    uid: string | null;
-    email: string | null;
-  }
-
-export interface Session {
-    user: User | null;
-    token: string | null;
-    error: Error | null;
-}
-
-interface TernVerificationResult extends User {
-  valid: boolean
-  authTime?: number
-  error?: AuthErrorResponse
-}
 
 const SESSION_CONSTANTS = {
   COOKIE_NAME: '_session_cookie',

@@ -1,6 +1,6 @@
 'use server'
 
-import { createSessionCookie, clearSessionCookie } from "@tern-secure/react";
+import { createSessionCookie, clearSessionCookie } from "@tern-secure/backend";
 import { NextCookieStore } from "../../utils/NextCookieAdapter";
 
 export async function createSessionCookieServer(idToken: string) {
