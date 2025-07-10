@@ -34,7 +34,6 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     instanceOptions
   } = props
 
-  const rv = props.instanceOptions.requiresVerification
 
   const { isomorphicTernSecure: instance, instanceStatus} = useLoadIsomorphicTernSecure(instanceOptions)
 

@@ -19,6 +19,10 @@ export default function Home() {
     router.push('/dashboard');
   };
 
+  const redirectToProtected = () => {
+    router.push('/protected');
+  };
+
   const createsignOut = async () => {
     await signOut();
   }
@@ -35,6 +39,12 @@ export default function Home() {
         className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
       >
         Dashboard
+      </button>
+      <button
+        onClick={redirectToProtected}
+        className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Server Side Page
       </button>
       <button
         onClick={createsignOut}

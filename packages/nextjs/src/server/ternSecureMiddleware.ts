@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { verifySession } from './edge-session'
-import type { UserInfo } from "./types"
+import type { BaseUser } from "./types"
 
 export const runtime = "edge"
 
 interface Auth {
-  user: UserInfo | null
+  user: BaseUser | null
   token: string | null
   protect: () => Promise<void>
 }

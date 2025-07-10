@@ -239,6 +239,7 @@ export class TernAuth implements TernSecureAuthProviderInterface {
   signOut = async(): Promise<void> => {
     await Promise.all([
       this.auth.signOut(),
+      this.#authCookieManager.clearServerCookie(),
       this.updateInternalAuthState(null)
     ]);
   }

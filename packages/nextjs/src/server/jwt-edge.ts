@@ -9,7 +9,7 @@ interface FirebaseIdTokenPayload {
   sub: string
   iat: number
   exp: number
-  email?: string
+  email?: string | null
   email_verified?: boolean
   firebase: {
     identities: {
@@ -17,6 +17,18 @@ interface FirebaseIdTokenPayload {
     }
     sign_in_provider: string
   }
+}
+
+
+interface FirebaseTokenResult {
+  valid: boolean;
+  uid?: string;
+  email?: string | null;
+  emailVerified?: boolean;
+  authTime?: number;
+  issuedAt?: number;
+  expiresAt?: number;
+  error?: string;
 }
 
 // Firebase public key endpoints
@@ -53,7 +65,7 @@ function decodeJwt(token: string) {
   }
 }
 
-export async function verifyFirebaseToken(token: string, isSessionCookie = false) {
+export async function verifyFirebaseToken(token: string, isSessionCookie = false): Promise<FirebaseTokenResult> {
   try {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     if (!projectId) {
@@ -66,10 +78,10 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
       throw new Error("Invalid token format")
     }
 
-    //console.log("Token details:", {
-    //  header: decoded.header,
-    //  type: isSessionCookie ? "session_cookie" : "id_token",
-    //})
+    console.log("Token details:", {
+      header: decoded.header,
+      type: isSessionCookie ? "session_cookie" : "id_token",
+    })
 
 
         // Use different JWKS based on token type
@@ -94,9 +106,9 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
     return {
           valid: true,
           uid: firebasePayload.sub,
-          email: firebasePayload.email,
+          email: firebasePayload.email ? String(firebasePayload.email) : null,
           emailVerified: firebasePayload.email_verified,
-          authTime: firebasePayload.auth_time,
+          authTime: typeof firebasePayload.auth_time === 'number' ? firebasePayload.auth_time : undefined,
           issuedAt: firebasePayload.iat,
           expiresAt: firebasePayload.exp,
         }

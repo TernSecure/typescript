@@ -319,14 +319,8 @@ export class TernSecure implements TernSecureInterface {
         }
         const redirectUrl = opts?.redirectUrl || this.#constructAfterSignOutUrl();
 
-        if (opts?.onBeforeSignOut) {
-            await opts.onBeforeSignOut();
-        }
         await this.ternAuth?.signOut();
-
-        if (opts?.onAfterSignOut) {
-            await opts.onAfterSignOut();
-        }
+        
         if (inBrowser()) {
             window.location.href = redirectUrl;
         }

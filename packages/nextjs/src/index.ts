@@ -31,4 +31,7 @@ export {
 export type { TernSecureUser, TernSecureUserData } from '@tern-secure/types'
 
 //export const TernSecureProvider = TernSecureServerProvider
-//export type { TernSecureState }
+export type {
+    UserInfo,
+    SessionResult
+} from './types'

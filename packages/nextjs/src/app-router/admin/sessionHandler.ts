@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createSessionCookie } from "@tern-secure/react"
+import { createSessionCookie, clearSessionCookie } from "@tern-secure/react"
 import { NextCookieStore } from "../../utils/NextCookieAdapter"
 
 export async function createSessionHandler(request: NextRequest): Promise<NextResponse> {
     try {
         const body = await request.json()
-        const { idToken, csrfToken } = body
+        const { idToken, csrfToken, action } = body
         const cookieStore = new NextCookieStore()
-
-        if (!idToken) {
-            return NextResponse.json(
-                {
-                    success: false, 
-                    message: 'ID token is required', 
-                    error: 'INVALID_TOKEN'
-                },
-                { status: 400 }
-            );
-        }
+        const csrfCookieValue = request.cookies.get('_session_terncf')?.value;
 
         if (!csrfToken) {
             return NextResponse.json(
@@ -30,6 +20,50 @@ export async function createSessionHandler(request: NextRequest): Promise<NextRe
             );
         }
 
+        if (!csrfCookieValue) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'CSRF token cookie not found',
+                    error: 'CSRF_COOKIE_MISSING'
+                },
+                { status: 403 }
+            );
+        }
+        
+        if (csrfToken !== csrfCookieValue) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'CSRF token mismatch',
+                    error: 'CSRF_TOKEN_MISMATCH'
+                },
+                { status: 403 }
+            );
+        }
+
+        if (action === 'clear') {
+            const res = await clearSessionCookie(cookieStore)
+
+            if (!res.success) {
+                console.error('[createSessionHandler] Error clearing session cookie:', {
+                    error: res.error,
+                    message: res.message
+                });
+            }
+            const statusCode = res.success ? 200 : 500; 
+            return NextResponse.json(res, { status: statusCode });
+        }
+        if (!idToken) {
+            return NextResponse.json(
+                {
+                    success: false, 
+                    message: 'ID token is required', 
+                    error: 'INVALID_TOKEN'
+                },
+                { status: 400 }
+            );
+        }
         const res = await createSessionCookie(idToken, cookieStore);
 
         if (!res.success) {

@@ -5,16 +5,15 @@ export interface User {
     authTime?: number
     disabled?: boolean
 }
-  
 
-
-  export interface UserInfo {
-    uid: string
-    email: string | null
-    emailVerified?: boolean
-    authTime?: number
-    disabled?: boolean
-  }
+export interface BaseUser {
+  uid: string
+  email: string | null
+  emailVerified?: boolean
+  tenantId: string | null
+  authTime?: number
+  disabled?: boolean
+}
   
   export interface SessionUser {
     uid: string
@@ -25,6 +24,6 @@ export interface User {
   
   export interface SessionResult {
     isAuthenticated: boolean
-    user: UserInfo | null
+    user: BaseUser | null
     error?: string
   }

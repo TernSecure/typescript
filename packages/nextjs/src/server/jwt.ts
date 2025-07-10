@@ -16,7 +16,20 @@ interface FirebaseIdTokenPayload {
       [key: string]: any
     }
     sign_in_provider: string
+    tenant?: string;
   }
+}
+
+interface FirebaseTokenResult {
+  valid: boolean;
+  tenant?: string;
+  uid?: string;
+  email?: string | null;
+  emailVerified?: boolean;
+  authTime?: number;
+  issuedAt?: number;
+  expiresAt?: number;
+  error?: string;
 }
 
 // Firebase public key endpoints
@@ -53,7 +66,7 @@ function decodeJwt(token: string) {
   }
 }
 
-export async function verifyFirebaseToken(token: string, isSessionCookie = false) {
+export async function verifyFirebaseToken(token: string, isSessionCookie = false): Promise<FirebaseTokenResult> {
   try {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     if (!projectId) {
@@ -66,10 +79,10 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
       throw new Error("Invalid token format")
     }
 
-    console.log("Token details:", {
-      header: decoded.header,
-      type: isSessionCookie ? "session_cookie" : "id_token",
-    })
+    //console.log("Token details:", {
+     // header: decoded.header,
+     // type: isSessionCookie ? "session_cookie" : "id_token",
+    //})
 
     let retries = 3
     let lastError: Error | null = null
@@ -88,9 +101,23 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
         })
 
         const firebasePayload = payload as unknown as FirebaseIdTokenPayload
+        const now = Math.floor(Date.now() / 1000)
+
+        // Verify token claims
+        if (firebasePayload.exp <= now) {
+          throw new Error("Token has expired")
+        }
+
+        if (firebasePayload.iat > now) {
+          throw new Error("Token issued time is in the future")
+        }
 
         if (!firebasePayload.sub) {
           throw new Error("Token subject is empty")
+        }
+
+        if (firebasePayload.auth_time > now) {
+          throw new Error("Token auth time is in the future")
         }
 
         return {
@@ -98,6 +125,7 @@ export async function verifyFirebaseToken(token: string, isSessionCookie = false
           uid: firebasePayload.sub,
           email: firebasePayload.email,
           emailVerified: firebasePayload.email_verified,
+          tenant: firebasePayload.firebase.tenant,
           authTime: firebasePayload.auth_time,
           issuedAt: firebasePayload.iat,
           expiresAt: firebasePayload.exp,

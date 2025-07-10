@@ -149,4 +149,43 @@ export type TernSecureNextProps = TernSecureProviderProps & {
   loadingComponent?: React.ReactNode
 }
 
+export interface User {
+    uid: string
+    email: string | null
+    emailVerified?: boolean
+    authTime?: number
+    disabled?: boolean
+}
+
+export interface BaseUser {
+  uid: string
+  email: string | null
+  emailVerified?: boolean
+  tenantId: string | null
+  authTime?: number
+}
+  
+
+
+  export interface UserInfo {
+    uid: string
+    email: string | null
+    emailVerified?: boolean
+    authTime?: number
+    disabled?: boolean
+  }
+  
+  export interface SessionUser {
+    uid: string
+    email: string | null
+    emailVerified: boolean
+    disabled?: boolean
+  }
+  
+  export interface SessionResult {
+    isAuthenticated: boolean
+    user: UserInfo | null
+    error?: string
+  }
+
 

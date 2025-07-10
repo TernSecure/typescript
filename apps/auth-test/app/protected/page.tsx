@@ -1,34 +1,12 @@
 import { auth } from "@tern-secure/nextjs/server"
-import { redirect} from "next/navigation";
+import { ProtectedPageClient } from "./protectedClient"
 
 export default async function ProtectedPage() {
-    const { user } = await auth();
+    const session = await auth();
 
-    if (!user) return null
+    if (!session || !session.user) return null
 
-    const redirectToHome = () => {
-      redirect('/');
-    };
+    const user = session.user;
 
-    const redirectToMoPage = () => {
-      redirect('/mo');
-    };
-
-    return (
-      <div>
-        <h1>Dashboard</h1>
-        <p>Welcome, {user?.email}!</p>
-        <button 
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-            Back to Mo page
-        </button>
-
-        <button 
-          className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
-        >
-            Back to Home
-        </button>
-     </div>
-    );
+    return <ProtectedPageClient user={user} />
 }

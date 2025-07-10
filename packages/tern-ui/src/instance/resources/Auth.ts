@@ -6,7 +6,7 @@ import {
 import type { SessionResult, CookieStore } from '@tern-secure/types';
 
 const SESSION_COOKIE_NAME = '_session_cookie';
-const CSRF_COOKIE_NAME = '__session_terncf';
+const CSRF_COOKIE_NAME = '_session_terncf';
 
 
 type AuthToken = {
@@ -116,7 +116,8 @@ export class AuthCookieManager {
         },
         body: JSON.stringify({ 
           idToken: token,
-          csrfToken: csrfToken
+          csrfToken: csrfToken,
+          action: 'create'
         }),
         credentials: 'include'
       });
@@ -208,6 +209,73 @@ export class AuthCookieManager {
       throw error
     }
   }
+
+
+  clearServerCookie = async(): Promise<SessionResult> => {
+    try {
+      console.log('[AuthCookieManager] Starting server cookie clearing');
+
+      await this.validateApiEndpoint();
+      const csrfToken = this.ensureCSRFToken();
+
+      const req = await fetch(`${this.baseUrl}/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          csrfToken: csrfToken,
+          action: 'clear'
+        }),
+        credentials: 'include'
+      });
+
+      console.log('[AuthCookieManager] Clear session API response:', req.status, req.statusText);
+      
+      if (!req.ok) {
+        console.warn('[AuthCookieManager] Server cookie clearing failed - API request failed');
+        return {
+          success: false,
+          message: 'Failed to clear server session cookie',
+          error: 'API request failed',
+        };
+      }
+
+      const res = await req.json();
+
+      if (!res.success) {
+        console.error('[AuthCookieManager] Session clearing unsuccessful:', {
+          error: res.error,
+          message: res.message
+        });
+        return res;
+      }
+
+      console.log('[AuthCookieManager] Server session cookie cleared successfully');
+      return {
+        success: true,
+        message: 'Server session cookie cleared successfully',
+        cookieSet: false,
+      };
+
+    } catch (error) {
+      console.error('Failed to clear server session cookie:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          return {
+            success: false,
+            message: 'Clear session API endpoint not found',
+            error: 'ENDPOINT_NOT_FOUND',
+          };
+        }
+      }
+      return {
+        success: false,
+        message: 'Failed to clear server session cookie',
+        error: 'Unknown error',
+      };
+    }
+  };
 
 
   /**

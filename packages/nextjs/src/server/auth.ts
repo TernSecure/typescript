@@ -1,13 +1,12 @@
 import { cache } from "react"
 import { cookies } from "next/headers"
-import type { UserInfo } from "./types"
-import { verifyFirebaseToken } from "./jwt-edge"
+import type { BaseUser } from "./types"
+import { verifyFirebaseToken } from "./jwt"
 import { TernSecureError } from "../errors"
 
 
-
 export interface AuthResult {
-  user: UserInfo | null
+  user: BaseUser | null
   error: Error | null
 }
 
@@ -25,10 +24,11 @@ export const auth = cache(async (): Promise<AuthResult> => {
     if (sessionCookie) {
       const result = await verifyFirebaseToken(sessionCookie, true)
       if (result.valid) {
-        const user: UserInfo = {
+        const user: BaseUser= {
           uid: result.uid ?? '',
-          email: result.email || null,
-          authTime: result.authTime
+          email: (result.email && typeof result.email === 'string') ? result.email : null,
+          tenantId: result.tenant || 'default',
+          authTime: (result.authTime && typeof result.authTime === 'number') ? result.authTime : undefined
         }
         return { user, error: null }
       }
@@ -39,10 +39,11 @@ export const auth = cache(async (): Promise<AuthResult> => {
     if (idToken) {
       const result = await verifyFirebaseToken(idToken, false)
       if (result.valid) {
-        const user: UserInfo = {
+        const user: BaseUser = {
           uid: result.uid ?? '',
-          email: result.email || null,
-          authTime: result.authTime
+          email: (result.email && typeof result.email === 'string') ? result.email : null,
+          tenantId: result.tenant || 'default',
+          authTime: (result.authTime && typeof result.authTime === 'number') ? result.authTime : undefined
         }
         return { user, error: null }
       }
@@ -79,7 +80,7 @@ export const isAuthenticated = cache(async (): Promise<boolean>  => {
 /**
  * Get user info from auth result
  */
-export const getUser = cache(async (): Promise<UserInfo | null> => {
+export const getUser = cache(async (): Promise<BaseUser | null> => {
   const { user } = await auth()
   return user
 })
@@ -88,7 +89,7 @@ export const getUser = cache(async (): Promise<UserInfo | null> => {
  * Require authentication
  * Throws error if not authenticated
  */
-export const requireAuth = cache(async (): Promise<UserInfo> => {
+export const requireAuth = cache(async (): Promise<BaseUser> => {
   const { user, error } = await auth()
 
   if (!user) {

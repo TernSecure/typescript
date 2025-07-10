@@ -11,6 +11,7 @@ export const config = {
 };
 
 export default ternSecureMiddleware(async (auth, request) => {
+  console.log(auth.user ? `Authenticated user: ${auth.user.uid}` : 'No authenticated user')
   if(!publicPaths(request)) {
     await auth.protect()
   }

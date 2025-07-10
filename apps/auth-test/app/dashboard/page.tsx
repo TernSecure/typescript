@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
  const router = useRouter();
- const { user } = useAuth();
+ const { user, signOut } = useAuth();
 
  //console.log('Dashboard user:', user);
 
@@ -18,6 +18,14 @@ export default function Dashboard() {
     const redirectToMoPage = () => {
       router.push('/mo');
     };
+    
+    const redirectToProtected = () => {
+      router.push('/protected');
+    };
+
+  const createsignOut = async () => {
+    await signOut();
+  }
 
     return (
       <div>
@@ -36,6 +44,19 @@ export default function Dashboard() {
         >
             Back to Home
         </button>
+      <button
+        onClick={redirectToProtected}
+        className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Server Side Page
+      </button>
+
+      <button
+        onClick={createsignOut}
+        className="ml-4 bg-red-500 text-white px-4 py-2 rounded"
+      >
+        Sign Out
+      </button>
      </div>
     );
 }
