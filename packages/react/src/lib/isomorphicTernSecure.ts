@@ -155,7 +155,7 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
     this.options = options;
     this.TernSecure = TernSecure;
     this._mode = inBrowser() ? 'browser' : 'server';
-    this.#eventBus.emit('statusChange', this.status);
+    //this.#eventBus.emit('statusChange', this.status);
 
     if(!this.options.sdkMetadata) {
       this.options.sdkMetadata = SDK_METADATA;
@@ -193,7 +193,6 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
   async loadTernUI(): Promise<HeadlessUIBrowser | Browser | undefined> {
     if (this._mode !== 'browser' || this.isReady) {
-      //console.warn('[IsomorphicTernSecure] loadTernUI called in non-browser mode');
       return;
     }
 
@@ -263,24 +262,44 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
     this.ternui = ternui;
 
-    this.subscribeToTernUIEvents();
+    this.premountState.methodCalls.forEach((calls, section) => {
+      calls.forEach(async promise => {
+        try {
+          await promise();
+        } catch (error) {
+          console.error(`[IsomorphicTernSecure] Error executing premounted method ${section}:`, error);
+        }
+        });
+      });
 
-    //ternui.setTernAuth(this._authProvider);
+    this.premountState.authStateListeners.forEach(callback => {
+      if (ternui.events?.onAuthStateChanged) {
+        ternui.events.onAuthStateChanged(callback);
+      }
+    });
+
+    this.subscribeToTernUIEvents();
+    
+    
+    this.#eventBus.getListeners('statusChange').forEach(listener => {
+      listener('ready');
+    });
+    
+    this.#eventBus.getListeners('authStateChange').forEach(listener => {
+      listener(this.ternAuth?.internalAuthState)
+    });
+    
 
     this.premountState.signInNodes.forEach((config, node) => {
-      console.log('[IsomorphicTernSecure] Processing premounted SignIn node', { node, config });
       ternui.showSignIn(node, config);
     });
 
     this.premountState.signUpNodes.forEach((config, node) => {
-      console.log('[IsomorphicTernSecure] Processing premounted SignUp node', { node, config });
       ternui.showSignUp(node, config);
     });
 
-      //this.#status = 'ready';
-      this.#eventBus.emit('statusChange', 'ready');
-
     if (typeof this.ternui.status === 'undefined') {
+      console.log('[IsomorphicTernSecure] TernUI has no status, setting internal status to ready');
       this.#status = 'ready';
       this.#eventBus.emit('statusChange', 'ready');
       console.log('[IsomorphicTernSecure] Set internal status to ready (ternui has no status)');
@@ -301,22 +320,16 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
     const { events } = this.ternui;
 
-    // Subscribe to status changes from the core TernSecure instance
+  
     events.onStatusChanged((newStatus: TernSecureInstanceTreeStatus) => {
-      console.log('[IsomorphicTernSecure] Received status change from ternui:', {
-        newStatus,
-        previousInternalStatus: this.#status,
-        ternuiStatus: this.ternui?.status
-      });
-
       this.#status = newStatus;
       this.#eventBus.emit('statusChange', newStatus);
     });
 
     events.onAuthStateChanged((authState: TernSecureState) => {
-      console.log('[IsomorphicTernSecure] Received auth state from ternui:', authState);
       this.premountState.authStateListeners.forEach(callback => {
         try {
+          console.log('[IsomorphicTernSecure] subscribeToTernUiEvents - Calling premounted listener');
           callback(authState);
         } catch (error) {
           console.error('[IsomorphicTernSecure] Error in premounted auth state listener:', error);
@@ -336,16 +349,13 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
 
   #awaitForTernUI(): Promise<HeadlessUIBrowser | Browser>{
     return new Promise<HeadlessUIBrowser | Browser>(resolve => {
-      //console.log('[IsomorphicTernSecure] Awaiting TernUI initialization...');
       resolve(this.ternui!);
     });
   }
 
   initialize = async (props: any): Promise<void> => {
     try {
-      //console.log('[IsomorphicTernSecure] Initializing TernUI...');
       await this.#awaitForTernUI();
-      //console.log('[IsomorphicTernSecure] TernUI initialized successfully');
     } catch (error) {
       console.error('[IsomorphicTernSecure] Failed to initialize TernUI:', error);
       throw error;
@@ -474,14 +484,12 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
   get events(): TernSecureInstanceTree['events'] {
     return {
       onAuthStateChanged: (callback: (authState: TernSecureState) => void) => {
-        console.log('[IsomorphicTernSecure] Setting up onAuthStateChanged listener');
-        if (this.ternui?.events) {
-          console.log('[IsomorphicTernSecure] Delegating onAuthStateChanged to ternui.events');
+        if (this.ternui?.events?.onAuthStateChanged) {
           return this.ternui.events.onAuthStateChanged(callback);
         }
-        this.premountState.authStateListeners.add(callback);
+        this.#eventBus.on('authStateChange', callback);
         return () => {
-          this.premountState.authStateListeners.delete(callback);
+          this.#eventBus.off('authStateChange', callback);
         };
       },
       onError: (callback: (error: AuthErrorTree) => void) => {
@@ -489,8 +497,10 @@ export class IsomorphicTernSecure implements TernSecureInstanceTree {
           return this.ternui.events.onError(callback);
         }
         this.premountState.errorListeners.add(callback);
+        this.#eventBus.on('error', callback);
         return () => {
           this.premountState.errorListeners.delete(callback);
+          this.#eventBus.off('error', callback);
         };
       },
       onStatusChanged: (callback: (status: TernSecureInstanceTreeStatus) => void) => {

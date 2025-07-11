@@ -22,9 +22,9 @@ import type {
 const ROOT_ELEMENT_ID = 'data-ternsecure-component';
 
 
-const debugLog = (component: string, action: string, data?: any) => {
-  console.log(`[tern-ui: TernSecureHostRenderer:${component}] ${action}`, data || '');
-};
+//const debugLog = (component: string, action: string, data?: any) => {
+//  console.log(`[tern-ui: TernSecureHostRenderer:${component}] ${action}`, data || '');
+//};
 
 
 interface HtmlNodeOptions {
@@ -71,14 +71,14 @@ function assertDOMElement(element: HTMLElement): asserts element {
 }
 
 export const mountComponentRenderer = (instance: TernSecureInstanceTree, options: TernSecureInstanceTreeOptions) => {
-    debugLog('Renderer', 'Initializing Renderer', instance);
+    //debugLog('Renderer', 'Initializing Renderer', instance);
     
     const getOrCreateRoot = () => {
         let instanceRoot = document.getElementById(ROOT_ELEMENT_ID);
-        console.log('[Renderer] Looking for existing root:', { 
-            elementId: ROOT_ELEMENT_ID, 
-            found: !!instanceRoot 
-        });
+        //console.log('[Renderer] Looking for existing root:', { 
+        //    elementId: ROOT_ELEMENT_ID, 
+        //    found: !!instanceRoot 
+        //});
 
         if (!instanceRoot) {
             instanceRoot = document.createElement('div');
@@ -88,20 +88,20 @@ export const mountComponentRenderer = (instance: TernSecureInstanceTree, options
             //instanceRoot.style.position = 'absolute';
             document.body.appendChild(instanceRoot);
             
-            console.log('[Renderer] Created React root container:', {
-                element: instanceRoot,
-                id: instanceRoot.id,
-                parentNode: instanceRoot.parentNode,
-                bodyChildren: document.body.children.length,
-                allTernSecureElements: document.querySelectorAll('[data-ternsecure-component]').length
-            });
+            //console.log('[Renderer] Created React root container:', {
+            //    element: instanceRoot,
+            //    id: instanceRoot.id,
+            //    parentNode: instanceRoot.parentNode,
+            //    bodyChildren: document.body.children.length,
+            //    allTernSecureElements: document.querySelectorAll('[data-ternsecure-component]').length
+            //});
 
-            debugLog('Renderer', 'Created React root container');
+            //debugLog('Renderer', 'Created React root container');
         } else {
-            console.log('[Renderer] Using existing root container:', {
-                element: instanceRoot,
-                parentNode: instanceRoot.parentNode
-            });
+            //console.log('[Renderer] Using existing root container:', {
+            //    element: instanceRoot,
+            //    parentNode: instanceRoot.parentNode
+            //});
         }
         return instanceRoot;
     };
@@ -214,10 +214,10 @@ const Components = (props: ComponentsProps) => {
         props.onComponentsMounted();
     }, []);
 
-    debugLog('Components', 'Rendering', { 
-        nodeCount: nodes.size,
-        activeNodes: Array.from(nodes.keys()).map(n => n.id)
-    });
+    //debugLog('Components', 'Rendering', { 
+    //    nodeCount: nodes.size,
+    //    activeNodes: Array.from(nodes.keys()).map(n => n.id)
+    //});
     return (
     <Suspense fallback={''}>
         <LazyProviders

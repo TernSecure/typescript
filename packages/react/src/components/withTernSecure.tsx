@@ -24,16 +24,16 @@ export const withTernSecure = <P extends { instance: TernSecureInstanceTree; com
 
     const instance = useIsomorphicTernSecureCtx();
 
-    console.log(
-      `[TernSecure] ${displayName} - Instance Status:`,
-      {
-        isReady: instance.isReady,
-        status: instance.status,
-        hasInstance: !!instance,
-        hasShowSignIn: !!(instance as any).showSignIn,
-        renderWhileLoading: options?.renderWhileLoading
-      }
-    );
+    //console.log(
+    //  `[TernSecure] ${displayName} - Instance Status:`,
+    //  {
+    //    isReady: instance.isReady,
+    //    status: instance.status,
+    //    hasInstance: !!instance,
+    //    hasShowSignIn: !!(instance as any).showSignIn,
+    //    renderWhileLoading: options?.renderWhileLoading
+    //  }
+    //);
 
     if (!instance.isReady && !options?.renderWhileLoading) {
       return null;

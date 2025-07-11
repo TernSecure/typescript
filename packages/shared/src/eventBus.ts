@@ -22,4 +22,8 @@ export class EventEmitter {
             this.listeners[eventName] = this.listeners[eventName].filter(l => l !== listener);
         }
     }
+
+    getListeners(eventName: string): Array<(...args: any[]) => void> {
+        return this.listeners[eventName] ? [...this.listeners[eventName]] : [];
+    }
 }

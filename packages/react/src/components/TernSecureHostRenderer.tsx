@@ -4,9 +4,9 @@ import React, { PropsWithChildren } from 'react';
 import type { SignInUIConfig, SignUpUIConfig } from '@tern-secure/types';
 
 // Debug logging utility
-const debugLog = (component?: string, action?: string, data?: any) => {
-  console.log(`[TernSecureHostRenderer:${component}] ${action}`, data || '');
-};
+//const debugLog = (component?: string, action?: string, data?: any) => {
+//  console.log(`[TernSecureHostRenderer:${component}] ${action}`, data || '');
+//};
 
 type TernUIProps = SignInUIConfig | SignUpUIConfig;
 
@@ -37,14 +37,14 @@ export class TernSecureHostRenderer extends React.PureComponent<HostRendererProp
     if (this.rootRef.current && this.props.updateProps) {
       const hasPropsChanged = JSON.stringify(prevProps.props) !== JSON.stringify(this.props.props);
 
-      debugLog(this.props.component, 'Props Update Check', {
-        hasChanged: hasPropsChanged,
-        prevProps: prevProps.props,
-        newProps: this.props.props,
-      });
+      //debugLog(this.props.component, 'Props Update Check', {
+      //  hasChanged: hasPropsChanged,
+      //  prevProps: prevProps.props,
+      //  newProps: this.props.props,
+      //});
 
       if (hasPropsChanged) {
-        debugLog(this.props.component, 'Updating Props');
+        //debugLog(this.props.component, 'Updating Props');
         this.props.updateProps({
           node: this.rootRef.current,
           props: this.props.props,
@@ -54,14 +54,14 @@ export class TernSecureHostRenderer extends React.PureComponent<HostRendererProp
   }
 
   componentDidMount() {
-    debugLog(this.props.component, 'Mounting');
+    //debugLog(this.props.component, 'Mounting');
     if (this.rootRef.current) {
       this.props.mount(this.rootRef.current, this.props.props);
     }
   }
 
   componentWillUnmount() {
-    debugLog(this.props.component, 'Unmounting');
+    //debugLog(this.props.component, 'Unmounting');
     if (this.rootRef.current) {
       this.props.unmount(this.rootRef.current);
     }
@@ -75,11 +75,11 @@ export class TernSecureHostRenderer extends React.PureComponent<HostRendererProp
       ...(component && { 'data-ternsecure-component': component }),
     };
 
-    debugLog(component, 'Rendering', {
-      hideRootHtmlElement,
-      hasChildren: !!children,
-      rootAttributes,
-    });
+    //debugLog(component, 'Rendering', {
+    //  hideRootHtmlElement,
+    //  hasChildren: !!children,
+    //  rootAttributes,
+    //});
 
     return (
       <>

@@ -1,15 +1,17 @@
-import type {
-    TernSecureInstanceTree as TernSecureInterface,
-    TernSecureInstanceTreeOptions,
-    SignInPropsTree,
-    SignUpPropsTree,
-    TernSecureInstanceTreeStatus,
-    TernSecureAuthProvider,
-    SignInRedirectOptions,
-    SignUpRedirectOptions,
-    RedirectOptions,
-    TernSecureSDK,
-    SignOutOptions
+import {
+    type TernSecureInstanceTree as TernSecureInterface,
+    type TernSecureInstanceTreeOptions,
+    type SignInPropsTree,
+    type SignUpPropsTree,
+    type TernSecureInstanceTreeStatus,
+    type TernSecureAuthProvider,
+    type SignInRedirectOptions,
+    type SignUpRedirectOptions,
+    type RedirectOptions,
+    type TernSecureSDK,
+    type SignOutOptions,
+    type TernSecureState,
+    handleFirebaseAuthError
 } from '@tern-secure/types';
 import { EventEmitter } from '@tern-secure/shared/eventBus'
 import type { MountComponentRenderer } from '../ui/Renderer'
@@ -84,10 +86,11 @@ export class TernSecure implements TernSecureInterface {
         this.customDomain = domain;
         //console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
 
-        this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
+        //this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
         //this.#setStatus('ready');
         //console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
 
+        this.#setupAuthStateSync();
         TernSecureBase.ternsecure = this
     }
 
@@ -156,7 +159,7 @@ export class TernSecure implements TernSecureInterface {
             initCompponentRenderer();
 
             this.#setStatus('ready');
-            this.#eventBus.emit('ready')
+            //this.#eventBus.emit('ready')
         } catch (error) {
             this.error = error as Error;
             this.#setStatus('error');
@@ -270,22 +273,22 @@ export class TernSecure implements TernSecureInterface {
             return;
         }
         
+        //this.#setupAuthStateSync();
+
         this.ternAuth = ternAuth;
-        //console.log('[TernSecure] TernAuth provider set:', ternAuth);
-        //console.log('[TernSecure] TernAuth internal state:', ternAuth.internalAuthState);
+
         this.#eventBus.emit('TernAuthReady', ternAuth);
     }
 
-    public emitAuthStateChange(authState: any): void {
+    public emitAuthStateChange(authState: TernSecureState): void {
         this.#eventBus.emit('authStateChange', authState);
-        //console.warn('[TernSecure] AuthState changed:', authState);
     }
 
     public get events(): TernSecureInterface['events'] {
         return {
             onAuthStateChanged: (callback) => {
                 this.#eventBus.on('authStateChange', callback);
-                //console.log('[TernSecure] onAuthStateChanged listener added');
+                console.log('[TernSecure] onAuthStateChanged listener added');
                 return () => {
                   this.#eventBus.off('authStateChange', callback);
                 }  
@@ -589,15 +592,43 @@ export class TernSecure implements TernSecureInterface {
     }
 
     #setupAuthStateSync(): void {
+        console.log('[TernSecure] Setting up auth state sync...');
         this.events.onAuthStateChanged((authState) => {
-            //console.log('[TernSecure] onAuthStateChanged:', authState.status);
+            console.log('[TernSecure] setupAuthSycn - onAuthStateChanged:', authState.status);
             if (authState.error) {
-                this.error = authState.error;
+                const authError = handleFirebaseAuthError(authState.error);
+                this.error = new Error(authError.message);
+
+                switch (authError.code) {
+                    case 'USER_DISABLED':
+                    case 'EXPIRED_TOKEN':
+                    case 'INVALID_ID_TOKEN':
+                    case 'SESSION_EXPIRED':
+                        console.warn('[TernSecure] Crititical Auth error:', authError.code);
+                        void this.signOut();
+                        break;
+                    case 'NETWORK_ERROR':
+                        console.error('[TernSecure] Network error detected');
+                        break;
+                    default:
+                        this.#eventBus.emit('error', this.error);
+                }
+                return;
             }
-            
-            if (authState.isAuthenticated && this.error) {
-                this.error = null;
+
+            switch (authState.status) {
+                case 'unauthenticated':
+                    console.log('[TernSecure] User is unauthenticated');
+                    this.signOut();
+                    break;
             }
         });
+
+        this.events.onError((error) => {
+            console.error('[TernSecure] Auth Error:', error);
+            const authError = handleFirebaseAuthError(error);
+            this.error = new Error(authError.message);
+            this.#eventBus.emit('error', this.error);
+        })
     }
 }

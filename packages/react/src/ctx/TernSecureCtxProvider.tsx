@@ -33,9 +33,19 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     initialState, 
     instanceOptions
   } = props
+  
+  
+  const [currentAuthState, setCurrentAuthState] = useState<TernSecureState>(
+    initialState || DEFAULT_TERN_SECURE_STATE
+  );
 
+  const { isomorphicTernSecure: instance, instanceStatus } = useLoadIsomorphicTernSecure(instanceOptions)
 
-  const { isomorphicTernSecure: instance, instanceStatus} = useLoadIsomorphicTernSecure(instanceOptions)
+  
+  useEffect(() => {
+    const unsubscribe = instance.events.onAuthStateChanged(setCurrentAuthState);
+    return () => unsubscribe?.();
+  }, [instance]);
 
 
   const ternsecureCtx = useMemo(() => ({
@@ -47,11 +57,11 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
   const ternAuthCtx = useMemo(() => {
     const value = {
       authProvider: instance.ternAuth,
-      authState: instance.ternAuth?.internalAuthState || DEFAULT_TERN_SECURE_STATE,
+      authState: currentAuthState,
     }
 
     return { value}
-  }, [instance.ternAuth, instance.ternAuth?.internalAuthState]);
+  }, [instance.ternAuth, currentAuthState]);
   
   const loadingComponent = useMemo(() => (
     <IsomorphicTernSecureCtx.Provider value={ternsecureCtx}>
@@ -81,6 +91,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
   }, []);
 
   const [instanceStatus, setInstanceStatus] = useState(isomorphicTernSecure.status)
+
   
   useEffect(() => {
     const unsubscribeStatus = isomorphicTernSecure.events.onStatusChanged((newStatus) => {
@@ -96,7 +107,7 @@ const useLoadIsomorphicTernSecure = (options: IsomorphicTernSecureOptions) => {
       unsubscribeStatus?.();
       unsubscribeError?.();
     };
-  }, [instanceStatus, error]);
+  }, []);
 
   useEffect(() => {
     void isomorphicTernSecure.initialize({ //check awai
