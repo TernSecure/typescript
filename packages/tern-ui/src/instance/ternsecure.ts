@@ -82,15 +82,8 @@ export class TernSecure implements TernSecureInterface {
             throw new Error('TernSecure requires a domain or proxy URL to be initialized.');
         }
 
-        //console.log('[TernSecure constructor] Initializing... Received domain:', domain);
         this.customDomain = domain;
-        //console.log('[TernSecure constructor] Custom domain set:', this.customDomain);
 
-        //this.#eventBus.emit('statusChange', this.#status); // Initial status is 'loading'
-        //this.#setStatus('ready');
-        //console.log('[TernSecure constructor] Initialization complete. isReady:', this.isReady, 'Status:', this.#status);
-
-        this.#setupAuthStateSync();
         TernSecureBase.ternsecure = this
     }
 
@@ -272,8 +265,6 @@ export class TernSecure implements TernSecureInterface {
             console.warn('[TernSecure] ternAuth is not defined');
             return;
         }
-        
-        //this.#setupAuthStateSync();
 
         this.ternAuth = ternAuth;
 

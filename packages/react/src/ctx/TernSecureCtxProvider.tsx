@@ -8,6 +8,7 @@ import type {
 } from '../types'
 import {
   DEFAULT_TERN_SECURE_STATE,
+  handleFirebaseAuthError,
   type TernSecureState
 } from '@tern-secure/types'
 import { 
@@ -25,6 +26,7 @@ export type AuthStateProps = {
   authState: TernSecureState
 }
 
+const isServerSide = typeof window === 'undefined';
 
 
 export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
@@ -46,7 +48,7 @@ export function TernSecureCtxProvider(props: TernSecureCtxProviderProps) {
     const unsubscribe = instance.events.onAuthStateChanged(setCurrentAuthState);
     return () => unsubscribe?.();
   }, [instance]);
-
+  
 
   const ternsecureCtx = useMemo(() => ({
     value: instance,
