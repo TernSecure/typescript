@@ -74,7 +74,7 @@
   "dependencies": {
     "@tern-secure/types": "workspace:*",
     "js-cookie": "^3.0.5",
-    "tslib": "2.4.1"
+    "tslib": "2.8.1"
   },
   "peerDependencies": {
     "react": "^19",
