@@ -45,7 +45,7 @@
     "clsx": "^2.1.1",
     "core-js": "3.41.0",
     "lucide-react": "^0.468.0",
-    "regenerator-runtime": "0.13.11",
+    "regenerator-runtime": "0.14.0",
     "styled-components": "^6.1.19",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
