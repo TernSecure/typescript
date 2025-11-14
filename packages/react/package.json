@@ -1,10 +1,10 @@
 {
-  "name": "@tern-secure/react",
+  "name": "@tern-secure/reactjs",
   "version": "1.1.5",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TernSecure/typescript.git",
-    "directory": "packages/react"
+    "directory": "packages/reactjs"
   },
   "bugs": {
     "url": "https://github.com/TernSecure/typescript/issues"

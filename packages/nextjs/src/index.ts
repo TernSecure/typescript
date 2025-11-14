@@ -35,3 +35,9 @@ export type {
     UserInfo,
     SessionResult
 } from './types'
+
+// Admin/Handler exports
+export {
+    createTernSecureNextJsHandler,
+    type TernSecureHandlerOptions
+} from './app-router/admin'
